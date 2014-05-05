@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * This retrieves a Bibliographic Relationship Node from the database
+ * @author griffinj@lafayette.edu
+ */
+function dss_elc_get_bib_rels($subjectNid) {
+
+  $subject = dss_elc_get_node('nid', $subjectNid);
+
+  /*
+  if(true) {
+
+    return array($subject->nid);
+    //return dss_elc_get_nodes('field_bib_rel_subject', $subject->nid, 'loan');
+  }
+  */
+
+  $bib_rel_nids = array();
+  $map = function($node) {
+
+    return $node->nid;
+  };
+
+  foreach(array('bibliographic_relationship', 'loan') as $bib_rel_child_node_type) {
+
+    // Not a bidirectional network
+    $bib_rel_nids = array_merge($bib_rel_nids, array_map($map, dss_elc_get_nodes('field_bib_rel_subject', intval($subject->nid), $bib_rel_child_node_type, 1)));
+  }
+
+  $bib_rels = array();
+  foreach($bib_rel_nids as $bib_rel_nid) {
+
+    // dss_elc_get_node($field, $value, $contentType=NULL, $entityField=0) {
+    $edge = dss_elc_get_node('nid', $bib_rel_nid);
+
+    $edge->field_bib_rel_subject[$edge->language][0] = $subject;
+
+    $edge->field_bib_rel_object[$edge->language][0] = dss_elc_get_node('nid', $edge->field_bib_rel_object[$edge->language][0]['target_id']);
+
+    $bib_rels[] = $edge;
+
+    // This will ultimately refactored into the Drupal 7 triple store
+    /*
+    $bib_rels[] = array('subject' => $subject,
+			 'predicate' => $edge,
+			 'object' => dss_elc_get_node('nid', $predicate->field_bib_rel_object->nid)
+			 );
+    */
+  }
+
+  return $bib_rels;
+}
+
+function dss_elc_loan_node_presave($node) {
+
+  // If the subject of the loan relationship (i. e. the Representative) field is empty...
+  if(empty($node->field_bib_rel_subject[$node->language])) {
+    
+    $node->field_bib_rel_subject[$node->language][] = $node->field_loan_shareholder[$node->language][0];
+  } elseif(property_exists($node, 'field_loan_shareholder') && array_key_exists($node->language, $node->field_loan_shareholder)) {
+
+    // If the shareholder and representative are specified, and are not identical to one another...
+    if($node->field_bib_rel_subject[$node->language][0]['target_id'] != $node->field_loan_shareholder[$node->language][0]['target_id']) {
+
+      // ...instantiate the personal relationship for these individuals
+      dss_elc_update_pers_rels(intval($node->field_bib_rel_subject[$node->language][0]['target_id']), intval($node->field_loan_shareholder[$node->language][0]['target_id']));
+    }
+  }
+
+  $subjectNode = dss_elc_get_node('nid', $node->field_bib_rel_subject[$node->language][0]['target_id'], 'human');
+  $objectNode = dss_elc_get_node('nid', $node->field_bib_rel_object[$node->language][0]['target_id']);
+    
+  //Override the title
+  #$node->title = $node->field_bib_rel_subject[$node->language][0]['target_id'] . ' borrowed ' . $node->field_bib_rel_object[$node->language][0]['target_id'] . ' on ';
+
+  // Retrieve the formatted date
+  preg_match('/(.*?)T/', $node->field_loan_duration[$node->language][0]['value'], $matches);
+
+  $subject_title = substr($subjectNode->title, 0, 100);
+  $object_title = substr($objectNode->title, 0, 100);
+
+  if($matches) {
+
+    $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  $matches[1];
+  } else {
+
+    $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  date('Y/m/d', $node->field_loan_duration[$node->language][0]['value']);
+  }
+
+  // 255
+  //0000/00/00 (255 - 10 - 4 - 10 = 231)
+
+  $node->title = $node_title;
+
+  /*
+    if(!empty($node->field_loan_volumes_loaned[$node->language])) {
+    
+    $map = function($volume) {
+    
+    return intval($volume['value']);
+    };
+    
+    $volumes = array_map($map, $node->field_loan_volumes_loaned[$node->language]);
+    
+      $drupalQuery = new EntityFieldQuery();
+
+      $bib_entities = array();
+
+      foreach(array('item', 'book', 'periodical') as $bibContentType) {
+
+	$result = $drupalQuery->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', $bibContentType)
+	  ->entityCondition('field_item_volume', 'value', $field_artifact_title)
+	  ->entityCondition('field_item_volume', 'value', $volumes, 'IN')
+	  ->execute();
+	
+	if(isset($result['node'])) {
+	  
+	  $bib_entities = array_merge(entity_load('node', array_keys($result['node'])));
+	}
+      }
+    }
+    */
+}

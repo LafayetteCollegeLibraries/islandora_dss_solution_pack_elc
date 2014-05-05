@@ -1,0 +1,44 @@
+
+/* Work-around */
+.field-multiple-drag {
+
+    display: none;
+}
+
+#visualize {
+
+    clear:right;
+    margin:auto;
+    width: 84%;
+}
+
+.visualize-loading {
+
+    width: 300px;
+    height: 300px;
+    background-image: url('/sites/all/modules/islandora_dss_solution_pack_elc/theme/images/ajax-loader.gif');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.visualize-column {
+
+    width:320px;
+    float:left;
+}
+
+.visualize-network {
+ 
+    border: 1px solid black;
+}
+
+/* Refactor/Redesign */
+section#comments {
+
+    clear: left;
+}
+
+div.view-content {
+
+    clear: left;
+}

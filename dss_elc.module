@@ -1,0 +1,1148 @@
+<?php
+
+  /*
+   * Intramodular dependencies
+   *
+   */
+module_load_include('inc', 'dss_elc', 'includes/utility');
+module_load_include('inc', 'dss_elc', 'includes/data_access');
+module_load_include('inc', 'dss_elc', 'includes/person');
+module_load_include('inc', 'dss_elc', 'includes/item');
+module_load_include('inc', 'dss_elc', 'includes/bib_rels');
+module_load_include('inc', 'dss_elc', 'includes/pers_rels');
+
+/**
+ * Implements hook_menu()
+ *
+ */
+function dss_elc_menu() {
+
+  $items = array(
+		 'node/get' => array(
+				     'page callback' => 'dss_elc_get_node_ajax',
+				     'access callback' => TRUE,
+				     ),
+		 'nodes/get' => array(
+				      'page callback' => 'dss_elc_get_nodes_ajax',
+				      'access callback' => TRUE,
+				      ),
+		 'pers-rels/get' => array(
+					  'page callback' => 'dss_elc_get_pers_rels_ajax',
+					  'access callback' => TRUE
+					  ),
+		 'bib-rels/get' => array(
+					 'page callback' => 'dss_elc_get_bib_rels_ajax',
+					 'access callback' => TRUE
+					 ),
+		 'qty/rels' => array(
+				     'page callback' => 'dss_elc_qty_rels_ajax',
+				     'access callback' => TRUE
+				     )
+		 );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission()
+ * @author griffinj@lafayette.edu
+ *
+ */
+function dss_elc_permission() {
+
+  return array(
+	       'access arguments page' => array(
+						'title' => t('Query the Person node interface'),
+						'description' => t('Query the Person node interface'),
+						),
+	       );
+}
+
+/**
+ * Implements hook_theme()
+ * @author griffinj@lafayette.edu
+ *
+ */
+function dss_elc_theme($existing, $type, $theme, $path) {
+
+  return array(
+	       'loan_node_form' => array(
+					 'render element' => 'form',
+					 'file' => 'theme/theme.inc',
+					 'template' => 'theme/loan-node-form',
+					 'path' => drupal_get_path('module', 'dss_elc'),
+					 ),
+	       'human_node_form' => array(
+					  'render element' => 'form',
+					  'file' => 'theme/theme.inc',
+					  'template' => 'theme/human-node-form',
+					  'path' => drupal_get_path('module', 'dss_elc'),
+					  ),
+	       'book_node_form' => array(
+					 'render element' => 'form',
+					 'file' => 'theme/theme.inc',
+					 'template' => 'theme/book-node-form',
+					 'path' => drupal_get_path('module', 'dss_elc'),
+					 ),
+	       'periodical_node_form' => array(
+					       'render element' => 'form',
+					       'file' => 'theme/theme.inc',
+					       'template' => 'theme/book-node-form',
+					       'path' => drupal_get_path('module', 'dss_elc'),
+					       ),
+	       'item_node_form' => array(
+					 'render element' => 'form',
+					 'file' => 'theme/theme.inc',
+					 'template' => 'theme/item-node-form',
+					 'path' => drupal_get_path('module', 'dss_elc'),
+					 ),
+	       'manifestation_node_form' => array(
+						  'render element' => 'form',
+						  'file' => 'theme/theme.inc',
+						  'template' => 'theme/manifestation-node-form',
+						  'path' => drupal_get_path('module', 'dss_elc'),
+						  ),
+	       'personal_relationship_node_form' => array(
+							  'render element' => 'form',
+							  'file' => 'theme/theme.inc',
+							  'template' => 'theme/personal-relationship-node-form',
+							  'path' => drupal_get_path('module', 'dss_elc'),
+							  ),
+	       /*
+,
+
+	       'organization_node_form' => array(
+						 'render element' => 'form',
+						 'file' => 'theme/theme.inc',
+						 'template' => 'theme/organization-node-form',
+						 'path' => drupal_get_path('module', 'dss_elc'),
+						 ),
+	       'location_node_form' => array(
+					     'render element' => 'form',
+					     'file' => 'theme/theme.inc',
+					     'template' => 'theme/location-node-form',
+					     'path' => drupal_get_path('module', 'dss_elc'),
+					     ),
+	       */
+							  );
+  }
+
+/*
+ * Implements hook_node_validate()
+ * @author griffinj@lafayette.edu
+ *
+ */
+function dss_elc_node_validate($node, $form, &$form_state) {
+
+  // To be implemented
+  /*
+  dpm($form);
+  switch($form['#bundle']) {
+
+  case 'personal_relationship':
+
+    if($form_state['values']['title'] == '') {
+
+      form_set_value($form['title'], 'testingTitle1', $form_state);
+    }
+    break;
+  }
+  */
+}
+
+/**
+ * Implements hook_node_presave()
+ * @author griffinj@lafayette.edu
+ *
+ */
+define('ROLES_TAXON', 'roles');
+function dss_elc_node_presave($node) {
+
+  switch($node->type) {
+
+  case 'loan':
+
+    dss_elc_loan_node_presave($node);
+    break;
+
+  case 'personal_relationship':
+
+    //Override the title
+    //$node->title = $node->field_pers_rel_subject[$node->language][0]['target_id'] . ' is a ' . $node->field_pers_rel_role[$node->language][0]['tid'] . ' in relation to ' . $node->field_pers_rel_object[$node->language][0]['target_id'];
+
+    $subjectNode = dss_elc_get_node('nid', $node->field_pers_rel_subject[$node->language][0]['target_id'], 'human');
+    $objectNode = dss_elc_get_node('nid', $node->field_pers_rel_object[$node->language][0]['target_id']);
+    $roleTerm = taxonomy_term_load($node->field_pers_rel_role[$node->language][0]['tid']);
+
+    $node->title = $subjectNode->title . ' is a ' . $roleTerm->name . ' in relation to ' . $objectNode->title;
+
+    break;
+
+  case 'book':
+  case 'periodical':
+  case 'item':
+    
+    dss_elc_item_node_presave($node);
+  break;
+
+  default:
+
+    break;
+  }
+}
+
+/**
+ * Implements hook_insert()
+ * @author griffinj@lafayette.edu
+ *
+ * The NID is required for the function dss_elc_update_pers_rels
+ */
+function dss_elc_node_insert($node) {
+
+  switch($node->type) {
+
+  case 'personal_relationship':
+
+    /*
+    // Handling for Representative relationships
+    if(!empty($node->field_pers_rel_role[$node->language]) &&
+       $node->field_pers_rel_role[$node->language][0]['name'] == 'Representative') {
+
+      dss_elc_update_pers_rels(intval($node->field_pers_rel_subject[$node->language][0]['target_id']), intval($node->field_pers_rel_object[$node->language][0]['target_id']));
+    }
+    */
+    break;
+    
+  case 'item':
+  case 'periodical':
+  case 'book':
+
+    dss_elc_item_node_insert($node);
+  break;
+
+  default:
+    break;
+  }
+}
+
+// Deprecate: Use "restws"
+
+function dss_elc_get_pers_rels_ajax($subjectNid) {
+
+  drupal_json_output(dss_elc_get_pers_rels($subjectNid) );
+}
+
+function dss_elc_get_bib_rels_ajax($subjectNid) {
+
+  drupal_json_output(dss_elc_get_bib_rels($subjectNid) );
+}
+
+/**
+ * Retrieve Nodes by Content Type
+ *
+ */
+/*
+function dss_elc_get_nodes($contentType) {
+
+  $query = new EntityFieldQuery();
+
+  $entities = $query->entityCondition('entity_type', 'node', '=')
+    ->propertyCondition('type', $contentType)
+    ->execute();
+
+  if(!empty($entities['node'])) {
+
+    return entity_load('node', array_keys($entities['node']));
+  } else {
+
+    return array();
+  }
+}
+*/
+
+/**
+ * @author griffinj@lafayette.edu
+ *
+ * To be integrated with the services Module as a RESTful API
+ *
+ * Example: http://elc.dev.lafayette.edu/node/get/[CONTENT_TYPE]/[NID]
+ * Example: http://elc.dev.lafayette.edu/node/get/[CONTENT_TYPE]/[NID]
+ *
+ */
+function dss_elc_get_node_ajax($contentType, $field, $value=NULL) {
+
+  // If value isn't set, retrieve by NID and contentType
+  if(!isset($value)) {
+
+    $value = $field;
+    $field = $contentType;
+
+    drupal_json_output(dss_elc_get_node($field, $value));
+  } else {
+    
+    drupal_json_output(dss_elc_get_node($field, $value, $contentType));
+  }
+}
+
+function dss_elc_get_univariate_rels($contentTypes, $field, $measure_names = array('mean' => array(),
+										   'median' => array(),
+										   'max' => array(),
+										   'total' => array()
+										   )) {
+
+  // Get nodes of all content types
+
+  $m = function($node) {
+    
+    // Quantitative values only
+    /*
+      if(!is_numeric($node->$field)) {
+      
+      throw new Exception('Non quantitative value found in field ' . $field);
+      }
+    */
+    return $node->$field;
+  };
+
+  $measures = array();
+  foreach($measure_names as $measure) {
+    
+    $measures[$measure] = array();
+  }
+
+  /*
+    Mean[list]mean (average)
+    Median[list]median (central value)
+    Max[list]maximum value
+    Variance[list]variance
+    StandardDeviation[list]standard deviation
+    Quantile[list,q]q^(th) quantile
+    Total[list]total
+  */
+
+  switch($field) {
+
+  case 'field_item_format':
+
+    $fieldValues = array('Octavo' => 0,
+			 'Quarto' => 1,
+			 'Duodecimo' => 2);
+    break;
+
+  default:
+
+    $fieldValues = array();
+    break;
+  }
+
+  foreach($fieldValues as $fieldName => $fieldValue) {
+
+    foreach($contentTypes as $contentType) {
+
+      if(array_key_exists('total', $measures) ||
+	 array_key_exists('mean', $measures)) {
+
+	$measures['total'][$contentType][$fieldName] = count(dss_elc_get_nodes($contentType, $field, $fieldValue, FIELD_TYPE_ENTITY));
+      }
+    }
+  }
+
+  if(array_key_exists('mean', $measures)) {
+
+    $reduce = function($u, $v) {
+      
+	  return $u + $v['total'];
+    };
+
+    $fieldTotals = array();
+    foreach($measures['total'] as $contentType => $field) {
+
+      // To be implemented
+    }
+
+    foreach($fieldValues as $fieldName => $fieldValue) {
+
+      $measures['mean'][$fieldName] = array_reduce($reduce, $measures['total']) / count(array_keys($measures['total'][$contentType]));
+    }
+  }
+
+  return $measures;
+}
+
+
+
+/**
+ * Retrieve a data set for bivariate analysis
+ * @author griffinj@lafayette.edu
+ */
+function dss_elc_get_bivariate_rels($contentTypes, $fieldU, $fieldV, $fieldUType=0, $fieldVType=0, $dateField=NULL, $dateFieldRange=FALSE) {
+
+  $sets = array();
+
+  foreach($contentTypes as $contentType) {
+
+    $sets[$contentType] = array($fieldU => array($fieldV => array()));
+    
+    foreach(dss_elc_get_nodes($contentType) as $node) {
+
+      $fieldUValue = dss_elc_get_node_field($node, $fieldU, $fieldUType);
+      $fieldVValue = dss_elc_get_node_field($node, $fieldV, $fieldVType);
+
+      
+      if($dateFieldRange) {
+	
+	if(isset($node->$dateField[$node->language][0]['value']) && isset($node->$dateField[$node->language][0]['value2'])) {
+	    
+	  // "field_loan_duration":{"und":[{"value":"2013-07-10T00:00:00","value2":"2013-07-10T00:00:00","timezone":"America\/New_York","timezone_db":"America\/New_York","date_type":"date"}]}
+	  if($dateField == $fieldU) {
+	    
+	    if(isset($node->$fieldV)) {
+
+	      //$sets[$contentType] = array($fieldU => array($fieldV => array()));
+	      $sets[$contentType][$fieldU][$fieldV][] = array($node->$dateField[$node->language][0]['value2'] - $node->$dateField[$node->language][0]['value'], $fieldVValue);
+	    }
+	  } else {
+	    
+	    if(isset($node->$fieldU)) {
+	      
+	      // "field_loan_duration":{"und":[{"value":"2013-07-10T00:00:00","value2":"2013-07-10T00:00:00","timezone":"America\/New_York","timezone_db":"America\/New_York","date_type":"date"}]}
+	      $sets[$contentType][$fieldU][$fieldV][] = array($fieldUValue, $node->$dateField[$node->language][0]['value2'] - $node->$dateField[$node->language][0]['value']);
+	    }
+	  }
+	}
+      } else {
+	
+	if($dateField == $fieldU) {
+	  
+	  $sets[$contentType][$fieldU][$fieldV][] = array($node->$dateField[$node->language][0]['value'], $fieldVValue);
+	} elseif($dateField == $fieldV) {
+
+	  $sets[$contentType][$fieldU][$fieldV][] = array($fieldUValue, $node->$dateField[$node->language][0]['value']);
+	} else {
+	  
+	  $sets[$contentType][$fieldU][$fieldV][] = array($fieldUValue, $fieldVValue);
+	}
+      }
+    }
+  }
+}
+
+/**
+ * Respond to POST requests for data sets used in quantiative analyses
+ * This should be refactored for direct parsing by either NumPy or SciRuby
+ * @author griffinj@lafayette.edu
+ */
+function dss_elc_qty_rels_ajax() {
+
+  if($_POST['analysis'] == 'bivariate') {
+
+    //return drupal_json_output(dss_elc_get_bivariate_rels($_POST['contentTypes'], $_POST['fields'][0], $_POST['fields'][1]));
+    return drupal_json_output(array(
+				    'loan' => array('value' =>
+						    array('field_loan_duration' =>
+							  array('total' =>
+								array('field_loan_volumes_loaned' => array(
+													   array(5, 20),
+													   array(480, 90),
+													   array(250, 50))
+								      )))
+						    )));
+  }
+
+  if($_POST['contentTypes'] == array('book')) {
+    
+    // {"total":{"book":{"Octavo":1661,"Quarto":46,"Duodecimo":1997}}}
+    return drupal_json_output(
+			      array('total' => array('book' => array('Octavo' => 1661,
+								     'Quarto' => 46,
+								     'Duodecimo' => 1997)))
+			      );
+      
+  } elseif($_POST['contentTypes'] == array('periodical')) {
+    
+    return drupal_json_output(
+			      array('total' => array('periodical' => array('Octavo' => 2,
+									   'Quarto' => 0,
+									   'Duodecimo' => 2)))
+			      );
+  }
+  
+  if(isset($_POST['measures'])) {
+    
+    return drupal_json_output(dss_elc_get_univariate_rels($_POST['contentTypes'], $_POST['fields'], $_POST['measures']));
+  }
+  
+  return drupal_json_output(dss_elc_get_univariate_rels($_POST['contentTypes'], $_POST['fields']));
+}
+
+/**
+ *
+ * @author griffinj@lafayette.edu
+ */
+function dss_elc_get_nodes_ajax($contentType, $field, $value=NULL) {
+
+  if(!isset($value)) {
+
+    $value = $field;
+    $field = $contentType;
+
+    drupal_json_output(dss_elc_get_nodes(NULL, $field, $value));
+  } else {
+    
+    drupal_json_output(dss_elc_get_nodes($field, $value, $contentType, 1));
+  }
+}
+
+function dss_elc_form_insert_js() {
+
+  if(empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+
+    drupal_add_library('system', 'ui.dialog');
+    drupal_add_library('system', 'ui.autocomplete');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/node_modal.js');
+    drupal_add_js(array('dssElc' => array('isAjaxRequest' => !empty($_SERVER['HTTP_X_REQUESTED_WITH']))), 'setting');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/node.js');
+  }
+}
+
+function dss_elc_form_insert_css() {
+
+  // Work-around
+  /*
+  drupal_add_css('
+', array('type' => 'inline'));
+  */
+}
+
+/**
+ * Implements template_preprocess_page()
+ * Integrate the necessary JavaScript widgets necessary for specific Content Types of Nodes
+ *
+ */
+function dss_elc_preprocess_page(&$variables) {
+
+  if(isset($variables['page']) && isset($variables['page']['content']['system_main']['#type'])) {
+    if($variables['page']['content']['system_main']['#type'] == 'form') {
+
+      switch($variables['page']['content']['system_main']['#form_id']) {
+
+      case 'loan_node_form':
+      case 'human_node_form':
+      case 'item_node_form':
+      case 'book_node_form':
+      case 'periodical_node_form':
+
+	$variables['page']['content']['system_main']['actions']['publish']['#value'] = t('Save');
+      break;
+      
+      default:
+	break;
+      }
+    }
+  } elseif(isset($variables['node'])) {
+
+    switch($variables['node']->type) {
+      
+    case 'loan':
+    case 'item':
+    case 'book':
+    case 'periodical':
+    default:
+      
+      break;
+    }
+  }
+}
+
+function dss_elc_theme_registry_alter(&$theme_registry) {
+
+  //dpm($theme_registry);
+
+  /*
+  $theme_registry['block']['template'] = 'human';
+  $theme_registry['block']['path'] = drupal_get_path('module', 'example_module');
+  $theme_registry['block']['type'] = 'module';
+  $theme_registry['block']['theme path'] = drupal_get_path('module', 'example_module');
+  $theme_registry['block']['theme paths'] = Array();
+  */
+} 
+
+/**
+ *
+ */
+function dss_elc_date_combo_element_process($element, &$form_state, $form) {
+
+  dpm($element);
+}
+
+/**
+ * Theme the field_loan_duration Field
+ *
+ */
+function dss_elc_field_loan_duration_after_build(&$element) {
+
+  foreach($element as $key => &$value) {
+
+    if(is_numeric($key)) {
+
+      $value['show_todate']['#title'] = 'Date Returned Listed?';
+      $value['show_todate']['#checked'] = TRUE;
+
+      hide($value['show_todate']);
+
+      $value['value']['#title'] = 'Checkout Date';
+      $value['value']['date']['#description'] = 'YYYY-MM-DD';
+
+      $value['value2']['#title'] = 'Returned Date';
+      $value['value2']['date']['#description'] = 'YYYY-MM-DD';
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Theme the field_loan_issues_loaned Field
+ *
+ */
+function dss_elc_field_loan_issues_loaned_after_build(&$element) {
+
+  foreach($element as $key => &$value) {
+
+    if($key == 'add_more') {
+
+      $value['#value'] = '+';
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Theme the field_loan_volumes_loaned Field
+ *
+ */
+function dss_elc_field_loan_volumes_loaned_after_build(&$element) {
+
+  foreach($element as $key => &$value) {
+
+    if($key == 'add_more') {
+
+      $value['#value'] = '+';
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Theme the field_loan_months_loaned Field
+ *
+ */
+function dss_elc_field_loan_months_loaned_after_build(&$element) {
+
+  foreach($element as $key => &$value) {
+
+    if($key == 'add_more') {
+
+      $value['#value'] = '+';
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Theme the field_loan_years_loaned Field
+ *
+ */
+function dss_elc_field_loan_years_loaned_after_build(&$element) {
+
+  foreach($element as $key => &$value) {
+
+    if($key == 'add_more') {
+
+      $value['#value'] = '+';
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Theme the field_bib_rel_object Field
+ *
+ */
+function dss_elc_field_bib_rel_object_after_build(&$element) {
+
+  foreach($element as $key => &$value) {
+
+    if($key == 'add_more' && isset($value['#type']) && $value['#type'] == 'submit') {
+
+      //$value['#suffix'] = '<div id="field-bib-rel-object-add-more-wrapper"><div class="node-add-object form-item"><button class="add-node-modal btn btn-info" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info" id="add-item-modal">New Item</button></div></div>';
+      $value['#suffix'] = '<button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-item-modal">New Item</button>';
+      /*
+      $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = '<div id="field-bib-rel-object-add-more-wrapper">';
+      $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-object form-item"><button class="add-node-modal btn btn-info" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info" id="add-item-modal">New Item</button></div></div>';
+
+      $value['#suffix'] = '<span id="trace" />';
+      */
+    }
+  }
+
+  return $element;
+}
+
+function dss_elc_preprocess(&$variables, $hook) {
+
+  if(isset($variables['page'])) {
+
+
+  }
+
+  //dpm($variables);
+  //dpm($hook);
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ * Restructuring all Node forms
+ *
+ */
+function dss_elc_form_node_form_alter(&$form, $form_state) {
+
+  $form['actions']['submit']['#value'] = 'Submit for Review';
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
+
+  dpm($form_id);
+  dpm($form);
+
+  dss_elc_form_insert_js();
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/loan_form.js');
+
+  // Apply theming for the field_bib_rel_object Field
+  //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#after_build'][] = 'dss_elc_field_bib_rel_object_after_build';
+
+  // Apply theming for the field_loan_duration Field
+  $form['field_loan_duration'][$form['field_loan_duration']['#language']]['#after_build'][] = 'dss_elc_field_loan_duration_after_build';
+  //$form['field_loan_duration'][$form['field_loan_duration']['#language']]['#process'][] = 'dss_elc_date_combo_element_process';
+
+  // Apply theming for fields
+  /**
+   * field_loan_issues_loaned
+   * field_loan_volumes_loaned
+   * field_loan_months_loaned
+   * field_loan_years_loaned
+   *
+   */
+
+  foreach(array('field_loan_issues_loaned',
+		'field_loan_volumes_loaned',
+		'field_loan_months_loaned',
+		'field_loan_years_loaned') as $fieldName) {
+
+    $form[$fieldName][$form[$fieldName]['#language']]['#after_build'][] = 'dss_elc_' . $fieldName . '_after_build';
+  }
+
+  /**
+   * 
+   *
+   */
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#after_build'][] = 'dss_elc_field_bib_rel_object_after_build';
+
+  drupal_set_title(t('Add a Loan'));
+
+  // Set the tabindex values
+  // No time, implementing this in Javascript (refactor)
+  /*
+  $form['field_loan_filename']['#attributes']['tabindex'] = '1';
+  $form['field_loan_shareholder']['#attributes']['tabindex'] = '2';
+  $form['field_bib_rel_subject']['#attributes']['tabindex'] = '3';
+  $form['field_bib_rel_object']['#attributes']['tabindex'] = '4';
+  */
+
+  $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#prefix'] = '<div id="field-loan-shareholder-add-more-wrapper">';
+  //$form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '<div class="node-add-shareholder form-item">Create a new ' . l(t('shareholder'), 'node/add/human', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-human-modal'))) . '</div></div>';
+  $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '<div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Shareholder</button></div></div>';
+
+  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#prefix'] = '<div id="field-bib-rel-subject-add-more-wrapper">';
+  //$form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item">Create a new ' . l(t('patron'), 'node/add/human', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-human-modal'))) . '</div></div>';
+  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Patron</button></div></div>';
+
+  $form['field_loan_shareholder']['#attributes']['disabled'] = true;
+
+  /*
+  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#prefix'] = '<div class="shareholder-column loan-column single-value-field">
+<div class="control-group form-type-textfield form-item-representative form-item">
+  <label class="control-label" for="edit-field-bib-rel-subject-und">Shareholder </label>
+<div class="controls" role="application"> <select disabled="true" type="text" class="form-text" maxlength="1024" size="0" value="" name="representative" id="edit-representative" autocomplete="OFF" aria-autocomplete="list"></select>
+</div></div></div>
+
+<div class="patron-column loan-column single-value-field"><div id="field-bib-rel-subject-add-more-wrapper">';
+  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item">Create a new ' . l(t('representative, shareholder, or other human person'), 'node/add/human', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-human-modal'))) . '</div></div></div>';
+  */
+
+  /*
+<div class="patron-column loan-column single-value-field">
+<div class="control-group form-type-textfield form-item-representative form-item">
+  <label class="control-label" for="edit-field-bib-rel-subject-und">Representative </label>
+<div class="controls" role="application"> <input type="text" class="form-text" maxlength="1024" size="60" value="" name="representative" id="edit-representative" autocomplete="OFF" aria-autocomplete="list">
+</div></div></div>';
+  */
+
+  /*
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = '<div id="field-bib-rel-object-add-more-wrapper">';
+  //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-object form-item">Create a new ' . l(t('book'), 'node/add/book', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-book-modal'))) . ', ' . l(t('periodical'), 'node/add/periodical', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-periodical-modal'))) . ', or ' . l(t('published work'), 'node/add/item', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-item-modal'))) . '</div></div>';
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-object form-item"><button class="add-node-modal btn btn-info" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info" id="add-item-modal">New Item</button></div></div>';
+  */
+
+  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Patron</button></div></div>';
+  
+  // For the Issues Loaned, Volumes Loaned, Months Loaned, and Years Loaned
+  foreach(array('issues', 'volumes', 'months', 'years') as $field) {
+    
+    $form["field_loan_" . $field . "_loaned"][$form["field_loan_" . $field . "_loaned"]['#language']]['add_more']['#value'] = 'Add another ' . substr($field, 0, strlen($field) - 1);
+  }
+
+  $form['field_bib_rel_object'][$form['field_bib_rel_subject']['#language']]['add_more']['#label'] = 'More Items Loaned?';
+  $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Type of Loan';
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function dss_elc_form_human_node_form_alter(&$form, $form_state) {
+
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/human_form.js');
+
+  drupal_set_title(t('Add a Human Person'));
+
+  // Hide certain fields for the modal
+  if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+
+    //$form['field_person_type'] = array();
+    $form['field_human_pers_rels'] = array();
+    $form['field_person_location'] = array();
+    $form['field_person_membership'] = array();
+    $form['field_human_gender'] = array();
+    $form['field_human_occupation'] = array();
+  }
+
+  /*
+    $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['#prefix'] = '<div id="field-human-pers-rels-add-more-wrapper">';
+    $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['#suffix'] = '<div class="node-add-field-human-pers-rels">Add a new ' . l(t('personal relationship'), 'node/add/personal-relationship', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-personal-relationship-modal'))) . '</div></div>';
+
+  $form['field_person_membership'][$form['field_person_membership']['#language']]['#prefix'] = '';
+  $form['field_person_membership'][$form['field_person_membership']['#language']]['#suffix'] = '<div class="node-add-field-person-membership">Add a new ' . l(t('organization'), 'node/add/organization', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-organization-modal'))) . '</div>';
+  
+  $form['field_person_location'][$form['field_person_location']['#language']]['#prefix'] = '<div id="field-person-location-add-more-wrapper">';
+  $form['field_person_location'][$form['field_person_location']['#language']]['#suffix'] = '<div class="node-add-person-location">Add a new ' . l(t('location'), 'node/add/location', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-location-modal'))) . '</div></div>';
+  */
+}
+
+function dss_elc_form_ajax_item_node_form_alter(&$form) {
+
+  // Hide certain fields for the modal
+  if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+
+    $form['field_artifact_type'] = array();
+    $form['field_artifact_metadata_record'] = array();
+    $form['field_item_embodies'] = array();
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function dss_elc_form_book_node_form_alter(&$form, $form_state) {
+
+  dss_elc_form_insert_js();
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/book_form.js');
+
+  hide($form['field_item_total_volumes']);
+
+  // Hide certain fields for the modal
+  dss_elc_form_ajax_item_node_form_alter($form);
+  // Issue
+  // Work-around
+  hide($form['field_item_volume']);
+
+  // Authors
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Author</button></div></div>';
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function dss_elc_form_periodical_node_form_alter(&$form, $form_state) {
+
+  dss_elc_form_insert_js();
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/book_form.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/periodical_form.js');
+
+  hide($form['field_item_total_volumes']);
+  // Issue
+  // Work-around
+  hide($form['field_item_volume']);
+
+  // Hide certain fields for the modal
+  dss_elc_form_ajax_item_node_form_alter($form);
+
+  // Authors
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Author</button></div></div>';
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function dss_elc_form_item_node_form_alter(&$form, $form_state) {
+
+  dss_elc_form_insert_js();
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/book_form.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/item_form.js');
+
+  hide($form['field_item_total_volumes']);
+  // Issue
+  // Work-around
+  hide($form['field_item_volume']);
+
+  // Hide certain fields for the modal
+  dss_elc_form_ajax_item_node_form_alter($form);
+
+  // Authors
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Author</button></div></div>';
+}
+
+/**
+ * Implements hook_form_alter
+ */
+function dss_elc_form_alter(&$form, &$form_state, $form_id) {
+
+  hide($form['actions']['preview']);
+
+  if($form_id == 'multi_node_add_page') {
+
+    //ddebug_backtrace();
+    //dpm($form);
+    //hide(form['fields_req']);
+    //hide($form['fields_to_utilize']);
+    hide($form['shortcut']);
+    $form['number']['#title'] = 'Number of Entities';
+  }
+
+  if($form_id == 'human_node_form' ||
+     $form_id == 'item_node_form' ||
+     $form_id == 'book_node_form' ||
+     $form_id == 'periodical_node_form' ||
+     $form_id == 'personal_relationship_node_form' ||
+     $form_id == 'organization_node_form' ||
+     $form_id == 'location_node_form') {
+
+
+  }
+
+  if($form_id == 'loan_node_form') {
+
+  } elseif($form_id == 'human_node_form') {
+
+  }
+
+    /*
+      This does not function as documented: (https://drupal.org/node/304258#drupal-settings and https://drupal.org/node/224333#local_settings_behaviors)
+    */
+    // (string)(!empty($_SERVER['HTTP_X_REQUESTED_WITH']))))
+    
+    /*
+<?php if($field_is_pers_related_to): ?>
+    <div class="node-field-is-pers-related-to">
+       <?php print render($field_is_pers_related_to); ?>
+<div class="node-add-field-is-pers-related-to">Add a new <?php print l(t('personal relationship'), 'node/add/personal-relationship', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-personal-relationship-modal'))); ?></div>
+</div>
+<?php endif; ?>
+
+   <?php if($field_relates_to): ?>
+   <div class="node-field-relates-to">
+      <?php print render($field_relates_to); ?>
+<div id="node-related-objects-container"></div>
+<div class="node-add-field-relates-to">Add a new <?php print l(t('organization'), 'node/add/organization', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-organization-modal'))); ?></div>
+</div>
+<?php endif; ?>
+
+<?php if($location): ?>
+    <div class="node-location">
+       <?php print render($location); ?>
+<div class="node-add-location">Add a new <?php print l(t('location'), 'node/add/location', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-location-modal'))); ?></div>
+</div>
+     */
+
+  /*
+  $form['#prefix'] = '<div class="myclass">';
+  $form['#suffix'] = '</div>';
+  */
+}
+
+/*
+function template_form_element($variables) {
+  $element = &$variables['element'];
+
+  // This function is invoked as theme wrapper, but the rendered form element
+  // may not necessarily have been processed by form_builder().
+  $element += array(
+		    '#title_display' => 'before',
+		    );
+
+  // Add element #id for #type 'item'.
+  if (isset($element['#markup']) && !empty($element['#id'])) {
+    $attributes['id'] = $element['#id'];
+  }
+  // Add element's #type and #name as class to aid with JS/CSS selectors.
+  $attributes['class'] = array('form-item');
+  if (!empty($element['#type'])) {
+    $attributes['class'][] = 'form-type-' . strtr($element['#type'], '_', '-');
+  }
+  if (!empty($element['#name'])) {
+    $attributes['class'][] = 'form-item-' . strtr($element['#name'], array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+  }
+  // Add a class for disabled elements to facilitate cross-browser styling.
+  if (!empty($element['#attributes']['disabled'])) {
+    $attributes['class'][] = 'form-disabled';
+  }
+  $output = '<div' . drupal_attributes($attributes) . '>' . "\n";
+
+  // If #title is not set, we don't display any label or required marker.
+  if (!isset($element['#title'])) {
+    $element['#title_display'] = 'none';
+  }
+  $prefix = isset($element['#field_prefix']) ? '<span class="field-prefix">' . $element['#field_prefix'] . '</span> ' : '';
+  $suffix = isset($element['#field_suffix']) ? ' <span class="field-suffix">' . $element['#field_suffix'] . '</span>' : '';
+
+  switch ($element['#title_display']) {
+  case 'before':
+  case 'invisible':
+    $output .= ' ' . theme('form_element_label', $variables);
+  $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+  break;
+
+  case 'after':
+    $output .= ' ' . $prefix . $element['#children'] . $suffix;
+    $output .= ' ' . theme('form_element_label', $variables) . "\n";
+    break;
+
+  case 'none':
+  case 'attribute':
+    // Output no label and no required marker, only the children.
+    $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+  break;
+  }
+
+  if (!empty($element['#description'])) {
+    $output .= '<div class="description">' . $element['#description'] . "</div>\n";
+  }
+
+  $output .= "</div>\n";
+
+  return $output;
+}
+*/
+
+/**
+ * Set the default value for the unique identifier as the name
+ * Implemented for the following Node Content Types:
+ ** Person
+ ** Human
+ ** Organization (Machine name: organization)
+ ** Business (Machine name: business)
+ ** Club (Machine name: club)
+ ** Family (Machine name: family)
+ ** Neighborhood (Machine name: neighborhood)
+ ** Place of Worship (Machine name: place_of_worship)
+ */
+
+/*
+function dss_elc_set_form_title_to_name($form) {
+
+  // For edit forms
+  if(isset($form['field_name']['und'][0]['value']['#default_value'])) {
+    
+    $form['title']['#default_value'] = $form['field_name']['und'][0]['value']['#default_value'];
+  } else {
+
+    $form['title']['#default_value'] = $form['field_name']['und'][0]['value']['#value'];
+    $form['title']['#value'] = $form['field_name']['und'][0]['value']['#value'];
+  }
+
+  return $form;
+}
+*/
+
+/**
+ * Implements hook_node_validate()
+ *
+ */
+
+/*
+function dss_elc_node_validate($node, $form, &$form_state) {
+
+  $PERSON_FORMS = array('neighborhood_node_form');
+
+  if(in_array($form['#form_id'], $PERSON_FORMS)) {
+
+    $form = dss_elc_set_form_title_to_name($form);
+  }
+}
+*/
+
+/**
+ * Implements hook_form_FORM_ID_alter()
+ *
+ */
+
+/*
+function dss_elc_form_person_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_human_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_organization_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_business_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_club_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_family_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_neighborhood_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+
+function dss_elc_form_place_of_worship_node_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form = dss_elc_set_form_title_to_name($form);
+}
+*/
