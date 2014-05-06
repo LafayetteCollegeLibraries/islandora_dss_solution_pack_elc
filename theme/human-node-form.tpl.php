@@ -9,14 +9,31 @@
     <?php print drupal_render_children($form['field_person_name']); ?>
 </div>
 <div class="human-column">
-    <?php print drupal_render_children($form['field_human_middle_initials']); ?>
-</div>
-<div class="human-column">
     <?php print drupal_render_children($form['field_human_surname']); ?>
 </div>
 <div class="human-column">
-    <?php print drupal_render_children($form['field_person_type']); ?>
+    <?php print drupal_render_children($form['field_human_middle_initials']); ?>
 </div>
+<div class="human-column">
+    <?php print drupal_render_children($form['field_human_gender']); ?>
+</div>
+
+</div>
+</div>
+
+<div class="human-row human-row-a">
+
+<div id="human-fields-c">
+<div class="human-column">
+    <?php print drupal_render_children($form['field_human_occupation']); ?>
+</div>
+<div class="human-column">
+    <?php print drupal_render_children($form['field_person_membership']); ?>
+</div>
+<div class="human-column">
+    <?php print drupal_render_children($form['field_person_location']); ?>
+</div>
+
 </div>
 </div>
 
@@ -26,26 +43,17 @@
 <div class="human-column">
     <?php print drupal_render_children($form['field_human_pers_rels']); ?>
 </div>
-<div class="human-column">
-    <?php print drupal_render_children($form['field_person_location']); ?>
-</div>
+
 </div>
 </div>
 
-<div class="human-row human-row-a">
+<div class="human-row">
 
-<div id="human-fields-c">
 <div class="human-column">
-    <?php print drupal_render_children($form['field_human_gender']); ?>
-</div>
-<div class="human-column">
-    <?php print drupal_render_children($form['field_person_membership']); ?>
-</div>
-<div class="human-column">
-    <?php print drupal_render_children($form['field_human_occupation']); ?>
+    <?php print drupal_render_children($form['field_person_type']); ?>
 </div>
 </div>
-</div>
+
 
 <div class="human-row">
 

@@ -66,12 +66,28 @@ function template_preprocess_human_node_form(&$variables) {
   drupal_add_js(array('dssElc' => array('isAjaxRequest' => (string)(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') )), 'setting');
   */
 
+  /**
+   * This must be adjusted for the actual request
+   *
+   */
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
+    //dpm($_SERVER);
+    watchdog('islandora_dss_solution_pack_elc', print_r($_SERVER), WATCHDOG_DEBUG);
+
     //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/ajaxNode.js');
+
+    /*
+    hide($variables['field_human_pers_rels']);
+    hide($variables['field_person_location']);
+    hide($variables['field_person_membership']);
+    hide($variables['field_human_gender']);
+    hide($variables['field_human_occupation']);
+    */
   } else {
-    
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/node.js');
+
+    //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
   }
   
   /*
@@ -106,7 +122,7 @@ function template_preprocess_loan_node_form(&$variables) {
 
   if(strpos($variables['form']['#action'], 'multi_node_add') == 0) {
 
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/node.js');    
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
   }
 
   if(!strpos($variables['form']['#action'], 'edit')) {
