@@ -150,6 +150,7 @@
 	$formField = $(this).parents('div[class*=-column]').find('input.form-text');
 
 	// Disable the button upon updating the form field
+	/*
 	$formField.change(function() {
 		
 		// 7 letter full name minimum
@@ -173,6 +174,7 @@
 		    }
 		}
 	    });
+	*/
 	
 	return this.$element.click(function(event) {
 
@@ -336,10 +338,10 @@ else {
 			 * @author griffinj@lafayette.edu
 			 *
 			 */
-			//$modal.find('#edit-submit').hide();
+			$modal.find('#edit-submit').hide();
 			
-			//$submit = $modal.find('#edit-publish');
-			$submit = $modal.find('#edit-submit');
+			$submit = $modal.find('#edit-publish');
+			//$submit = $modal.find('#edit-submit');
 
 			/*
 			  $(this).find('div#branding').hide();
@@ -364,6 +366,10 @@ else {
 				    container: $modal
 				    });
 
+			/**
+			 * Event handler for the modal form submission
+			 *
+			 */
 			$submit.click(function(event) {
 				
 				event.preventDefault();
@@ -394,9 +400,6 @@ else {
 						});
 					} else {
 
-					    // Work-around
-					    nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
-
 					    // Work-around; Refactor
 					    $thisModal = null;
 					    $('.ui-dialog').map(function(i, e) {
@@ -409,19 +412,72 @@ else {
 						    }
 						});
 
-					    //$submit = $thisModal.find('#edit-publish');
-					    $submit = $thisModal.find('#edit-submit');
+					    $submit = $thisModal.find('#edit-publish');
+					    //$submit = $thisModal.find('#edit-submit');
 
 					    $relatedFormElement = $submit.data('nodeFormModal').relatedFormElement;
+
+					    // This updates the form element to which the button was related
+					    $relatedInputField = $relatedFormElement.parent().parent().find('input.form-text');
 
 					    // This assumes that the title is the first field
 					    //entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
 					    entityRefStr = $(data).find('em.placeholder').text();
 
-					    // This updates the form element to which the button was related
-					    $relatedInputField = $relatedFormElement.parent().parent().find('input.form-text');
-					    $relatedInputField.val(entityRefStr);
-						
+					    // Work-around
+					    nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
+					    entityRefStr += ' (' + nodeId + ')';
+
+					    /*
+					    / **
+					     * Work-around
+					     * One must query Drupal again for the entity ID
+					     *
+					     * /
+
+					    var m = /edit\-(.+?)\-und/.exec($relatedInputField.attr('id'));
+					    var inputFieldName = m[1];
+					    inputFieldName = inputFieldName.replace(/\-/g, '_', 'g');
+					    $.get('/entityreference/autocomplete/tags/' + inputFieldName + '/node/item/NULL/' + encodeURI(entityRefStr), function(data) {
+
+						    var entities = Object.keys(data).sort(function(u, v) {
+
+							    u = /\((\d+)\)/.exec(u)[1];
+							    v = /\((\d+)\)/.exec(v)[1];
+
+							    if(u < v) {
+
+								return -1;
+							    }
+							    if(u > v) {
+
+								return 1;
+							    }
+							    
+							    return 0;
+							});
+						    var m = /(".+?")/.exec(entities.pop());
+
+						    if(m) {
+
+							//islandoraDssElc['autoCompleteItem'] = m[1];
+							//entityRefStr += ' (' + entityRefId + ')';
+
+							entityRefStr = m[1];
+						    }
+						});
+					    */
+
+					    //$relatedInputField.val(entityRefStr);
+
+					    /**
+					     * Integration for tokenization
+					     * @todo Refactor
+					     */
+					    $("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+					    $relatedInputField.val('');
+
+					    // Close the container
 					    $container = $submit.data('nodeFormModal').container;
 					    $container.dialog('close');
 					    $container.remove();

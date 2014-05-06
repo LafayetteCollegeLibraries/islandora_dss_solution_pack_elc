@@ -905,7 +905,6 @@ function dss_elc_form_periodical_node_form_alter(&$form, $form_state) {
 function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 
   dss_elc_form_insert_js();
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/book_form.js');
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/item_form.js');
 
   hide($form['field_item_total_volumes']);

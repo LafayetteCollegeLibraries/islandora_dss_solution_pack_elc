@@ -10,7 +10,7 @@ function dss_elc_preprocess_node_form(&$variables) {
 
   // bootstrap-tokenfield/js/
   //drupal_add_js(libraries_get_path('bootstrap-tokenfield') . '/js/bootstrap-tokenfield.js');
-  drupal_add_js(libraries_get_path('jquery.token-field') . '/javascripts/jquery.token-field.js');
+  //drupal_add_js(libraries_get_path('jquery.token-field') . '/javascripts/jquery.token-field.js');
 
   hide($variables['form']['additional_settings']);
   #$variables['form']['actions']['submit']['#value'] = 'Submit for Review';
@@ -104,8 +104,6 @@ function template_preprocess_human_node_form(&$variables) {
  */
 function template_preprocess_loan_node_form(&$variables) {
 
-
-
   if(strpos($variables['form']['#action'], 'multi_node_add') == 0) {
 
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/node.js');    
@@ -128,7 +126,7 @@ function template_preprocess_loan_node_form(&$variables) {
 
   hide($variables['form']['field_loan_issues_loaned']);
 
-  dpm($variables);
+  //dpm($variables);
 
   //$variables['subject'][] = $variables['form']['field_bib_rel_subject'];
   //hide($variables['form']['field_bib_rel_subject']);
