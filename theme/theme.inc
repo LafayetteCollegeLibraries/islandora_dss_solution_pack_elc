@@ -73,7 +73,6 @@ function template_preprocess_human_node_form(&$variables) {
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
     //dpm($_SERVER);
-    watchdog('islandora_dss_solution_pack_elc', print_r($_SERVER), WATCHDOG_DEBUG);
 
     //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/ajaxNode.js');
 
@@ -88,6 +87,7 @@ function template_preprocess_human_node_form(&$variables) {
 
     //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
+    drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/human_form.css');
   }
   
   /*

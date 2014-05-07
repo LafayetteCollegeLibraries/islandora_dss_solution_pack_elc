@@ -813,12 +813,32 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Type of Loan';
 }
 
+function dss_elc_form_human_node_form_add_more_submit($form, &$form_state) {
+
+  //print_r($form_state['values']['field_human_pers_rels']['und'][0]);
+  //print_r($form_state['values']['field_human_pers_rels']['und'][0]);
+
+  print_r($form_state['complete form']);
+
+  print_r(array_keys($form_state));
+  //print_r($form_state);
+  //dpm($form_state);
+}
+
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function dss_elc_form_human_node_form_alter(&$form, $form_state) {
 
   drupal_set_title(t('Add Person'));
+
+  dpm($form);
+  dpm($form_state);
+
+  //$form['field_human_pers_rels']['und']['add_more']['#submit'][] = 'dss_elc_form_human_node_form_add_more_submit';
+
+  dpm($form);
+  //$form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'] = array($form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'], '';
 
   /*
   // Hide certain fields for the modal

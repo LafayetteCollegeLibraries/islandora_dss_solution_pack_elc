@@ -1,0 +1,9 @@
+/**
+ * @file Styling for the Human Node Add/Edit Form
+ *
+ */
+
+[id^="edit-field-human-pers-rels-und-"].form-text {
+
+    display: none;
+}
