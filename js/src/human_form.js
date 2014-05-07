@@ -27,16 +27,15 @@
 			$('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
 
 				if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
-				    
-				    /*
-				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input type="text" id="edit-field-pers-rel-role-und-' + i + '" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" value="" class="form-text form-autocomplete" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list"><input type="hidden" id="" value="" disabled="disabled" class="autocomplete" /><input id="edit-field-pers-rel-role-und-' + i + '-autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="/taxonomy/autocomplete/field_pers_rel_role"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und-' + i + '" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"><input id="edit-field-pers-rel-object-und-' + i + 'autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="/entityreference/autocomplete/tags/field_pers_rel_object/node/human/NULL"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
-				    */
-				    /*
-				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input type="text" id="edit-field-pers-rel-role-und-' + i + '" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" value="" class="form-text form-autocomplete" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list"><input id="edit-field-pers-rel-role-und-' + i + '-autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="https://elc.stage.lafayette.edu/taxonomy/autocomplete/field_pers_rel_role"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und-' + i + '" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"><input id="edit-field-pers-rel-object-und-' + i + '-autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="https://elc.stage.lafayette.edu/entityreference/autocomplete/tags/field_pers_rel_object/node/human/NULL"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
-				    */
+				
+				    /**
+				     * Appending additional elements to the DOM
+				     * Ideally, this markup would be generated and passed from a hook implementation within Drupal (hook_form_alter() or template_preprocess_hook_form()
+				     * However, this would require far more work in order to properly integrate the handling of more complex AJAX responses for the form itself
+				     * @todo Decouple and implement within the appropriate Drupal hook implementations
+				     *
+				     */
 				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
-				    
-
 				}
 			    });
 		    }).call());
@@ -45,8 +44,36 @@
 	     * Event handler for the addition of more personal relationships
 	     *
 	     */
-	    $('[name="field_human_pers_rels_add_more"]').click(function(e) {
+	    //$(document).on('click', '[name="field_human_pers_rels_add_more"]', function(e) {
+	    //$(document).on('click', '[id^="edit-field-human-pers-rels-und-add-more"]', function(e) {
+	    $(document).ajaxSend(function(event, jqxhr, settings) {
 
+		    if(settings.url == '/system/ajax') {
+
+			/**
+			 * Serialized the form values within the DOM
+			 * Again, this should, ideally, be integrated with Drupal hook implementations relating to AJAX response generation
+			 * @todo Decouple and implement in Drupal
+			 *
+			 */
+			var islandoraDssElcHumanForm = $(document).data('islandoraDssElcHumanForm') || {};
+
+			/**
+			 * Hard-coding the jQuery selector
+			 * @todo Refactor
+			 */
+			$(['edit-field-pers-rel-role-und', 'edit-field-pers-rel-object-und'].map(function(e,i) {
+				
+				    islandoraDssElcHumanForm[e] = [];
+				    return '[id="' + e + '"]:visible';
+				}).join(', ')).each(function(i, e) {
+			    
+					//islandoraDssElcHumanForm[e.id] = islandoraDssElcHumanForm[e.id].concat(e.value || "");
+					islandoraDssElcHumanForm[e.id][i] = e.value || "";
+				    });
+			
+			$(document).data('islandoraDssElcHumanForm', islandoraDssElcHumanForm);
+		    }
 		});
 
 	    //$('[name="field_human_pers_rels_add_more"]').click((function(e) {
@@ -90,6 +117,29 @@
 						    .attr('id', $input.attr('id') + '-autocomplete-aria-live')
 						    );
 					new Drupal.jsAC($input, acdb[uri]);
+
+					/**
+					 * Populating the fields with serialized values
+					 * Should be integrated with Drupal hook implementations relating to AJAX response generation
+					 * @todo Decouple and implement in Drupal
+					 *
+					 */
+					var islandoraDssElcHumanForm = $(document).data('islandoraDssElcHumanForm') || {};
+
+					/**
+					 * Hard-coding the jQuery selector
+					 * @todo Refactor
+					 */
+					$(['edit-field-pers-rel-role-und', 'edit-field-pers-rel-object-und'].map(function(e,i) {
+				
+						    return '[id="' + e + '"]:visible';
+						}).join(', ')).each(function(i, e) {
+			    
+							//islandoraDssElcHumanForm[e.id] = islandoraDssElcHumanForm[e.id].concat(e.value);
+							$(e).val(islandoraDssElcHumanForm[e.id][i]);
+						    });
+			
+					$(document).data('islandoraDssElcHumanForm', islandoraDssElcHumanForm);
 				    });
 			    });
 
