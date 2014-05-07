@@ -306,11 +306,11 @@ else {
 			    modal: container
 			    });
 		
-		$.get(url, function(data, textStatus, xhr) {
+		$.get(url, { isModalQuery: true }, function(data, textStatus, xhr) {
 
 			$modalContainer = $('.modal-content-container').last();
 			//$('#modal-content-container').append($(data));
-			$modalContainer.append($(data));
+			$modalContainer.append($(data).find('.main-container'));
 			
 			//$modal = container;
 			$modal = $modalContainer.data('nodeFormModal')['modal'];
@@ -418,8 +418,8 @@ else {
 					    $relatedFormElement = $submit.data('nodeFormModal').relatedFormElement;
 
 					    // This updates the form element to which the button was related
-					    $relatedInputField = $relatedFormElement.parent().parent().find('input.form-text');
-
+					    $relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
+					    
 					    // This assumes that the title is the first field
 					    //entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
 					    entityRefStr = $(data).find('em.placeholder').text();
@@ -471,11 +471,22 @@ else {
 					    //$relatedInputField.val(entityRefStr);
 
 					    /**
-					     * Integration for tokenization
-					     * @todo Refactor
+					     * Handling for personal relationship nodes
+					     *
 					     */
-					    $("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
-					    $relatedInputField.val('');
+					    if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
+
+						$relatedInputField.val(entityRefStr);
+						//$relatedInputField.change();
+					    } else {
+
+						/**
+						 * Integration for tokenization
+						 * @todo Refactor
+						 */
+						$("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+						$relatedInputField.val('');
+					    }
 
 					    // Close the container
 					    $container = $submit.data('nodeFormModal').container;

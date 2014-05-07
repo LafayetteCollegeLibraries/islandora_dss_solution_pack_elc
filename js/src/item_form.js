@@ -162,7 +162,7 @@
 
 	    /**
 	     * Handling for fields which do not reference other Drupal entities
-	     *
+	     * @todo Abstract as a plug-in
 	     */
 	    $(document).on('keydown', '#edit-field-item-number-taxon-und, #edit-field-item-subject-und', function(e) {
 

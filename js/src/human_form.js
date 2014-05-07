@@ -28,7 +28,7 @@
 
 				if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
 				    
-				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button class="btn btn-primary form-submit" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
 				}
 			    });
 		    }).call());
@@ -104,6 +104,54 @@
 				}
 			    });
 		    }).call());
+
+	    /**
+	     * Modify the DOM for the addition of tokenized form values
+	     * @todo Refactor for a plug-in
+	     *
+	     */
+	    $.each(['#edit-field-human-occupation-und', '#edit-field-person-membership-und', '#edit-field-person-location-und', '#edit-field-person-type-und'], function(i, elementId) {
+
+		    $(elementId).before('<ul id="' + $(elementId).attr('id') + '-tokens" class="token-list"></ul>');
+		});
+
+	    /**
+	     * Event handling for the autocomplete elements (Drupal 7 core)
+	     * Limited to Taxonomy terms
+	     * @todo Refactor for a plug-in
+	     *
+	     */
+	    $(document).on('click', '#autocomplete .selected div', function(e) {
+		
+		    var $fieldElem = $(e.target).parents('.controls').children('input.form-text');
+
+		    $("<li><a href='#' class='token'><span>" + $fieldElem.val() + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		    $fieldElem.val('');
+		});
+
+	    /**
+	     * Handling for the tokenization of specific fields
+	     * @todo Abstract as a plug-in
+	     *
+	     */
+	    $(document).on('keydown', '#edit-field-human-occupation-und, #edit-field-person-membership-und, #edit-field-person-location-und, #edit-field-person-type-und', function(e) {
+
+		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
+
+			var $fieldElem = $(e.target).parents('.controls').children('input.form-text');
+
+			$("<li><a href='#' class='token'><span>" + $fieldElem.val() + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		    
+			$('.token').click(function(e) {
+
+				e.preventDefault();
+				$(this).parents('li').remove();
+			    });
+			$fieldElem.val('');
+
+			e.preventDefault();
+		    }
+		});
 	}
     };
 }(jQuery, Drupal));

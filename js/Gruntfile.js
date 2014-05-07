@@ -20,6 +20,9 @@ module.exports = function(grunt) {
 		},
 	    },
 	    jshint: {
+		options: {
+		    smarttabs: true
+		},
 		myFiles: ['src/**/*.js']
 	    }
 	});

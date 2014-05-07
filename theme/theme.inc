@@ -70,25 +70,45 @@ function template_preprocess_human_node_form(&$variables) {
    * This must be adjusted for the actual request
    *
    */
+
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
-    //dpm($_SERVER);
+    drupal_add_js(array('dssElc' => array('isAjaxRequest' => true)), 'setting');
 
     //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/ajaxNode.js');
 
-    /*
-    hide($variables['field_human_pers_rels']);
-    hide($variables['field_person_location']);
-    hide($variables['field_person_membership']);
-    hide($variables['field_human_gender']);
-    hide($variables['field_human_occupation']);
-    */
+    if(array_key_exists('isModalQuery', $_GET) and $_GET['isModalQuery']) {
+
+      /*
+      hide($variables['form']['field_human_pers_rels']);
+      hide($variables['form']['field_person_location']);
+      hide($variables['form']['field_person_membership']);
+      hide($variables['form']['field_human_occupation']);
+      */
+      $variables['form']['field_human_pers_rels'] = array();
+      $variables['form']['field_person_location'] = array();
+      $variables['form']['field_person_membership'] = array();
+      $variables['form']['field_human_occupation'] = array();
+    }
   } else {
 
-    //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.js');
+    drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
+
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
     drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/human_form.css');
   }
+
+  /**
+   * Invocations of hide() remove the needed AJAX integration for the JavaScript
+   *
+   */
+  $variables['form']['field_pers_rel_role']['#attributes']['style'] = 'display:none';
+  $variables['form']['field_pers_rel_object']['#attributes']['style'] = 'display:none';
+
+  //hide($variables['form']['field_pers_rel_role']);
+  //hide($variables['form']['field_pers_rel_object']);
   
   /*
   $variables['field_is_pers_related_to'] = array();
