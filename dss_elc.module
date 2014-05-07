@@ -818,9 +818,10 @@ function dss_elc_form_human_node_form_add_more_submit($form, &$form_state) {
   //print_r($form_state['values']['field_human_pers_rels']['und'][0]);
   //print_r($form_state['values']['field_human_pers_rels']['und'][0]);
 
-  print_r($form_state['complete form']);
+  //print_r($form_state['complete form']);
 
-  print_r(array_keys($form_state));
+  //print_r(array_keys($form_state));
+  //print_r($form_state['values']);
   //print_r($form_state);
   //dpm($form_state);
 }
@@ -839,6 +840,8 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
 
   dpm($form);
   //$form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'] = array($form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'], '';
+
+  //$form['field_human_pers_rels']['und']['#suffix'] = '';
 
   /*
   // Hide certain fields for the modal
@@ -863,6 +866,11 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   $form['field_person_location'][$form['field_person_location']['#language']]['#prefix'] = '<div id="field-person-location-add-more-wrapper">';
   $form['field_person_location'][$form['field_person_location']['#language']]['#suffix'] = '<div class="node-add-person-location">Add a new ' . l(t('location'), 'node/add/location', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-location-modal'))) . '</div></div>';
   */
+
+  //print_r('trace');
+  //exit();
+
+  dpm($_POST);
 }
 
 function dss_elc_form_ajax_item_node_form_alter(&$form) {
@@ -1009,6 +1017,10 @@ function dss_elc_form_alter(&$form, &$form_state, $form_id) {
   $form['#suffix'] = '</div>';
   */
 }
+
+/*
+  
+ */
 
 /*
 function template_form_element($variables) {

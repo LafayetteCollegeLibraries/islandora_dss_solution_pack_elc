@@ -23,12 +23,20 @@
 
 	    $('button[name="field_human_pers_rels_add_more"]').click((function(e) {
 
-				//$('#field-human-pers-rels-values .form-text').each(function(i,e) {
+			//$('#field-human-pers-rels-values .form-text').each(function(i,e) {
 			$('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
 
 				if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
 				    
-				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+				    /*
+				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input type="text" id="edit-field-pers-rel-role-und-' + i + '" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" value="" class="form-text form-autocomplete" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list"><input type="hidden" id="" value="" disabled="disabled" class="autocomplete" /><input id="edit-field-pers-rel-role-und-' + i + '-autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="/taxonomy/autocomplete/field_pers_rel_role"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und-' + i + '" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"><input id="edit-field-pers-rel-object-und-' + i + 'autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="/entityreference/autocomplete/tags/field_pers_rel_object/node/human/NULL"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+				    */
+				    /*
+				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input type="text" id="edit-field-pers-rel-role-und-' + i + '" name="field_human_pers_rels[und][' + i + '][field_pers_rel_role][und]" value="" class="form-text form-autocomplete" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list"><input id="edit-field-pers-rel-role-und-' + i + '-autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="https://elc.stage.lafayette.edu/taxonomy/autocomplete/field_pers_rel_role"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und-' + i + '" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_human_pers_rels[und][' + i + '][field_pers_rel_object][und]" autocomplete="OFF" aria-autocomplete="list"><input id="edit-field-pers-rel-object-und-' + i + '-autocomplete" class="autocomplete autocomplete-processed" type="hidden" disabled="disabled" value="https://elc.stage.lafayette.edu/entityreference/autocomplete/tags/field_pers_rel_object/node/human/NULL"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+				    */
+				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+				    
+
 				}
 			    });
 		    }).call());
@@ -37,7 +45,127 @@
 	     * Event handler for the addition of more personal relationships
 	     *
 	     */
-	    $('[name="field_human_pers_rels_add_more"]').click((function(e) {
+	    $('[name="field_human_pers_rels_add_more"]').click(function(e) {
+
+		});
+
+	    //$('[name="field_human_pers_rels_add_more"]').click((function(e) {
+	    //$(document).ajaxSuccess((function(event, xhr, settings ) {
+	    $(document).ajaxComplete(function(event, xhr, settings) {
+
+		    //console.log(settings);
+		    if(settings && /system\/ajax/.exec(settings.url)) {
+
+			// Work-around for autocomplete
+			/**
+			 * Work-around for enabling autocompletion from multiple elements
+			 * @todo Refactor for the invocation of $.once()
+			 *
+			 */
+			//Drupal.behaviors.autocomplete.attach(document, Drupal.settings);
+
+			var acdb = [];
+			$('#edit-field-pers-rel-role-und-autocomplete, #edit-field-pers-rel-object-und-autocomplete').each(function(i,e) {
+
+				var uri = this.value;
+				if (!acdb[uri]) {
+
+				    acdb[uri] = new Drupal.ACDB(uri);
+				}
+
+				/**
+				 * Linking the individual input fields with the actual autocompletion widgets
+				 *
+				 */
+				$('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
+
+					var $input = $(input)
+					    .attr('autocomplete', 'OFF')
+					    .attr('aria-autocomplete', 'list');
+				
+					$($input[0].form).submit(Drupal.autocompleteSubmit);
+					$input.parent()
+					    .attr('role', 'application')
+					    .append($('<span class="element-invisible" aria-live="assertive"></span>')
+						    .attr('id', $input.attr('id') + '-autocomplete-aria-live')
+						    );
+					new Drupal.jsAC($input, acdb[uri]);
+				    });
+			    });
+
+			/**
+			 * Population of the form fields from the individual 
+			 *
+			 */
+			$('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
+
+				var fieldText = $(e).val();
+
+				/**
+				 * Hard-coded regex for the personal-relationship Node title
+				 * @todo Refactor
+				 *
+				 */
+				var m = /is a (.+?) in relation to (.+)/.exec(fieldText);
+
+				if(m) {
+
+				    var $roleFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-role-und');
+				    var $objectFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-object-und');
+
+				    $roleFieldElem.val(m[1]);
+				    $objectFieldElem.val(m[2]);
+				}
+			    });
+
+			/**
+			 * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
+			 *
+			 */
+			//$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
+			$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+				
+				var $relationFieldElem = $(this).parents('.controls').children('.form-text');
+				
+				if($(this).val().length > 0) {
+				    
+				    var humanName = $('#edit-field-person-name-und-0-value').val();
+				    
+				    if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
+					
+					humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
+				    }
+				    
+				    if($('#edit-field-human-surname-und-0-value').val().length > 0) {
+					
+					humanName += ' ' + $('#edit-field-human-surname-und-0-value').val();
+				    }
+				    
+				    var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
+				    var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
+			
+				    $relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
+
+				    // Trigger the autocompletion
+				    //$relationFieldElem.keyup();
+				    $.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
+
+					    var lastEntity = Object.keys(data).pop();
+					    $relationFieldElem.val(lastEntity);
+				    });
+				} else {
+				
+				    $relationFieldElem.val('');
+				}
+			    });
+			}
+			//}).call());
+		});
+
+	    var f = function(event, xhr, settings) {
+
+		//console.log(settings);
+		if(settings && /system\/ajax/.exec(settings.url)) {
 
 			/**
 			 * Population of the form fields from the individual 
@@ -103,7 +231,9 @@
 				    $relationFieldElem.val('');
 				}
 			    });
-		    }).call());
+			}
+			//}).call());
+	    }
 
 	    /**
 	     * Modify the DOM for the addition of tokenized form values

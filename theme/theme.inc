@@ -98,6 +98,7 @@ function template_preprocess_human_node_form(&$variables) {
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
     drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/human_form.css');
+
   }
 
   /**
