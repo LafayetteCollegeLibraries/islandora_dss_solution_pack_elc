@@ -216,9 +216,18 @@
 	     * @todo Refactor for a plug-in
 	     *
 	     */
-	    $.each(['#edit-field-human-occupation-und', '#edit-field-person-membership-und', '#edit-field-person-location-und', '#edit-field-person-type-und'], function(i, elementId) {
+	    //$.each(['#edit-field-human-occupation-und', '#edit-field-person-membership-und', '#edit-field-person-location-und', '#edit-field-person-type-und'], function(i, elementId) {
+	    $('#edit-field-human-occupation-und, #edit-field-person-membership-und, #edit-field-person-location-und, #edit-field-person-type-und').each(function(i, elementId) {
 
-		    $(elementId).before('<ul id="' + $(elementId).attr('id') + '-tokens" class="token-list"></ul>');
+		    var $elementId = $(elementId);
+		    /**
+		     * Work-around
+		     * @todo Refactor
+		     **/
+		    if($elementId.siblings('.token-list').length == 0) {
+
+			$(elementId).before('<ul id="' + $(elementId).attr('id') + '-tokens" class="token-list"></ul>');
+		    }
 		});
 
 	    /**
@@ -226,6 +235,8 @@
 	     *
 	     */
 	    this.tokenizeTerm = function(e) {
+
+		e.stopImmediatePropagation();
 
 		var $fieldElem = $(e.target).parents('.controls').children('input.form-text');
 
@@ -272,7 +283,7 @@
 	     * @todo Refactor for a plug-in
 	     *
 	     */
-	    $(document).on('click', '#autocomplete .selected div', function(e) {
+	    $(document).on('click', '#autocomplete .selected div, .reference-autocomplete', function(e) {
 
 		    that.tokenizeTerm(e);
 		});
@@ -285,12 +296,80 @@
 		    
 		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
 
+			e.preventDefault();
+			var inputElement = this;
 			var $listElem = $(this).parents('.controls').find('.reference-autocomplete');
 
+			var islandoraDssElc = $(document).data('islandoraDssElc') || {};
 			if($listElem.length == 1) {
 
-			    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
 			    islandoraDssElc['autoCompleteKey'] = true;
+			    // ('li').data('autocompleteValue')
+			    islandoraDssElc['autoCompleteItem'] = $listElem.parents('li').data('autocompleteValue');
+
+			    //$listElem.click();
+			    // Work-around
+			    e.target = inputElement;
+			    that.tokenizeTerm(e);
+
+			    islandoraDssElc['autoCompleteKey'] = false;
+			    delete islandoraDssElc['autoCompleteItem'];
+			    //islandoraDssElc['autoCompleteItem'] = null;
+			    $(document).data('islandoraDssElc', islandoraDssElc);
+
+			    /*
+			    /**
+			     * Work-around
+			     * One must query Drupal again for the entity ID
+			     * (Unfortunately, this cannot be resolved more properly without implementing handling for the Drupal cache)
+			     *
+			     * /
+			    $.get($(this).siblings('.autocomplete').val() + '/' + encodeURI($listElem.text()), function(data) {
+			
+				    var items = Object.keys(data);
+				    if(items.length > 0) {
+
+					/*
+					var m = /(".+?")/.exec(items[0]);
+					if(m) {
+
+					   islandoraDssElc['autoCompleteItem'] = m[1];
+					}
+					* /
+
+					islandoraDssElc['autoCompleteItem'] = items[0];
+				    }
+
+				    $(document).data('islandoraDssElc', islandoraDssElc);
+
+				    //$listElem.click();
+				    // Work-around
+				    e.target = inputElement;
+				    that.tokenizeTerm(e);
+
+				    islandoraDssElc['autoCompleteKey'] = false;
+				    delete islandoraDssElc['autoCompleteItem'];
+				    //islandoraDssElc['autoCompleteItem'] = null;
+				    $(document).data('islandoraDssElc', islandoraDssElc);
+				});
+			    */
+
+			    /*
+			    $(document).data('islandoraDssElc', islandoraDssElc);
+
+			    $listElem.click();
+			    e.preventDefault();
+
+			    islandoraDssElc['autoCompleteKey'] = false;
+			    //delete islandoraDssElc['autoCompleteItem'];
+			    islandoraDssElc['autoCompleteItem'] = null;
+			    $(document).data('islandoraDssElc', islandoraDssElc);
+			    */
+			} else if($listElem.length == 0) {
+
+			    // Try again
+			    $(this).addClass('throbbing');
+			    //$(this.ariaLive).html(Drupal.t('Searching for matches...'));
 
 			    /**
 			     * Work-around
@@ -298,37 +377,46 @@
 			     * (Unfortunately, this cannot be resolved more properly without implementing handling for the Drupal cache)
 			     *
 			     */
-			    $.get($(this).siblings('.autocomplete').val() + '/' + encodeURI($listElem.text()), function(data) {
+			    $.get($(this).siblings('.autocomplete').val() + '/' + encodeURI(this.value), function(data) {
+
+				    $(inputElement).removeClass('throbbing');
+			
+				    var items = Object.keys(data);
+				    if(items.length > 0) {
+
+					islandoraDssElc['autoCompleteItem'] = items[0];
+
+					$(document).data('islandoraDssElc', islandoraDssElc);
 				    
-				    var m = /(".+?")/.exec(Object.keys(data));
-				    if(m) {
+					//$listElem.click();
+					// Work-around
+					e.target = inputElement;
+					that.tokenizeTerm(e);
+				    } else {
 
-					islandoraDssElc['autoCompleteItem'] = m[1];
-				    }
-				});
+					/**
+					 * No entities, render the dialog
+					 *
+					 */
+					$('<div class="form-alert-dialog" title="Error"><p>This entity does not exist!</p></div>').appendTo('.main-container').dialog({
+						modal: true,
 
-			    $(document).data('islandoraDssElc', islandoraDssElc);
-
-			    $listElem.click();
-			    e.preventDefault();
-
-			    islandoraDssElc['autoCompleteKey'] = false;
-			    delete islandoraDssElc['autoCompleteItem'];
-			    $(document).data('islandoraDssElc', islandoraDssElc);
-			} else if($listElem.length == 0) {
-
-			    $('<div class="form-alert-dialog" title="Error"><p>This entity does not exist!</p></div>').appendTo('.main-container').dialog({
-				    modal: true,
-
-					close: function(event, ui) {
+						    close: function(event, ui) {
 				    
-					$('#form-alert-dialog').remove();
-					$(this).focus();
-				    }
-				});
+						    $('#form-alert-dialog').remove();
+						    $(this).focus();
+						}
+					    });
 
-			    $(this).val('');
-			    e.preventDefault();
+					$(this).val('');
+					e.preventDefault();
+				    }
+
+				    islandoraDssElc['autoCompleteKey'] = false;
+				    delete islandoraDssElc['autoCompleteItem'];
+				    //islandoraDssElc['autoCompleteItem'] = null;
+				    $(document).data('islandoraDssElc', islandoraDssElc);
+				});
 			}
 		    }
 		});
@@ -340,10 +428,12 @@
 	     */
 	    $(document).on('keydown', '#edit-field-human-occupation-und, #edit-field-person-type-und', function(e) {
 
+		    e.stopPropagation();
+
 		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
 
 			that.tokenizeTerm(e);
-
+			
 			e.preventDefault();
 		    }
 		});
