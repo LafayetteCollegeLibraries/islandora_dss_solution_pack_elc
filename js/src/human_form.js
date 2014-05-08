@@ -208,82 +208,8 @@
 				    $relationFieldElem.val('');
 				}
 			    });
-			}
-			//}).call());
+		    }
 		});
-
-	    var f = function(event, xhr, settings) {
-
-		//console.log(settings);
-		if(settings && /system\/ajax/.exec(settings.url)) {
-
-			/**
-			 * Population of the form fields from the individual 
-			 *
-			 */
-			$('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
-
-				var fieldText = $(e).val();
-
-				/**
-				 * Hard-coded regex for the personal-relationship Node title
-				 * @todo Refactor
-				 *
-				 */
-				var m = /is a (.+?) in relation to (.+)/.exec(fieldText);
-
-				if(m) {
-
-				    var $roleFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-role-und');
-				    var $objectFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-object-und');
-
-				    $roleFieldElem.val(m[1]);
-				    $objectFieldElem.val(m[2]);
-				}
-			    });
-
-			/**
-			 * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
-			 *
-			 */
-			$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
-				
-				var $relationFieldElem = $(this).parents('.controls').children('.form-text');
-				
-				if($(this).val().length > 0) {
-				    
-				    var humanName = $('#edit-field-person-name-und-0-value').val();
-				    
-				    if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
-					
-					humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
-				    }
-				    
-				    if($('#edit-field-human-surname-und-0-value').val().length > 0) {
-					
-					humanName += ' ' + $('#edit-field-human-surname-und-0-value').val();
-				    }
-				    
-				    var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
-				    var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
-			
-				    $relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
-
-				    // Trigger the autocompletion
-				    //$relationFieldElem.keyup();
-				    $.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
-
-					    var lastEntity = Object.keys(data).pop();
-					    $relationFieldElem.val(lastEntity);
-				    });
-				} else {
-				
-				    $relationFieldElem.val('');
-				}
-			    });
-			}
-			//}).call());
-	    }
 
 	    /**
 	     * Modify the DOM for the addition of tokenized form values
@@ -296,17 +222,115 @@
 		});
 
 	    /**
+	     * Refactoring the tokenization functionality
+	     *
+	     */
+	    this.tokenizeTerm = function(e) {
+
+		var $fieldElem = $(e.target).parents('.controls').children('input.form-text');
+
+		// Only tokenize for non-existing values
+		if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
+
+			    return $(token).children('span:first').text() == $fieldElem.val();
+			}).length == 0) {
+
+		    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
+
+		    /**
+		     * For now, only implementing for default language encoding
+		     * @todo Restructure for extended languages and character sets
+		     *
+		     */
+
+		    if(islandoraDssElc.hasOwnProperty('autoCompleteItem')) {
+
+			$("<li><a href='#' class='token'><span>" + islandoraDssElc['autoCompleteItem'] + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		    } else {
+
+			$("<li><a href='#' class='token'><span>" + $fieldElem.val() + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		    }
+		    $fieldElem.val('');
+		}
+	    };
+
+	    var that = this;
+
+	    /**
+	     * Event handlers for tokenized terms
+	     *
+	     */
+	    $(document).on('click', '.token', function(e) {
+
+		    e.preventDefault();
+		    $(this).parents('li').remove();
+		});
+
+	    /**
 	     * Event handling for the autocomplete elements (Drupal 7 core)
 	     * Limited to Taxonomy terms
 	     * @todo Refactor for a plug-in
 	     *
 	     */
 	    $(document).on('click', '#autocomplete .selected div', function(e) {
-		
-		    var $fieldElem = $(e.target).parents('.controls').children('input.form-text');
 
-		    $("<li><a href='#' class='token'><span>" + $fieldElem.val() + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
-		    $fieldElem.val('');
+		    that.tokenizeTerm(e);
+		});
+
+	    /**
+	     * Handling for fields which reference other Drupal entities
+	     *
+	     */
+	    $(document).on('keydown', '#edit-field-person-membership-und, #edit-field-person-location-und', function(e) {
+		    
+		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
+
+			var $listElem = $(this).parents('.controls').find('.reference-autocomplete');
+
+			if($listElem.length == 1) {
+
+			    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
+			    islandoraDssElc['autoCompleteKey'] = true;
+
+			    /**
+			     * Work-around
+			     * One must query Drupal again for the entity ID
+			     * (Unfortunately, this cannot be resolved more properly without implementing handling for the Drupal cache)
+			     *
+			     */
+			    $.get($(this).siblings('.autocomplete').val() + '/' + encodeURI($listElem.text()), function(data) {
+				    
+				    var m = /(".+?")/.exec(Object.keys(data));
+				    if(m) {
+
+					islandoraDssElc['autoCompleteItem'] = m[1];
+				    }
+				});
+
+			    $(document).data('islandoraDssElc', islandoraDssElc);
+
+			    $listElem.click();
+			    e.preventDefault();
+
+			    islandoraDssElc['autoCompleteKey'] = false;
+			    delete islandoraDssElc['autoCompleteItem'];
+			    $(document).data('islandoraDssElc', islandoraDssElc);
+			} else if($listElem.length == 0) {
+
+			    $('<div class="form-alert-dialog" title="Error"><p>This entity does not exist!</p></div>').appendTo('.main-container').dialog({
+				    modal: true,
+
+					close: function(event, ui) {
+				    
+					$('#form-alert-dialog').remove();
+					$(this).focus();
+				    }
+				});
+
+			    $(this).val('');
+			    e.preventDefault();
+			}
+		    }
 		});
 
 	    /**
@@ -314,20 +338,11 @@
 	     * @todo Abstract as a plug-in
 	     *
 	     */
-	    $(document).on('keydown', '#edit-field-human-occupation-und, #edit-field-person-membership-und, #edit-field-person-location-und, #edit-field-person-type-und', function(e) {
+	    $(document).on('keydown', '#edit-field-human-occupation-und, #edit-field-person-type-und', function(e) {
 
 		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
 
-			var $fieldElem = $(e.target).parents('.controls').children('input.form-text');
-
-			$("<li><a href='#' class='token'><span>" + $fieldElem.val() + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
-		    
-			$('.token').click(function(e) {
-
-				e.preventDefault();
-				$(this).parents('li').remove();
-			    });
-			$fieldElem.val('');
+			that.tokenizeTerm(e);
 
 			e.preventDefault();
 		    }
