@@ -392,6 +392,9 @@
 					// Work-around
 					e.target = inputElement;
 					that.tokenizeTerm(e);
+					
+					// Cancel the autocomplete search
+					$(inputElement).blur();
 				    } else {
 
 					/**
