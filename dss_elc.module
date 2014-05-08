@@ -904,7 +904,7 @@ function dss_elc_form_book_node_form_alter(&$form, $form_state) {
 
   // Authors
   $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
-  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Author</button></div></div>';
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Person</button></div></div>';
 }
 
 /**
@@ -926,7 +926,7 @@ function dss_elc_form_periodical_node_form_alter(&$form, $form_state) {
 
   // Authors
   $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
-  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Author</button></div></div>';
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Person</button></div></div>';
 }
 
 /**
@@ -947,7 +947,7 @@ function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 
   // Authors
   $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
-  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Author</button></div></div>';
+  $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Person</button></div></div>';
 }
 
 /**

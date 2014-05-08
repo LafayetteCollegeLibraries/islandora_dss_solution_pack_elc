@@ -304,67 +304,15 @@
 			if($listElem.length == 1) {
 
 			    islandoraDssElc['autoCompleteKey'] = true;
-			    // ('li').data('autocompleteValue')
 			    islandoraDssElc['autoCompleteItem'] = $listElem.parents('li').data('autocompleteValue');
 
-			    //$listElem.click();
-			    // Work-around
 			    e.target = inputElement;
 			    that.tokenizeTerm(e);
 
 			    islandoraDssElc['autoCompleteKey'] = false;
 			    delete islandoraDssElc['autoCompleteItem'];
-			    //islandoraDssElc['autoCompleteItem'] = null;
 			    $(document).data('islandoraDssElc', islandoraDssElc);
 
-			    /*
-			    /**
-			     * Work-around
-			     * One must query Drupal again for the entity ID
-			     * (Unfortunately, this cannot be resolved more properly without implementing handling for the Drupal cache)
-			     *
-			     * /
-			    $.get($(this).siblings('.autocomplete').val() + '/' + encodeURI($listElem.text()), function(data) {
-			
-				    var items = Object.keys(data);
-				    if(items.length > 0) {
-
-					/*
-					var m = /(".+?")/.exec(items[0]);
-					if(m) {
-
-					   islandoraDssElc['autoCompleteItem'] = m[1];
-					}
-					* /
-
-					islandoraDssElc['autoCompleteItem'] = items[0];
-				    }
-
-				    $(document).data('islandoraDssElc', islandoraDssElc);
-
-				    //$listElem.click();
-				    // Work-around
-				    e.target = inputElement;
-				    that.tokenizeTerm(e);
-
-				    islandoraDssElc['autoCompleteKey'] = false;
-				    delete islandoraDssElc['autoCompleteItem'];
-				    //islandoraDssElc['autoCompleteItem'] = null;
-				    $(document).data('islandoraDssElc', islandoraDssElc);
-				});
-			    */
-
-			    /*
-			    $(document).data('islandoraDssElc', islandoraDssElc);
-
-			    $listElem.click();
-			    e.preventDefault();
-
-			    islandoraDssElc['autoCompleteKey'] = false;
-			    //delete islandoraDssElc['autoCompleteItem'];
-			    islandoraDssElc['autoCompleteItem'] = null;
-			    $(document).data('islandoraDssElc', islandoraDssElc);
-			    */
 			} else if($listElem.length == 0) {
 
 			    // Try again
