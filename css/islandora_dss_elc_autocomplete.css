@@ -1,0 +1,15 @@
+/**
+ * @file Styling for the autocomplete widget (must be applied at the system layer - CSS_SYSTEM)
+ * @author griffinj@lafayette.edu
+ *
+ */
+
+/**
+ * @todo Identify why this is no longer present/overridden within the Drupal 7.x core stylesheets
+ *
+ */
+#autocomplete li.selected {
+
+    background-color: #A2A0A0;
+    color: #ffffff;
+}

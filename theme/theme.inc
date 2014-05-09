@@ -187,3 +187,43 @@ function template_preprocess_loan_node_form(&$variables) {
   hide($variables['form']['actions']);
   */
   }
+
+/**
+ * Implements template_preprocess_page()
+ * Integrate the necessary JavaScript widgets necessary for specific Content Types of Nodes
+ *
+ */
+function dss_elc_preprocess_page(&$variables) {
+
+  if(isset($variables['page']) && isset($variables['page']['content']['system_main']['#type'])) {
+    if($variables['page']['content']['system_main']['#type'] == 'form') {
+
+      switch($variables['page']['content']['system_main']['#form_id']) {
+
+      case 'loan_node_form':
+      case 'human_node_form':
+      case 'item_node_form':
+      case 'book_node_form':
+      case 'periodical_node_form':
+
+	$variables['page']['content']['system_main']['actions']['publish']['#value'] = t('Save');
+      break;
+      
+      default:
+	break;
+      }
+    }
+  } elseif(isset($variables['node'])) {
+
+    switch($variables['node']->type) {
+      
+    case 'loan':
+    case 'item':
+    case 'book':
+    case 'periodical':
+    default:
+      
+      break;
+    }
+  }
+}

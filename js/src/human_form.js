@@ -35,7 +35,7 @@
 				     * @todo Decouple and implement within the appropriate Drupal hook implementations
 				     *
 				     */
-				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="submit" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+				    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
 				}
 			    });
 		    }).call());
@@ -292,7 +292,7 @@
 	     * Handling for fields which reference other Drupal entities
 	     *
 	     */
-	    $(document).on('keydown', '#edit-field-person-membership-und, #edit-field-person-location-und', function(e) {
+	    $(document).on('keydown keyup', '#edit-field-person-membership-und, #edit-field-person-location-und', function(e) {
 		    
 		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
 
@@ -377,7 +377,7 @@
 	     * @todo Abstract as a plug-in
 	     *
 	     */
-	    $(document).on('keydown', '#edit-field-human-occupation-und, #edit-field-person-type-und', function(e) {
+	    $(document).on('keydown keyup', '#edit-field-human-occupation-und, #edit-field-person-type-und', function(e) {
 
 		    e.stopPropagation();
 

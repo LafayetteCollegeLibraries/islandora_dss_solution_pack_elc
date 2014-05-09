@@ -15,4 +15,5 @@ dependencies[] = views
 files[] = tests/node.test
 ; scripts[] = js/jquery.waituntilexists.js
 
-stylesheets[all][] = css/style.css
+stylesheets[all][] = css/islandora_dss_elc
+stylesheets[all][] = css/islandora_dss_elc_autocomplete.css
