@@ -108,7 +108,7 @@
 	     * Handling for fields which reference other Drupal entities
 	     *
 	     */
-	    $(document).on('keydown', '#edit-field-artifact-was-authored-by-und', function(e) {
+	    $(document).on('keydown keyup', '#edit-field-artifact-was-authored-by-und', function(e) {
 		    
 		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
 
@@ -164,7 +164,7 @@
 	     * Handling for fields which do not reference other Drupal entities
 	     * @todo Abstract as a plug-in
 	     */
-	    $(document).on('keydown', '#edit-field-item-number-taxon-und, #edit-field-item-subject-und', function(e) {
+	    $(document).on('keydown keyup', '#edit-field-item-number-taxon-und, #edit-field-item-subject-und', function(e) {
 
 		    if((e.which == 188 || e.which == 13) && $(this).val().length > 1) {
 
