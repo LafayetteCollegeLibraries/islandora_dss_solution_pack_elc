@@ -41,17 +41,23 @@
 	return this.islandoraDssElc.hasOwnProperty(prop) ? this.islandoraDssElc[prop] : null;
     };
 
+    /**
+     * Binding of keydown and keyup events
+     *
+     */
     DssElcAutocomplete.prototype.bindInputHandlers = function() {
 
 	var that = this;
 	$(this.input).keydown(function(e) {
 
-		that.keydown(e);
+		//that.keydown(e);
+		$(this).data('islandoraDssElc.autocomplete').keydown(e);
 	    });
 
 	$(this.input).keyup(function(e) {
 
-		that.keyup(e);
+		//that.keyup(e);
+		$(this).data('islandoraDssElc.autocomplete').keyup(e);
 	    });
     };
 
@@ -123,6 +129,51 @@
 
 	DssElcAutocomplete.call(this, input, $);
 	//this.appendAjaxHandlers();
+
+	/**
+	 * Very dangerous work-around
+	 * @todo Integrate with the Drupal 7.x autocomplete core
+	 *
+	 */
+
+	/*
+	Drupal.jsAC.constructor
+
+	// Ensure that the Drupal.jsAC Object is only modified once within the context of the DOM
+	if(!Drupal.jsAC.hasOwnProperty('DssElcAutocomplete')) {
+
+	    this.onkeyup = Drupal.jsAC.prototype.onkeyup;
+	    Drupal.jsAC.prototype.onkeyup = function (input, event) {
+
+		// If this is an entity reference...
+		var dssElcAutocomplete = $(input).data('islandoraDssElc.autocomplete');
+		if(typeof(dssElcAutocomplete) === 'DssElcAutocompleteEntityRef') {
+
+		    switch (event.keyCode) {
+
+		    case 9: // Tab.
+		    case 13: // Enter.
+		    case 27: // Esc.
+			dssElcAutocomplete.set('autoCompleteKey', true);
+			dssElcAutocomplete.set('autoCompleteItem', $(this.selected).data('autocompleteValue'));
+		
+			event.target = input;
+			dssElcAutocomplete.tokenize(event);
+			
+			dssElcAutocomplete.set('autoCompleteKey', false);
+			dssElcAutocomplete.set('autoCompleteItem', null);		
+		    }
+		}
+
+		//this = Drupal.jsAC.prototype;
+
+		// Invoke the original handler
+		dssElcAutocomplete.onkeyup.call(Drupal.jsAC.prototype, input, event);
+	    };
+	    
+	    Drupal.jsAC.DssElcAutocomplete = true;
+	}
+	*/
     };
 
     /**
@@ -174,7 +225,6 @@
 	//$(document).ajaxSuccess((function(event, xhr, settings ) {
 	$(document).ajaxComplete(function(event, xhr, settings) {
 
-		//console.log(settings);
 		if(settings && /system\/ajax/.exec(settings.url)) {
 
 		    // Work-around for autocomplete
@@ -318,27 +368,130 @@
 
 	if((event.which == 188 || event.which == 13) && $(this.input).val().length > 1) {
 
+	    // @todo Refactor
+	    //event.stopImmediatePropagation();
 	    event.preventDefault();
 	    var inputElement = this.input;
+
 	    var $listElem = $(this.input).parents('.controls').find('.reference-autocomplete');
+	    //var ajaxComplete = $(document).data('islandoraDssElc.autocomplete.ajaxComplete');
+
+
+
+	    while(false && !$(document).data('islandoraDssElc.autocomplete.ajaxComplete')) {
+
+		//$(this.input).parents('.controls').find('.reference-autocomplete');
+
+		/**
+		 * @todo Integrate support for MutationObservers, DOMAttrModified, and propertychange
+		 *
+		 */
+
+		/*
+		if(MutationObserver) {
+
+		    var observer = new MutationObserver(function(mutations) {
+
+			    mutations.forEach(function(mutation){
+
+				    callback.call(that, mutation);
+				});
+			});
+
+		    observer.observe(this, { subtree: false, attributes: true });
+		} else if(isEventSupported('DOMAttrModified', div)) {
+
+		    $el.on('DOMAttrModified', callback);
+		} else if(isEventSupported('propertychange', div)) {
+
+		    $el.on('propertychange', callback);
+
+		} else {
+
+		    setInterval(function(){ check.call(that, $el); }, options.throttle);
+		}
+		*/
+		
+
+	    }
 	    
 	    //var islandoraDssElc = $(document).data('islandoraDssElc') || {};
-	    if($listElem.length == 1) {
+	    if($listElem.length > 0) {
+		//if(false) {
 
 		//islandoraDssElc['autoCompleteKey'] = true;
 		//islandoraDssElc['autoCompleteItem'] = $listElem.parents('li').data('autocompleteValue');
 		this.set('autoCompleteKey', true);
-		this.set('autoCompleteItem', $listElem.parents('li').data('autocompleteValue'));
+		var listItem = $listElem.parents('li.selected').length > 0 ? $listElem.parents('li.selected').data('autocompleteValue') : $listElem.parents('li:first').data('autocompleteValue');
+		this.set('autoCompleteItem', listItem);
 		
 		event.target = inputElement;
-		that.tokenizeTerm(e);
+		//this.tokenizeTerm(event);
+		this.tokenize(event);
 
 		//islandoraDssElc['autoCompleteKey'] = false;
 		//delete islandoraDssElc['autoCompleteItem'];
 		this.set('autoCompleteKey', false);
 		this.set('autoCompleteItem', null);
 
-	    } else if($listElem.length == 0) {
+	    } else if(true) {
+
+		$(document).data('islandoraDssElc.autocomplete.poll', this);
+		$(document).data('islandoraDssElc.autocomplete.pollEvent', event);
+		$(document).data('islandoraDssElc.autocomplete.timeInit', +new Date());
+		//$(document).data('islandoraDssElc.autocomplete.timeElapsed', 0);
+
+		// No time-effective and safe manner by which to hook in to the autocomplete functionality for Drupal 7.x
+		// Polling the DOM for changes until the AJAX submission is complete...
+		/**
+		 * Synchronously poll the DOM state
+		 *
+		 */
+		var intervalId = setInterval(function() {
+
+			var context = $(document).data('islandoraDssElc.autocomplete.poll');
+			var event = $(document).data('islandoraDssElc.autocomplete.pollEvent');
+			var timeElapsed = +new Date() - $(document).data('islandoraDssElc.autocomplete.timeInit');
+
+			/**
+			 * @todo Investigate as to why islandoraDssElc.autocomplete.pollInterval is still accessible but not islandoraDssElc.autocomplete.poll
+			 *
+			 */
+			if(!context || (timeElapsed > 1000)) {
+
+			    clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
+			    $(document).data('islandoraDssElc.autocomplete.poll', null);
+			    $(document).data('islandoraDssElc.autocomplete.pollEvent', null);
+			} else {
+
+			    var $listElem = $(context.input).parents('.controls').find('.reference-autocomplete');
+
+			    if($listElem.length > 0) {
+
+				//$(document).data('islandoraDssElc.autocomplete.ajaxComplete', $(this.input).parents('.controls').find('.reference-autocomplete').length);
+
+				//islandoraDssElc['autoCompleteKey'] = true;
+				//islandoraDssElc['autoCompleteItem'] = $listElem.parents('li').data('autocompleteValue');
+				context.set('autoCompleteKey', true);
+				context.set('autoCompleteItem', $listElem.parents('li.selected').data('autocompleteValue'));
+		
+				event.target = inputElement;
+				context.tokenize(event);
+
+				//islandoraDssElc['autoCompleteKey'] = false;
+				//delete islandoraDssElc['autoCompleteItem'];
+				context.set('autoCompleteKey', false);
+				context.set('autoCompleteItem', null);
+
+				clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
+				$(document).data('islandoraDssElc.autocomplete.poll', null);
+				$(document).data('islandoraDssElc.autocomplete.pollEvent', null);
+			    }
+			}
+		    }, 250);
+		$(document).data('islandoraDssElc.autocomplete.pollInterval', intervalId);
+
+	    } else if(false) {
 
 		/**
 		 * Try to directly query the AJAX endpoint
@@ -428,6 +581,7 @@
 		    if(isEntityRef) {
 
 			$(this).data('islandoraDssElc.autocomplete', new DssElcAutocompleteEntityRef($(this), $));
+			$(this).data('islandoraDssElc.autocomplete').bindInputHandlers();
 		    } else {
 
 			$(this).data('islandoraDssElc.autocomplete', new DssElcAutocomplete($(this), $));
