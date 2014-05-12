@@ -186,6 +186,8 @@ function template_preprocess_loan_node_form(&$variables) {
   $variables['buttons'] = $variables['form']['actions'];
   hide($variables['form']['actions']);
   */
+
+  hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
   }
 
 /**

@@ -552,10 +552,10 @@ function dss_elc_field_loan_duration_after_build(&$element) {
 
       hide($value['show_todate']);
 
-      $value['value']['#title'] = 'Checkout Date';
+      $value['value']['#title'] = 'Check-out';
       $value['value']['date']['#description'] = 'YYYY-MM-DD';
 
-      $value['value2']['#title'] = 'Returned Date';
+      $value['value2']['#title'] = 'Check-in';
       $value['value2']['date']['#description'] = 'YYYY-MM-DD';
     }
   }
@@ -641,14 +641,9 @@ function dss_elc_field_bib_rel_object_after_build(&$element) {
 
     if($key == 'add_more' && isset($value['#type']) && $value['#type'] == 'submit') {
 
-      //$value['#suffix'] = '<div id="field-bib-rel-object-add-more-wrapper"><div class="node-add-object form-item"><button class="add-node-modal btn btn-info" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info" id="add-item-modal">New Item</button></div></div>';
-      $value['#suffix'] = '<button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-item-modal">New Item</button>';
-      /*
-      $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = '<div id="field-bib-rel-object-add-more-wrapper">';
-      $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-object form-item"><button class="add-node-modal btn btn-info" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info" id="add-item-modal">New Item</button></div></div>';
+      //$value['#suffix'] = '<button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-item-modal">New Item</button>';
 
-      $value['#suffix'] = '<span id="trace" />';
-      */
+      $value['#suffix'] = '<button class="add-node-modal btn btn-info field-add-more-submit form-submit ajax-processed" id="add-item-modal">New Item</button>';
     }
   }
 
@@ -772,7 +767,16 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   }
 
   $form['field_bib_rel_object'][$form['field_bib_rel_subject']['#language']]['add_more']['#label'] = 'More Items Loaned?';
-  $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Type of Loan';
+
+  $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Tags';
+  $form['body'][$form['body']['#language']][0]['#title'] = 'Notes for Review';
+
+  /*
+  dpm($form['body'][$form['body']['#language']]['#title']);
+  dpm($form['body'][$form['body']['#language']]);
+  */
+
+  hide($form['field_was_ordered']);
 }
 
 function dss_elc_form_human_node_form_add_more_submit($form, &$form_state) {
