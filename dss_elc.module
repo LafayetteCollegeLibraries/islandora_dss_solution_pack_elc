@@ -679,11 +679,11 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   dss_elc_form_insert_js();
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/loan_form.min.js');
 
-  $autocomplete_fields = array('entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
+  $autocomplete_fields = array('entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und", '[id^="edit-field-bib-rel-object-und"].form-text'),
 			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
 
   // Apply theming for the field_bib_rel_object Field
   //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#after_build'][] = 'dss_elc_field_bib_rel_object_after_build';
@@ -743,7 +743,16 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
     $form["field_loan_" . $field . "_loaned"][$form["field_loan_" . $field . "_loaned"]['#language']]['add_more']['#value'] = 'Add another ' . substr($field, 0, strlen($field) - 1);
   }
 
-  $form['field_bib_rel_object'][$form['field_bib_rel_subject']['#language']]['add_more']['#label'] = 'More Items Loaned?';
+  dpm($form);
+
+  /**
+   * This has been temporarily disabled in order to resolve issues with autocompletion integration
+   * @todo Resolve issues with JavaScript integration and pass this markup through the templating layer
+   *
+   */
+  //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] . '<input id="edit-field-bib-rel-object-und" class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_bib_rel_object[und][0][target_id]" tabindex="4" autocomplete="OFF" aria-autocomplete="list">';
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['add_more']['#label'] = 'More Items Loaned?';
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['add_more']['#value'] = 'More Items Loaned?';
 
   $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Tags';
   $form['body'][$form['body']['#language']][0]['#title'] = 'Notes for Review';
