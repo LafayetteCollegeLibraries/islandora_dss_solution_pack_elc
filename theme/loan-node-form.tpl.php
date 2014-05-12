@@ -4,9 +4,13 @@
 <div class="loan-row">
 
 <div id="loan-fields-a">
+
+
 <div class="filename-column loan-column single-value-field">
     <?php print drupal_render_children($form['field_loan_filename']); ?>
 </div>
+
+<div class="loan-persons">
 <div class="shareholder-column loan-column single-value-field">
     <?php print drupal_render_children($form['field_loan_shareholder']); ?>
 </div>
@@ -14,7 +18,10 @@
     <?php print drupal_render_children($form['field_bib_rel_subject']); ?>
 </div>
 </div>
-
+<div class="loan-persons-add">
+  <div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button">New Person</button></div>
+</div>
+</div>
 </div>
 
 <div class="loan-row">
@@ -26,7 +33,11 @@
 </div>
 </div>
 
-
+<div class="loan-row">
+<div class="duration-column loan-column">
+    <?php print drupal_render_children($form['field_loan_duration']); ?>
+</div>
+</div>
 
 <div class="loan-row loan-row-a">
 <div class="loan-columns-container">

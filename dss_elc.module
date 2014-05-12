@@ -676,11 +676,14 @@ function dss_elc_form_node_form_alter(&$form, $form_state) {
  */
 function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 
-  dpm($form_id);
-  dpm($form);
-
   dss_elc_form_insert_js();
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/loan_form.min.js');
+
+  $autocomplete_fields = array('entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
+			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
+			       );
+  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   // Apply theming for the field_bib_rel_object Field
   //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#after_build'][] = 'dss_elc_field_bib_rel_object_after_build';
@@ -701,9 +704,10 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   foreach(array('field_loan_issues_loaned',
 		'field_loan_volumes_loaned',
 		'field_loan_months_loaned',
-		'field_loan_years_loaned') as $fieldName) {
+		'field_loan_years_loaned') as $field_name) {
 
-    $form[$fieldName][$form[$fieldName]['#language']]['#after_build'][] = 'dss_elc_' . $fieldName . '_after_build';
+    //$form[$field_name][$form[$field_name]['#language']]['#after_build'][] = 'dss_elc_' . $field_name . '_after_build';
+    hide($form[$field_name]);
   }
 
   /**
@@ -724,42 +728,15 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   */
 
   $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#prefix'] = '<div id="field-loan-shareholder-add-more-wrapper">';
-  //$form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '<div class="node-add-shareholder form-item">Create a new ' . l(t('shareholder'), 'node/add/human', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-human-modal'))) . '</div></div>';
-  $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '<div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Shareholder</button></div></div>';
+  //$form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '<div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Shareholder</button></div></div>';
+  $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '</div>';
 
   $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#prefix'] = '<div id="field-bib-rel-subject-add-more-wrapper">';
-  //$form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item">Create a new ' . l(t('patron'), 'node/add/human', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-human-modal'))) . '</div></div>';
-  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Patron</button></div></div>';
+  //$form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Patron</button></div></div>';
+  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '</div>';
 
   $form['field_loan_shareholder']['#attributes']['disabled'] = true;
 
-  /*
-  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#prefix'] = '<div class="shareholder-column loan-column single-value-field">
-<div class="control-group form-type-textfield form-item-representative form-item">
-  <label class="control-label" for="edit-field-bib-rel-subject-und">Shareholder </label>
-<div class="controls" role="application"> <select disabled="true" type="text" class="form-text" maxlength="1024" size="0" value="" name="representative" id="edit-representative" autocomplete="OFF" aria-autocomplete="list"></select>
-</div></div></div>
-
-<div class="patron-column loan-column single-value-field"><div id="field-bib-rel-subject-add-more-wrapper">';
-  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item">Create a new ' . l(t('representative, shareholder, or other human person'), 'node/add/human', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-human-modal'))) . '</div></div></div>';
-  */
-
-  /*
-<div class="patron-column loan-column single-value-field">
-<div class="control-group form-type-textfield form-item-representative form-item">
-  <label class="control-label" for="edit-field-bib-rel-subject-und">Representative </label>
-<div class="controls" role="application"> <input type="text" class="form-text" maxlength="1024" size="60" value="" name="representative" id="edit-representative" autocomplete="OFF" aria-autocomplete="list">
-</div></div></div>';
-  */
-
-  /*
-  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = '<div id="field-bib-rel-object-add-more-wrapper">';
-  //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-object form-item">Create a new ' . l(t('book'), 'node/add/book', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-book-modal'))) . ', ' . l(t('periodical'), 'node/add/periodical', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-periodical-modal'))) . ', or ' . l(t('published work'), 'node/add/item', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-item-modal'))) . '</div></div>';
-  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-object form-item"><button class="add-node-modal btn btn-info" id="add-book-modal">New Book</button><button class="add-node-modal btn btn-info" id="add-periodical-modal">New Periodical</button><button class="add-node-modal btn btn-info" id="add-item-modal">New Item</button></div></div>';
-  */
-
-  $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Patron</button></div></div>';
-  
   // For the Issues Loaned, Volumes Loaned, Months Loaned, and Years Loaned
   foreach(array('issues', 'volumes', 'months', 'years') as $field) {
     
@@ -770,11 +747,6 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 
   $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Tags';
   $form['body'][$form['body']['#language']][0]['#title'] = 'Notes for Review';
-
-  /*
-  dpm($form['body'][$form['body']['#language']]['#title']);
-  dpm($form['body'][$form['body']['#language']]);
-  */
 
   hide($form['field_was_ordered']);
 }

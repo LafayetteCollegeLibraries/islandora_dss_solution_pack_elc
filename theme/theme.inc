@@ -153,8 +153,9 @@ function template_preprocess_loan_node_form(&$variables) {
     $variables['form']['field_loan_ledger'] = NULL;
   }
 
-  hide($variables['form']['field_loan_ledger']);
+  dpm($variables);
 
+  hide($variables['form']['field_loan_ledger']);
 
   //drupal_add_library('system', 'ui.datepicker');
   drupal_add_library('system', 'ui.dialog');
@@ -162,8 +163,7 @@ function template_preprocess_loan_node_form(&$variables) {
   dss_elc_preprocess_node_form($variables);
 
   hide($variables['form']['field_loan_issues_loaned']);
-
-  //dpm($variables);
+  //$variables['form']['field_loan_issues_loaned'] = array();
 
   //$variables['subject'][] = $variables['form']['field_bib_rel_subject'];
   //hide($variables['form']['field_bib_rel_subject']);
@@ -187,6 +187,7 @@ function template_preprocess_loan_node_form(&$variables) {
   hide($variables['form']['actions']);
   */
 
+  hide($variables['form']['field_loan_other_notes'][$variables['form']['field_loan_other_notes']['#language']][0]['format']);
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
   }
 
