@@ -751,8 +751,30 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
    *
    */
   //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] . '<input id="edit-field-bib-rel-object-und" class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_bib_rel_object[und][0][target_id]" tabindex="4" autocomplete="OFF" aria-autocomplete="list">';
+
+  /**
+   * Hard-coding the field for volumes
+   * (Note: These are not fields to be captured as Drupal content, as they, more properly, reference other Entities)
+   *
+   */
+  //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] . '<div class="control-group form-type-textfield form-item-field-volumes-und-0-value form-item"><label class="control-label" for="edit-field-volumes-und-0-value">Volume(s) </label><div class="controls"><input id="edit-field-volumes-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="" name="volumes[und][0][value]" tabindex=""></div></div>';
+
+  /**
+   * Hard-coding the field for issues
+   * (Note: These fields are also not to be captured as Drupal content)
+   *
+   */
+  //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] . '<div class="control-group form-type-textfield form-item-field-issues-und-0-value form-item"><label class="control-label" for="edit-field-issues-und-0-value">Issue(s) </label><div class="controls"><input id="edit-field-issues-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="" name="issues[und][0][value]" tabindex=""></div></div>';
+
+  /**
+   * Deprecated in favor of JavaScript functionality
+   *
+   */
+  /*
   $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['add_more']['#label'] = 'More Items Loaned?';
   $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['add_more']['#value'] = 'More Items Loaned?';
+  */
+  hide($form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['add_more']);
 
   $form['field_bib_rel_type'][$form['field_bib_rel_subject']['#language']]['#title'] = 'Tags';
   $form['body'][$form['body']['#language']][0]['#title'] = 'Notes for Review';

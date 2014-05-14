@@ -66,11 +66,9 @@
 <div id="edit-actions" class="form-actions form-wrapper">
    <?php print drupal_render_children($form['actions']); ?>
 </div>
-</div>
 
-<div class="human-row">
 <div class="human-column">
-    <?php print drupal_render_children($form); ?>
+<?php print drupal_render_children($form); ?>
 </div>
 </div>
 

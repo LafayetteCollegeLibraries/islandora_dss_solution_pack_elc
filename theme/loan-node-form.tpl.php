@@ -29,6 +29,8 @@
 <div id="loan-fields-b">
 <div class="items-column loan-column">
     <?php print drupal_render_children($form['field_bib_rel_object']); ?>
+    <?php print drupal_render_children($form['field_loan_volumes_text']); ?>
+    <?php print drupal_render_children($form['field_loan_issues_text']); ?>
 </div>
 </div>
 </div>
