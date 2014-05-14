@@ -534,7 +534,7 @@ function dss_elc_theme_registry_alter(&$theme_registry) {
  */
 function dss_elc_date_combo_element_process($element, &$form_state, $form) {
 
-  dpm($element);
+  //dpm($element);
 }
 
 /**
@@ -650,17 +650,6 @@ function dss_elc_field_bib_rel_object_after_build(&$element) {
   return $element;
 }
 
-function dss_elc_preprocess(&$variables, $hook) {
-
-  if(isset($variables['page'])) {
-
-
-  }
-
-  //dpm($variables);
-  //dpm($hook);
-}
-
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  * Restructuring all Node forms
@@ -679,7 +668,8 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   dss_elc_form_insert_js();
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/loan_form.min.js');
 
-  $autocomplete_fields = array('entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und", '[id^="edit-field-bib-rel-object-und"].form-text'),
+  $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
+			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
 			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
@@ -743,8 +733,6 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
     $form["field_loan_" . $field . "_loaned"][$form["field_loan_" . $field . "_loaned"]['#language']]['add_more']['#value'] = 'Add another ' . substr($field, 0, strlen($field) - 1);
   }
 
-  dpm($form);
-
   /**
    * This has been temporarily disabled in order to resolve issues with autocompletion integration
    * @todo Resolve issues with JavaScript integration and pass this markup through the templating layer
@@ -802,12 +790,8 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
 
   drupal_set_title(t('Add Person'));
 
-  dpm($form);
-  dpm($form_state);
-
   //$form['field_human_pers_rels']['und']['add_more']['#submit'][] = 'dss_elc_form_human_node_form_add_more_submit';
 
-  dpm($form);
   //$form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'] = array($form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'], '';
 
   //$form['field_human_pers_rels']['und']['#suffix'] = '';
@@ -835,11 +819,6 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   $form['field_person_location'][$form['field_person_location']['#language']]['#prefix'] = '<div id="field-person-location-add-more-wrapper">';
   $form['field_person_location'][$form['field_person_location']['#language']]['#suffix'] = '<div class="node-add-person-location">Add a new ' . l(t('location'), 'node/add/location', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-location-modal'))) . '</div></div>';
   */
-
-  //print_r('trace');
-  //exit();
-
-  dpm($_POST);
 }
 
 function dss_elc_form_ajax_item_node_form_alter(&$form) {

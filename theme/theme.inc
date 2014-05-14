@@ -53,7 +53,6 @@ function template_preprocess_item_node_form(&$variables) {
 
 function template_preprocess_human_node_form(&$variables) {
 
-  //print dpm($variables);
   // $variables['form']['#action'] = '/node/add/human'
 
   // div#page div#content div#console div.error
@@ -152,8 +151,6 @@ function template_preprocess_loan_node_form(&$variables) {
     //hide($variables['form']['field_loan_ledger']);
     $variables['form']['field_loan_ledger'] = NULL;
   }
-
-  dpm($variables);
 
   hide($variables['form']['field_loan_ledger']);
 
