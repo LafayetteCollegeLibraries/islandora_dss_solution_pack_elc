@@ -60,6 +60,8 @@ function template_preprocess_human_node_form(&$variables) {
   drupal_add_library('system', 'ui.dialog');
   dss_elc_preprocess_node_form($variables);
 
+  $variables['form']['field_human_gender'][$variables['form']['field_human_gender']['#language']]['_none']['#title'] = 'Unknown';
+
   /*
     This does not function as documented: (https://drupal.org/node/304258#drupal-settings and https://drupal.org/node/224333#local_settings_behaviors)
   drupal_add_js(array('dssElc' => array('isAjaxRequest' => (string)(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') )), 'setting');
