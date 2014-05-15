@@ -63,13 +63,13 @@
 	     */
 	    $('.date-date').each(function(i,e) {
 
-		    var fieldNameMap = { 0 : 'year', 1 : 'month', 2 : 'day' };
+		    var fieldNameMap = { 0 : 'Year', 1 : 'Month', 2 : 'Day' };
 
 		    for(var j in [0,1,2]) {
 
 			var value = i ? 'value' : 'value2';
-			var id = 'edit-field-loan-duration-und-0-' + value + '-' + fieldNameMap[j];
-			var name = "field_loan_duration[und][0][" + fieldNameMap[j] + "][" + value + "]";
+			var id = 'edit-field-loan-duration-und-0-' + value + '-' + fieldNameMap[j].toLowerCase();
+			var name = "field_loan_duration[und][0][" + fieldNameMap[j].toLowerCase() + "][" + value + "]";
 
 			/**
 			 * Append the field for the year, month, and date in accordance with the wireframes
@@ -77,7 +77,9 @@
 			 *
 			 */
 			//$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="' + name + '" tabindex="9">').keyup(function(event) {
-			$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
+
+			$(e).append('<label class="control-label" for="' + id + '">' + fieldNameMap[j] + ' </label>').append(
+$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
 
 				var $input = $(this).siblings('[id$="-date"]');
 				var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
@@ -93,7 +95,8 @@
 				default:
 				    $input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
 				}
-			    }).appendTo($(e));
+				//}).appendTo($(e)));
+			    }));
 		    }
 
 		    // Ensure that the actual field is hidden
