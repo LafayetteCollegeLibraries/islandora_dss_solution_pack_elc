@@ -101,6 +101,21 @@
 		});
 	    //$('div.date-no-float.end-date-wrapper.container-inline-date').hide();
 
+	    /**
+	     * Loan Subset Functionality
+	     *
+	     */
+	    $('#edit-loan-subset-1-3').click(function(e) {
+
+		    $(this).addClass('active').siblings().removeClass('active');
+		    $('.type-column, .fine-column').show();
+		});
+	    $('#edit-loan-subset-4-5').click(function(e) {
+
+		    $(this).addClass('active').siblings().removeClass('active');
+		    $('.type-column, .fine-column').hide();
+		});
+
 	    // Focus on...
 
 	    '<input id="edit-field-loan-duration-und-0-value-date" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="field_loan_duration[und][0][value][date]" tabindex="9">'
