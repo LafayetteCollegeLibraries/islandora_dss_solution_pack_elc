@@ -46,6 +46,7 @@ function template_preprocess_item_node_form(&$variables) {
   hide($variables['form']['field_item_volume_migrate']);
 
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
+  hide($variables['form']['field_book_or_periodical'][$variables['form']['field_book_or_periodical']['#language']]['_none']);
 
   //hide($variables['form']['additional_settings']);
   dss_elc_preprocess_node_form($variables);

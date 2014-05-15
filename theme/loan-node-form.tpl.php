@@ -1,4 +1,3 @@
-
 <div class="loan-record">
 <?php if($form): ?>
 
