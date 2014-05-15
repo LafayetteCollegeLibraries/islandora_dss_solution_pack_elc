@@ -57,9 +57,55 @@
 		});
 	    */
 
-	    $('div.date-no-float.end-date-wrapper.container-inline-date').hide();
+	    /**
+	     * Date field handling functionality
+	     *
+	     */
+	    $('.date-date').each(function(i,e) {
+
+		    var fieldNameMap = { 0 : 'year', 1 : 'month', 2 : 'day' };
+
+		    for(var j in [0,1,2]) {
+
+			var value = i ? 'value' : 'value2';
+			var id = 'edit-field-loan-duration-und-0-' + value + '-' + fieldNameMap[j];
+			var name = "field_loan_duration[und][0][" + fieldNameMap[j] + "][" + value + "]";
+
+			/**
+			 * Append the field for the year, month, and date in accordance with the wireframes
+			 * Ensure that the "name" field remains explicitly null in order to ensure that the values are not transmitted in the POST request
+			 *
+			 */
+			//$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="' + name + '" tabindex="9">').keyup(function(event) {
+			$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
+
+				var $input = $(this).siblings('[id$="-date"]');
+				var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
+
+				switch(type) {
+
+				case 'year':
+				    $input.val( $input.val().replace(/^\d{0,4}/, $(this).val()) );
+				    break;
+				case 'month':
+				    $input.val( $input.val().replace(/^(\d{0,4})\-?\d{0,2}/, '$1-' + $(this).val()) );
+				    break;
+				default:
+				    $input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
+				}
+			    }).appendTo($(e));
+		    }
+
+		    // Ensure that the actual field is hidden
+		    $(e).children('input:first').hide();
+		});
+	    //$('div.date-no-float.end-date-wrapper.container-inline-date').hide();
 
 	    // Focus on...
+
+	    '<input id="edit-field-loan-duration-und-0-value-date" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="field_loan_duration[und][0][value][date]" tabindex="9">'
+	    '<input id="edit-field-loan-duration-und-0-value2-date" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="field_loan_duration[und][0][value2][date]" tabindex="10">'
+
 	    //$('#edit-field-loan-duration-und-0-value-date').focusout(function(event) {
 	    $('#edit-field-loan-duration-und-0-value-date').keyup(function(event) {
 
