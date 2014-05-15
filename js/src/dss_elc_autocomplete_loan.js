@@ -39,6 +39,11 @@
 		    });
 	    });
 	*/
+
+	if(this.input && this.input.val()) {
+
+	    this.tokenizeField(this.input);
+	}
     };
 
     /**
@@ -85,6 +90,45 @@
     };
 
     /**
+     * Method for tokenizing the actual field values
+     * @todo Refactor with tokenize() and DssElcAutocompleteLoan.tokenizeField()
+     *
+     */
+    DssElcAutocomplete.prototype.tokenizeField = function($fieldElem) {
+
+	// Only tokenize for non-existing values
+	if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
+
+		    return $(token).children('span:first').text() == $fieldElem.val();
+		}).length == 0) {
+
+	    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
+	    var items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
+
+	    $.each(items, function(i, val) {
+	    //for(var i in items) {
+
+		    var val = items[i];
+
+		/**
+		 * For now, only implementing for default language encoding
+		 * @todo Restructure for extended languages and character sets
+		 *
+		 */
+		    if(this.get('autoCompleteItem')) {
+			
+			$("<li><a href='#' class='token'><span class='token-object'>" + this.get('autoCompleteItem') + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		    } else {
+		    
+			$("<li><a href='#' class='token'><span class='token-object'>" + val + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		    }
+		});
+	    //}
+	    $fieldElem.val('');
+	}
+    };
+
+    /**
      * Method for tokenizing terms or entity reference ID's from the autocompletion list
      * @params [Event] event
      */
@@ -99,30 +143,8 @@
 
 	//var $fieldElem = $(event.target).parents('.controls').children('input.form-text');
 	var $fieldElem = $(this.input);
+	this.tokenizeField($fieldElem);
 
-	// Only tokenize for non-existing values
-	if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
-
-		    return $(token).children('span:first').text() == $fieldElem.val();
-		}).length == 0) {
-
-	    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
-
-	    /**
-	     * For now, only implementing for default language encoding
-	     * @todo Restructure for extended languages and character sets
-	     *
-	     */
-	    //if(islandoraDssElc.hasOwnProperty('autoCompleteItem')) {
-	    if(this.get('autoCompleteItem')) {
-
-		$("<li><a href='#' class='token'><span class='token-object'>" + this.get('autoCompleteItem') + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
-	    } else {
-
-		$("<li><a href='#' class='token'><span class='token-object'>" + $fieldElem.val() + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
-	    }
-	    $fieldElem.val('');
-	}
     };
 
     DssElcAutocomplete.prototype.keydown = function(event) {
@@ -157,8 +179,7 @@
     function DssElcAutocompleteEntityRef(input, $) {
 
 	DssElcAutocomplete.call(this, input, $);
-
-	this.bindAjaxHandlers();
+	//this.bindAjaxHandlers();
     };
 
     /**
@@ -167,6 +188,74 @@
      */
     DssElcAutocompleteEntityRef.prototype = new DssElcAutocomplete();
     DssElcAutocompleteEntityRef.prototype.constructor = DssElcAutocompleteEntityRef;
+
+    /**
+     * Method for tokenizing actual values
+     * @todo Refactor with tokenize()
+     */
+    DssElcAutocompleteEntityRef.prototype.tokenizeField = function($fieldElem) {
+
+	// Only tokenize for non-existing values
+	if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
+		    
+		    return $(token).children('span:first').text() == $fieldElem.val();
+		}).length == 0) {
+
+	    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
+
+	    //edit-field-bib-rel-object-und-0-target-id
+	    //jQuery('[id^="edit-field-bib-rel-object-und-"].form-text')
+
+	    //edit-field-human-pers-rels-und-0-target-id
+	    //jQuery('[id^="edit-field-human-pers-rels-und-"].form-text')
+
+	    //var items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
+
+	    var items;
+	    var elems = $('[id^="' + /(.+?und)/.exec($fieldElem.attr('id'))[1] + '"].form-text');
+	    if(elems.length > 1) {
+
+		items = elems.map(function(i,e) { return $(e).val() }).filter(function(i,e) { return e; });
+		elems.slice(1).remove();
+	    } else if($fieldElem.val().indexOf(',') > 0) {
+		
+		//items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
+		items = $fieldElem.val().split(/\",/).map(function(e) {
+			
+			return (e.slice(-1) == '"') ? e : e + '"';
+		    });
+	    } else {
+
+		items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split();
+	    }
+
+	    $.each(items, function(i, val) {
+	    //for(var i in items) {
+
+		    //var val = items[i];
+		    item = '<span class="token-object">' + val + '</span>';
+
+		    /**
+		     * Resolve issues related to functionality for parsing the fields specific to the Loan form
+		     * @todo Abstract
+		     */
+		    if($('#edit-field-loan-volumes-text-und-0-value').val()) {
+
+			item += '<span class="token-volumes">(' + $('#edit-field-loan-volumes-text-und-0-value').val() + ')</span>';
+			$('#edit-field-loan-volumes-text-und-0-value').val('');
+		    }
+		    if($('#edit-field-loan-issues-text-und-0-value').val()) {
+
+			item += '<span class="token-issues">(' + $('#edit-field-loan-issues-text-und-0-value').val() + ')</span>';
+			$('#edit-field-loan-issues-text-und-0-value').val('');
+		    }
+		    
+		    $("<li><a href='#' class='token'>" + item + "<span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
+		});
+	    //}
+	    $fieldElem.val('');
+	}
+    };
 
     DssElcAutocompleteEntityRef.prototype.bindAjaxHandlers = function() {
 
@@ -566,7 +655,7 @@
 
 	DssElcAutocompleteEntityRef.call(this, input, $);
 
-	this.bindAjaxHandlers();
+	//this.bindAjaxHandlers();
 
 	//$('button[name$="_add_more"]').parents('.form-item').prepend('<div><input id="edit-field-bib-rel-object-und" class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_bib_rel_object[und]" autocomplete="OFF" aria-autocomplete="list" /></div>');
 
@@ -620,6 +709,8 @@
     DssElcAutocompleteLoan.prototype = new DssElcAutocompleteEntityRef();
     DssElcAutocompleteLoan.prototype.constructor = DssElcAutocompleteLoan;
 
+
+
     /**
      * Method for tokenizing terms or entity reference ID's from the autocompletion list
      * @params [Event] event
@@ -635,7 +726,9 @@
 
 	//var $fieldElem = $(event.target).parents('.controls').children('input.form-text');
 	var $fieldElem = $(this.input);
+	this.tokenizeField($fieldElem);
 
+	/*
 	// Only tokenize for non-existing values
 	if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
 
@@ -650,7 +743,7 @@
 	    /**
 	     * Resolve issues related to functionality for parsing the fields specific to the Loan form
 	     * @todo Abstract
-	     */
+	     * /
 
 	    if($('#edit-field-loan-volumes-text-und-0-value').val()) {
 
@@ -666,6 +759,7 @@
 	    $("<li><a href='#' class='token'>" + item + "<span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
 	    $fieldElem.val('');
 	}
+	*/
     };
 
     /**
@@ -743,7 +837,7 @@
     Drupal.behaviors.dssElcAutocomplete = {
 	attach: function (context, settings) {
 
-	    $(settings.dssElcAutocomplete.fields.loans.join(',')).dssElcAutocomplete({type: DssElcAutocompleteLoan});
+	    $(settings.dssElcAutocomplete.fields.loans.join(',')).first().dssElcAutocomplete({type: DssElcAutocompleteLoan});
 	    $(settings.dssElcAutocomplete.fields.entityRefs.join(',')).dssElcAutocomplete({type: DssElcAutocompleteEntityRef});
 	    $(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete();
 
