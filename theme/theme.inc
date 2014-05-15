@@ -143,6 +143,15 @@ function template_preprocess_human_node_form(&$variables) {
  */
 function template_preprocess_loan_node_form(&$variables) {
 
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/loan_form.min.js');
+
+  $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
+			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
+			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
+			       );
+  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
+
   if(strpos($variables['form']['#action'], 'multi_node_add') == 0) {
 
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');

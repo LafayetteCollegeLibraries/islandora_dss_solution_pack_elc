@@ -64,6 +64,7 @@
 	    $('.date-date').each(function(i,e) {
 
 		    var fieldNameMap = { 0 : 'Year', 1 : 'Month', 2 : 'Day' };
+		    var date = $(e).children('input:first').val();
 
 		    for(var j in [0,1,2]) {
 
@@ -81,7 +82,7 @@
 			$(e).append('<label class="control-label" for="' + id + '">' + fieldNameMap[j] + ' </label>').append(
 $('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
 
-				var $input = $(this).siblings('[id$="-date"]');
+	var $input = $(this).siblings('[id$="-date"]');
 				var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
 
 				switch(type) {
@@ -97,11 +98,24 @@ $('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="12
 				}
 				//}).appendTo($(e)));
 			    }));
-		    }
 
+			// Populate the field based upon submitted values
+			if(date) {
+
+			    var m = /^(\d*)\-(\d*)\-(\d*)/.exec(date);
+
+			    /**
+			     * @todo Resolve why j is a String Object
+			     *
+			     */
+			    $('#' + id).val(m[ parseInt(j) + 1]);
+			}
+		    }
+		    
 		    // Ensure that the actual field is hidden
 		    $(e).children('input:first').hide();
 		});
+
 	    //$('div.date-no-float.end-date-wrapper.container-inline-date').hide();
 
 	    /**

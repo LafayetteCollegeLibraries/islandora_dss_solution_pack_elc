@@ -666,14 +666,6 @@ function dss_elc_form_node_form_alter(&$form, $form_state) {
 function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 
   dss_elc_form_insert_js();
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/loan_form.min.js');
-
-  $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
-			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
-			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
-			       );
-  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
 
   // Apply theming for the field_bib_rel_object Field
   //$form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#after_build'][] = 'dss_elc_field_bib_rel_object_after_build';
