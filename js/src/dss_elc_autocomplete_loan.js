@@ -939,7 +939,13 @@
 		     */
 		    $(document).on('click', '#autocomplete .selected div, .reference-autocomplete', function(event) {
 		    
-			    $(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete').tokenize(event);
+			    
+			    //$(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete').tokenize(event);
+			    var autocomplete = $(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete');
+			    if(autocomplete) {
+
+				autocomplete.tokenize(event);
+			    }
 			});
 
 		    return this;

@@ -104,6 +104,9 @@ function template_preprocess_human_node_form(&$variables) {
     drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
 
+    drupal_add_js(array('dssElcPersRelsField' => array('button' => 'button[name="field_human_pers_rels_add_more"]')), 'setting');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_pers_rels.js');
+
     //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
