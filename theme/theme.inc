@@ -96,6 +96,14 @@ function template_preprocess_human_node_form(&$variables) {
 
     drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
 
+    /*
+    $autocomplete_fields = array('entityRefs' => array("#edit-field-artifact-was-authored-by-und"),
+				 'terms' => array("#edit-field-person-type-und")
+				 );
+    drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
+    */
+
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');

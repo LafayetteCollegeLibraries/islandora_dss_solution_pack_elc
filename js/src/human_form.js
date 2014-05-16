@@ -231,6 +231,19 @@
 		});
 
 	    /**
+	     * Prevent end-users from entering multiple values
+	     * Resolves EDDC-94
+	     *
+	     */
+	    $('#edit-field-pers-rel-object-und').keydown(function(e) {
+
+		    if(e.which == 188) {
+			
+			e.preventDefault();
+		    }
+		});
+
+	    /**
 	     * Refactoring the tokenization functionality
 	     *
 	     */
