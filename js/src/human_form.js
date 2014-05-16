@@ -244,6 +244,12 @@
 		});
 
 	    /**
+	     * Functionality for parsing form values
+	     * @todo Refactor with DssElcAutocomplete
+	     *
+	     */
+
+	    /**
 	     * Refactoring the tokenization functionality
 	     *
 	     */

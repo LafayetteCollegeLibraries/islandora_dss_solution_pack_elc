@@ -105,16 +105,16 @@
 	    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
 	    var items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
 
-	    $.each(items, function(i, val) {
-	    //for(var i in items) {
+	    //$.each(items, function(i, val) {
+	    for(var i in items) {
 
 		    var val = items[i];
 
-		/**
-		 * For now, only implementing for default language encoding
-		 * @todo Restructure for extended languages and character sets
-		 *
-		 */
+		    /**
+		     * For now, only implementing for default language encoding
+		     * @todo Restructure for extended languages and character sets
+		     *
+		     */
 		    if(this.get('autoCompleteItem')) {
 			
 			$("<li><a href='#' class='token'><span class='token-object'>" + this.get('autoCompleteItem') + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
@@ -122,8 +122,8 @@
 		    
 			$("<li><a href='#' class='token'><span class='token-object'>" + val + "</span><span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
 		    }
-		});
-	    //}
+		    //});
+	    }
 	    $fieldElem.val('');
 	}
     };
@@ -654,52 +654,6 @@
     function DssElcAutocompleteLoan(input, $) {
 
 	DssElcAutocompleteEntityRef.call(this, input, $);
-
-	//this.bindAjaxHandlers();
-
-	//$('button[name$="_add_more"]').parents('.form-item').prepend('<div><input id="edit-field-bib-rel-object-und" class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_bib_rel_object[und]" autocomplete="OFF" aria-autocomplete="list" /></div>');
-
-	    /**
-	     * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
-	     *
-	     */
-	    //$('<div><input id="edit-field-bib-rel-object-und" class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_bib_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></input></div>').keydown(function(e) {
-
-		    /*
-		    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
-				
-		    if($(this).val().length > 0) {
-				    
-			var humanName = $('#edit-field-person-name-und-0-value').val();
-				    
-			if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
-					
-			    humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
-			}
-				    
-			if($('#edit-field-human-surname-und-0-value').val().length > 0) {
-					
-			    humanName += ' ' + $('#edit-field-human-surname-und-0-value').val();
-			}
-				    
-			var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
-			var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
-			
-			$relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
-
-			// Trigger the autocompletion
-			//$relationFieldElem.keyup();
-			$.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
-					    
-				var lastEntity = Object.keys(data).pop();
-				$relationFieldElem.val(lastEntity);
-			    });
-		    } else {
-			
-			$relationFieldElem.val('');
-		    }
-		    */
-	    //}).prependTo($('button[name$="_add_more"]').parents('.form-item'));
     };
     
     /**
@@ -709,57 +663,220 @@
     DssElcAutocompleteLoan.prototype = new DssElcAutocompleteEntityRef();
     DssElcAutocompleteLoan.prototype.constructor = DssElcAutocompleteLoan;
 
+    /**
+     * DssElcAutocompleteHuman Class
+     * @constructor
+     *
+     */
+    function DssElcAutocompleteHuman(input, $) {
 
+	DssElcAutocompleteEntityRef.call(this, input, $);
+    };
 
     /**
-     * Method for tokenizing terms or entity reference ID's from the autocompletion list
-     * @params [Event] event
+     * Declare DssElcAutocompleteHuman to be a child class of DssElcAutocompleteEntityRef
+     *
      */
-    DssElcAutocompleteLoan.prototype.tokenize = function(event) {
+    DssElcAutocompleteHuman.prototype = new DssElcAutocompleteEntityRef();
+    DssElcAutocompleteHuman.prototype.constructor = DssElcAutocompleteHuman;
+
+    /**
+     * Specific to the field field_human_pers_rels_add_more
+     *
+     */
+    DssElcAutocompleteHuman.prototype.bindAddModel = function() {
+
+	$('button[name="field_human_pers_rels_add_more"]').click((function(e) {
+
+		    //$('#field-human-pers-rels-values .form-text').each(function(i,e) {
+		    $('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
+			    
+			    if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
+				
+				/**
+				 * Appending additional elements to the DOM
+				 * Ideally, this markup would be generated and passed from a hook implementation within Drupal (hook_form_alter() or template_preprocess_hook_form()
+				 * However, this would require far more work in order to properly integrate the handling of more complex AJAX responses for the form itself
+				 * @todo Decouple and implement within the appropriate Drupal hook implementations
+				 *
+				 */
+				$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+			    }
+			});
+		}).call());
+    };
+
+    DssElcAutocompleteHuman.prototype.bindAjaxHandlers = function() {
 
 	/**
-	 * Work-around
-	 * @todo Properly address with one() or once()
+	 * For storing the value of the autocompletion widgets within the DOM
 	 *
 	 */
-	event.stopImmediatePropagation();
+	$(document).ajaxSend(function(event, jqxhr, settings) {
 
-	//var $fieldElem = $(event.target).parents('.controls').children('input.form-text');
-	var $fieldElem = $(this.input);
-	this.tokenizeField($fieldElem);
+		if(settings.url == '/system/ajax') {
 
-	/*
-	// Only tokenize for non-existing values
-	if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
+		    /**
+		     * Serialized the form values within the DOM
+		     * Again, this should, ideally, be integrated with Drupal hook implementations relating to AJAX response generation
+		     * @todo Decouple and implement in Drupal
+		     *
+		     */
+		    var islandoraDssElcHumanForm = $(document).data('islandoraDssElcHumanForm') || {};
 
-		    return $(token).children('span:first').text() == $fieldElem.val();
-		}).length == 0) {
+		    /**
+		     * Hard-coding the jQuery selector
+		     * @todo Refactor
+		     */
+		    $(['edit-field-pers-rel-role-und', 'edit-field-pers-rel-object-und'].map(function(e,i) {
+				
+				islandoraDssElcHumanForm[e] = [];
+				return '[id="' + e + '"]:visible';
+			    }).join(', ')).each(function(i, e) {
+			    
+				    //islandoraDssElcHumanForm[e.id] = islandoraDssElcHumanForm[e.id].concat(e.value || "");
+				    islandoraDssElcHumanForm[e.id][i] = e.value || "";
+				});
+			
+		    $(document).data('islandoraDssElcHumanForm', islandoraDssElcHumanForm);
+		}
+	    });
 
-	    var islandoraDssElc = $(document).data('islandoraDssElc') || {};
+	$(document).ajaxComplete(function(event, xhr, settings) {
 
-	    var item = this.get('autoCompleteItem') ? this.get('autoCompleteItem') : $fieldElem.val();
-	    item = '<span class="token-object">' + item + '</span>';
+		if(settings && /system\/ajax/.exec(settings.url)) {
 
-	    /**
-	     * Resolve issues related to functionality for parsing the fields specific to the Loan form
-	     * @todo Abstract
-	     * /
+		    // Work-around for autocomplete
+		    /**
+		     * Work-around for enabling autocompletion from multiple elements
+		     * @todo Refactor for the invocation of $.once()
+		     *
+		     */
+		    //Drupal.behaviors.autocomplete.attach(document, Drupal.settings);
 
-	    if($('#edit-field-loan-volumes-text-und-0-value').val()) {
+		    var acdb = [];
+		    $('#edit-field-pers-rel-role-und-autocomplete, #edit-field-pers-rel-object-und-autocomplete').each(function(i,e) {
 
-		item += '<span class="token-volumes">(' + $('#edit-field-loan-volumes-text-und-0-value').val() + ')</span>';
-		$('#edit-field-loan-volumes-text-und-0-value').val('');
-	    }
-	    if($('#edit-field-loan-issues-text-und-0-value').val()) {
+			    var uri = this.value;
+			    if (!acdb[uri]) {
+				
+				acdb[uri] = new Drupal.ACDB(uri);
+			    }
 
-		item += '<span class="token-issues">(' + $('#edit-field-loan-issues-text-und-0-value').val() + ')</span>';
-		$('#edit-field-loan-issues-text-und-0-value').val('');
-	    }
+			    /**
+			     * Linking the individual input fields with the actual autocompletion widgets
+			     *
+			     */
+			    $('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
+					
+				    /**
+				     * Instantiate and bind the Drupal 7.x core autocomplete widget for the input fields
+				     *
+				     */
+				    var $input = $(input)
+					.attr('autocomplete', 'OFF')
+					.attr('aria-autocomplete', 'list');
+				    
+				    $($input[0].form).submit(Drupal.autocompleteSubmit);
+				    $input.parent()
+					.attr('role', 'application')
+					.append($('<span class="element-invisible" aria-live="assertive"></span>')
+						.attr('id', $input.attr('id') + '-autocomplete-aria-live')
+						);
+				    new Drupal.jsAC($input, acdb[uri]);
+				    
+				    /**
+				     * Populating the fields with serialized values
+				     * Should be integrated with Drupal hook implementations relating to AJAX response generation
+				     * @todo Decouple and implement in Drupal
+				     *
+				     */
+				    var islandoraDssElcHumanForm = $(document).data('islandoraDssElcHumanForm') || {};
+					
+				    /**
+				     * Hard-coding the jQuery selector
+				     * @todo Refactor
+				     */
+				    $(['edit-field-pers-rel-role-und', 'edit-field-pers-rel-object-und'].map(function(e,i) {
+				
+						return '[id="' + e + '"]:visible';
+					    }).join(', ')).each(function(i, e) {
+			    
+						    //islandoraDssElcHumanForm[e.id] = islandoraDssElcHumanForm[e.id].concat(e.value);
+						    $(e).val(islandoraDssElcHumanForm[e.id][i]);
+						});
+			
+				    $(document).data('islandoraDssElcHumanForm', islandoraDssElcHumanForm);
+				});
+			});
+		    
+		    /**
+		     * Population of the form fields from the individual 
+		     *
+		     */
+		    $('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
 
-	    $("<li><a href='#' class='token'>" + item + "<span class='token-x'>×</span></a></li>").appendTo( $fieldElem.siblings('.token-list') );
-	    $fieldElem.val('');
-	}
-	*/
+			    var fieldText = $(e).val();
+
+			    /**
+			     * Hard-coded regex for the personal-relationship Node title
+			     * @todo Refactor
+			     *
+			     */
+			    var m = /is a (.+?) in relation to (.+)/.exec(fieldText);
+				
+			    if(m) {
+
+				var $roleFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-role-und');
+				var $objectFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-object-und');
+
+				$roleFieldElem.val(m[1]);
+				$objectFieldElem.val(m[2]);
+			    }
+			});
+
+		    /**
+		     * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
+		     *
+		     */
+		    //$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
+		    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+			    
+			    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
+			    
+			    if($(this).val().length > 0) {
+				
+				var humanName = $('#edit-field-person-name-und-0-value').val();
+				
+				if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
+				    
+				    humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
+				}
+				
+				if($('#edit-field-human-surname-und-0-value').val().length > 0) {
+				    
+				    humanName += ' ' + $('#edit-field-human-surname-und-0-value').val();
+				}
+				
+				var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
+				var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
+				
+				$relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
+				
+				// Trigger the autocompletion
+				//$relationFieldElem.keyup();
+				$.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
+					
+					var lastEntity = Object.keys(data).pop();
+					$relationFieldElem.val(lastEntity);
+				    });
+			    } else {
+				
+				$relationFieldElem.val('');
+				}
+			});
+		}
+	    });
     };
 
     /**
@@ -837,8 +954,21 @@
     Drupal.behaviors.dssElcAutocomplete = {
 	attach: function (context, settings) {
 
-	    $(settings.dssElcAutocomplete.fields.loans.join(',')).first().dssElcAutocomplete({type: DssElcAutocompleteLoan});
-	    $(settings.dssElcAutocomplete.fields.entityRefs.join(',')).dssElcAutocomplete({type: DssElcAutocompleteEntityRef});
+	    var FIELD_CLASS_MAP = {loans: DssElcAutocompleteLoan,
+				   entityRefs: DssElcAutocompleteEntityRef };
+	    for(var field in FIELD_CLASS_MAP) {
+
+		if(settings.dssElcAutocomplete.fields.hasOwnProperty(field)) {
+
+		    if(field == 'loans') {
+
+			$(settings.dssElcAutocomplete.fields[field].join(',')).first().dssElcAutocomplete({type: FIELD_CLASS_MAP[field] });
+		    } else {
+
+			$(settings.dssElcAutocomplete.fields[field].join(',')).dssElcAutocomplete({type: FIELD_CLASS_MAP[field] });
+		    }
+		}
+	    }
 	    $(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete();
 
 	    $('.node-form').submit(function(e) {
