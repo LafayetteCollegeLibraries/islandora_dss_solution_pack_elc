@@ -25,7 +25,7 @@
 </div>
 </div>
 <div class="loan-persons-add">
-  <div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button">New Person</button></div>
+  <div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button">Add Person Record</button></div>
 </div>
 </div>
 </div>

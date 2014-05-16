@@ -79,29 +79,29 @@
 			 */
 			//$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="' + name + '" tabindex="9">').keyup(function(event) {
 
-			$(e).append('<label class="control-label" for="' + id + '">' + fieldNameMap[j] + ' </label>').append(
-$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
+			// Insert <div> wrapper
+			$('<div class="date-wrapper-' + id + '"><label class="control-label" for="' + id + '">' + fieldNameMap[j] + ' </label></div>').appendTo(e).append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
+			    
+				    var $input = $(this).parent().siblings('[id$="-date"]');
+				    var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
 
-	var $input = $(this).siblings('[id$="-date"]');
-				var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
+				    switch(type) {
 
-				switch(type) {
-
-				case 'year':
-				    $input.val( $input.val().replace(/^\d{0,4}/, $(this).val()) );
-				    break;
-				case 'month':
-				    $input.val( $input.val().replace(/^(\d{0,4})\-?\d{0,2}/, '$1-' + $(this).val()) );
-				    break;
-				default:
-				    $input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
-				}
-				//}).appendTo($(e)));
-			    }));
+				    case 'year':
+					$input.val( $input.val().replace(/^\d{0,4}/, $(this).val()) );
+					break;
+				    case 'month':
+					$input.val( $input.val().replace(/^(\d{0,4})\-?\d{0,2}/, '$1-' + $(this).val()) );
+					break;
+				    default:
+					$input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
+				    }
+				    //}).appendTo($(e)));
+				}));
 
 			// Populate the field based upon submitted values
 			if(date) {
-
+			    
 			    var m = /^(\d*)\-(\d*)\-(\d*)/.exec(date);
 
 			    /**

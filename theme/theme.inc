@@ -112,6 +112,9 @@ function template_preprocess_human_node_form(&$variables) {
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
     drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/human_form.css');
 
+    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
+    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['#prefix'] = render($variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']);
+    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more'] = array();
   }
 
   /**
@@ -175,13 +178,11 @@ function template_preprocess_loan_node_form(&$variables) {
     $variables['form']['field_loan_ledger'] = NULL;
   }
 
-  hide($variables['form']['field_loan_ledger']);
-
   //drupal_add_library('system', 'ui.datepicker');
   drupal_add_library('system', 'ui.dialog');
-
   dss_elc_preprocess_node_form($variables);
 
+  hide($variables['form']['field_loan_ledger']);
   hide($variables['form']['field_loan_issues_loaned']);
   //$variables['form']['field_loan_issues_loaned'] = array();
 

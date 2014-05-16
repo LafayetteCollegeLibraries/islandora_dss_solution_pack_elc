@@ -40,6 +40,32 @@ function DssElcPersRelsField(document, options) {
 	});
 };
 
+DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
+
+    var $ = this.$;
+    //$('#field-human-pers-rels-values .form-text').each(function(i,e) {
+    $('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
+
+	    if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
+				
+		/**
+		 * Appending additional elements to the DOM
+		 * Ideally, this markup would be generated and passed from a hook implementation within Drupal (hook_form_alter() or template_preprocess_hook_form()
+		 * However, this would require far more work in order to properly integrate the handling of more complex AJAX responses for the form itself
+		 * @todo Decouple and implement within the appropriate Drupal hook implementations
+		 *
+		 */
+		$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
+	    }
+	});
+
+    //this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
+    //this.$personFields = $('#edit-field-pers-rel-object-und-autocomplete');
+    this.$roleFields = $('edit-field-pers-rel-role-und');
+    this.$personFields = $('#edit-field-pers-rel-object-und');
+    //}).call()
+};
+
 /**
  * Bind the handlers for the "Add Another Item" button (default Drupal interface)
  *
@@ -48,27 +74,7 @@ DssElcPersRelsField.prototype.bindButtonHandlers = function() {
 
     var $ = this.$;
     //$('button[name="field_human_pers_rels_add_more"]').click((function(e) {
-    this.button.click((function(e) {
-
-		//$('#field-human-pers-rels-values .form-text').each(function(i,e) {
-		$('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
-
-			if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
-				
-			    /**
-			     * Appending additional elements to the DOM
-			     * Ideally, this markup would be generated and passed from a hook implementation within Drupal (hook_form_alter() or template_preprocess_hook_form()
-			     * However, this would require far more work in order to properly integrate the handling of more complex AJAX responses for the form itself
-			     * @todo Decouple and implement within the appropriate Drupal hook implementations
-			     *
-			     */
-			    $(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]">+New Person</button></div>');
-			}
-		    });
-
-		this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
-		this.$personFields = $('#edit-field-pers-rel-object-und-autocomplete');
-	    }).call());
+    this.button.click();
 };
 
 /**
@@ -136,7 +142,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			 * Linking the individual input fields with the actual autocompletion widgets
 			 *
 			 */
-			$('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
+			//$('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
+			$('[id="' + e.id + '"]:visible').each(function(i, input) {
 				
 				var $input = $(input)
 				    .attr('autocomplete', 'OFF')
