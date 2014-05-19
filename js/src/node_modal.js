@@ -132,7 +132,14 @@
 	    humanType = this.$element.text()[0].toUpperCase() + this.$element.text().slice(1);
 
 	    // Work-around
-	    humanType = /(New |Edit this )(.+)/.exec(humanType)[2]
+	    //humanType = /(New |Edit this )(.+)/.exec(humanType)[2]
+
+	    /**
+	     * Work-around for parsing the URL
+	     * Resolves EDDC-107
+	     *
+	     */
+	    humanType = $('.item-record').length ? 'Author' : 'Person';
 	    this.set('humanType', humanType);
 	}
 	

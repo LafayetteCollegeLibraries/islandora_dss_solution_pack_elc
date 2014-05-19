@@ -1,9 +1,14 @@
 <?php
 
-  //dpm('trace13');
+  /**
+   * @file Template for the Add/Edit Item Content Node Form
+   * @author griffinj@lafayette.edu
+   * @author goodnowt@lafayette.edu
+   *
+   */
 ?>
 
-<div class="loan-record">
+<div class="item-record">
 <?php if($form): ?>
 
 <div class="loan-row">
