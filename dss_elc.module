@@ -791,14 +791,46 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   /*
   // Hide certain fields for the modal
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
+    //$variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['#prefix'] = render($variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']);
+    //$variables['form']['field_human_pers_rels']['add_more'] = $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more'];
 
-    //$form['field_person_type'] = array();
-    $form['field_human_pers_rels'] = array();
-    $form['field_person_location'] = array();
-    $form['field_person_membership'] = array();
-    $form['field_human_gender'] = array();
-    $form['field_human_occupation'] = array();
+    //array_merge($variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more'], $variables['form']['field_human_pers_rels']);
+    
+    /**
+    * Ensure that the fields are added in the proper order
+    *
+    */
+  //$form['field_human_gender'][$form['field_human_gender']['#language']]['_none']['#title'] = 'Unknown';
+
+  //$form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#submit'][] = 'dss_elc_field_human_pers_rels_add_more_submit';
+  //$form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#ajax']['callback'] = array('field_add_more_js', 'dss_elc_field_human_pers_rels_add_more_submit');
+
+  dpm($form);
+  //dpm($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
+
+  $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
+  $new_field = array('add_more' => $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
+  unset($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
+
+  foreach($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']] as $key => $value) {
+
+    $new_field[$key] = $value;
   }
+  dpm($new_field);
+  
+  $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']] = $new_field;
+
+  dpm($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]);
+  dpm($form['field_human_pers_rels']);
+
+  /*
+  //$form['field_person_type'] = array();
+  $form['field_human_pers_rels'] = array();
+  $form['field_person_location'] = array();
+  $form['field_person_membership'] = array();
+  $form['field_human_gender'] = array();
+  $form['field_human_occupation'] = array();
   */
 
   /*
@@ -811,6 +843,8 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   $form['field_person_location'][$form['field_person_location']['#language']]['#prefix'] = '<div id="field-person-location-add-more-wrapper">';
   $form['field_person_location'][$form['field_person_location']['#language']]['#suffix'] = '<div class="node-add-person-location">Add a new ' . l(t('location'), 'node/add/location', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-location-modal'))) . '</div></div>';
   */
+
+
 }
 
 function dss_elc_form_ajax_item_node_form_alter(&$form) {
@@ -963,6 +997,8 @@ function dss_elc_form_alter(&$form, &$form_state, $form_id) {
   $form['#suffix'] = '</div>';
   */
 }
+
+
 
 /*
   

@@ -47,10 +47,30 @@ function template_preprocess_item_node_form(&$variables) {
 
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
   hide($variables['form']['field_book_or_periodical'][$variables['form']['field_book_or_periodical']['#language']]['_none']);
-
+  
   //hide($variables['form']['additional_settings']);
   dss_elc_preprocess_node_form($variables);
   }
+
+/**
+ * Form submission handler for the add_more submission within field_human_pers_rels
+ *
+ */
+function dss_elc_field_human_pers_rels_add_more_submit($form, &$form_state) {
+
+  print_r($form_state);
+  exit(0);
+  dpm($form_state);
+  
+  $new_field = array('add_more' => $form_state['field_human_pers_rels'][$form_state['field_human_pers_rels']['#language']]['add_more']);
+  unset($form_state['field_human_pers_rels'][$form_state['field_human_pers_rels']['#language']]['add_more']);
+
+  foreach($form_state['field_human_pers_rels'] as $key => $value) {
+
+    $new_field[$key] = $value;
+  }
+  $form_state['field_human_pers_rels'] = $new_field;
+}
 
 function template_preprocess_human_node_form(&$variables) {
 
@@ -61,7 +81,7 @@ function template_preprocess_human_node_form(&$variables) {
   drupal_add_library('system', 'ui.dialog');
   dss_elc_preprocess_node_form($variables);
 
-  $variables['form']['field_human_gender'][$variables['form']['field_human_gender']['#language']]['_none']['#title'] = 'Unknown';
+  
 
   /*
     This does not function as documented: (https://drupal.org/node/304258#drupal-settings and https://drupal.org/node/224333#local_settings_behaviors)
@@ -107,14 +127,10 @@ function template_preprocess_human_node_form(&$variables) {
     drupal_add_js(array('dssElcPersRelsField' => array('button' => 'button[name="field_human_pers_rels_add_more"]')), 'setting');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_pers_rels.js');
 
-    //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
     drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/human_form.css');
-
-    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
-    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['#prefix'] = render($variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']);
-    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more'] = array();
   }
 
   /**

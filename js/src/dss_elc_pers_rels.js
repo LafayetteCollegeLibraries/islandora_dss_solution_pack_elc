@@ -42,7 +42,7 @@ function DssElcPersRelsField(document, options) {
 
 DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
 
-    var $ = this.$;
+    var $ = this.$ || jQuery;
     //$('#field-human-pers-rels-values .form-text').each(function(i,e) {
     $('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
 
@@ -59,10 +59,10 @@ DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
 	    }
 	});
 
-    //this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
-    //this.$personFields = $('#edit-field-pers-rel-object-und-autocomplete');
-    this.$roleFields = $('edit-field-pers-rel-role-und');
-    this.$personFields = $('#edit-field-pers-rel-object-und');
+    this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
+    this.$personFields = $('#edit-field-pers-rel-object-und-autocomplete');
+    //this.$roleFields = $('#edit-field-pers-rel-role-und');
+    //this.$personFields = $('#edit-field-pers-rel-object-und');
     //}).call()
 };
 
@@ -74,7 +74,8 @@ DssElcPersRelsField.prototype.bindButtonHandlers = function() {
 
     var $ = this.$;
     //$('button[name="field_human_pers_rels_add_more"]').click((function(e) {
-    this.button.click();
+    this.button.click(this.buttonOnClickHandler);
+    this.buttonOnClickHandler();
 };
 
 /**
@@ -129,8 +130,13 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		//Drupal.behaviors.autocomplete.attach(document, Drupal.settings);
 
 		var acdb = [];
-		//$('#edit-field-pers-rel-role-und-autocomplete, #edit-field-pers-rel-object-und-autocomplete').each(function(i,e) {
-		this.$roleFields.add(this.$personFields).each(function(i,e) {
+
+		/**
+		 * @todo Refactor with this.$roleFields and this.$personFields
+		 *
+		 */
+		$('#edit-field-pers-rel-role-und-autocomplete, #edit-field-pers-rel-object-und-autocomplete').each(function(i,e) {
+		//this.$roleFields.add(this.$personFields).each(function(i,e) {
 
 			var uri = this.value;
 			if (!acdb[uri]) {
@@ -142,8 +148,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			 * Linking the individual input fields with the actual autocompletion widgets
 			 *
 			 */
-			//$('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
-			$('[id="' + e.id + '"]:visible').each(function(i, input) {
+			$('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
+			//$('[id="' + e.id + '"]:visible').each(function(i, input) {
 				
 				var $input = $(input)
 				    .attr('autocomplete', 'OFF')
@@ -208,6 +214,7 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 
 		/**
 		 * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
+		 * @todo Refactor with this.$roleFields and this.$personFields
 		 *
 		 */
 		//$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
@@ -232,15 +239,15 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
 			    var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
 			    
-				    $relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
+			    $relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
 				    
-				    // Trigger the autocompletion
-				    //$relationFieldElem.keyup();
-				    $.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
+			    // Trigger the autocompletion
+			    //$relationFieldElem.keyup();
+			    $.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
 					    
-					    var lastEntity = Object.keys(data).pop();
-					    $relationFieldElem.val(lastEntity);
-					});
+				    var lastEntity = Object.keys(data).pop();
+				    $relationFieldElem.val(lastEntity);
+				});
 			} else {
 			    
 			    $relationFieldElem.val('');
