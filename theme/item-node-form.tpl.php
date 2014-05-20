@@ -11,6 +11,15 @@
 <div class="item-record">
 <?php if($form): ?>
 
+<div class="add-form-legend">
+
+<ul>
+<li><span class="add-form-legend-asterisk">*</span> = Required field</li>	
+<li><span class="add-form-legend-circle">&#9702;</span> = Features autocomplete; if value not listed, please create new record</li>
+</ul>
+
+</div>
+
 <div class="loan-row">
 <div class="book-column single-value-field">
    <?php print drupal_render_children($form['field_artifact_title']); ?>
