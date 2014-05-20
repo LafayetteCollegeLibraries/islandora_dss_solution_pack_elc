@@ -12,9 +12,6 @@
 <div class="loan-column">
     <?php print drupal_render_children($form['field_pers_rel_object']); ?>
 </div>
-<div class="loan-column">
-    <?php print drupal_render_children($form['field_pers_rel_type']); ?>
-</div>
 </div>
 
 <div class="loan-row">

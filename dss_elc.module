@@ -904,6 +904,17 @@ function dss_elc_form_periodical_node_form_alter(&$form, $form_state) {
 }
 
 /**
+ * Alterations to the form for personal_relationship nodes
+ *
+ */
+function dss_elc_form_personal_relationship_node_form_alter(&$form, $form_state) {
+
+  drupal_set_title(t('Add Relationship'));
+  $form['field_pers_rel_subject'][$form['field_pers_rel_subject']['#language']]['#prefix'] = '<div id="field-item-was-authored-by-add-more-wrapper">';
+  $form['field_pers_rel_subject'][$form['field_pers_rel_subject']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button">Create Person Record</button></div></div>';
+}
+
+/**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function dss_elc_form_item_node_form_alter(&$form, $form_state) {

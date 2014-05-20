@@ -32,11 +32,28 @@ function template_preprocess_organization_node_form(&$variables) {
   dss_elc_preprocess_node_form($variables);
   }
 
+/**
+ * Theming for the Personal Relationship form
+ *
+ */
 function template_preprocess_personal_relationship_node_form(&$variables) {
 
-  //hide($variables['form']['additional_settings']);
+  drupal_add_library('system', 'ui.dialog');
   dss_elc_preprocess_node_form($variables);
-  }
+
+  $autocomplete_fields = array('entityRefs' => array('#edit-field-pers-rel-subject-und', '#edit-field-pers-rel-object-und'),
+			       'terms' => array("#edit-field-pers-rel-role-und", '#edit-field-pers-rel-type-und')
+			       );
+  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
+
+  drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
+
+  hide($variables['form']['field_pers_rel_type']);
+  hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
+}
 
 function template_preprocess_item_node_form(&$variables) {
 
@@ -58,10 +75,6 @@ function template_preprocess_item_node_form(&$variables) {
  */
 function dss_elc_field_human_pers_rels_add_more_submit($form, &$form_state) {
 
-  print_r($form_state);
-  exit(0);
-  dpm($form_state);
-  
   $new_field = array('add_more' => $form_state['field_human_pers_rels'][$form_state['field_human_pers_rels']['#language']]['add_more']);
   unset($form_state['field_human_pers_rels'][$form_state['field_human_pers_rels']['#language']]['add_more']);
 
