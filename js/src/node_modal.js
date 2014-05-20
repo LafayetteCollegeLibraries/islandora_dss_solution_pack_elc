@@ -315,14 +315,30 @@ else {
 		
 		$.get(url, { isModalQuery: true }, function(data, textStatus, xhr) {
 
+			/**
+			 * Retrieve the modal container from the Document
+			 * Note: This requires that the container be the last of its class appended to the Document
+			 * @todo Refactor
+			 *
+			 */
 			$modalContainer = $('.modal-content-container').last();
 			//$('#modal-content-container').append($(data));
 			$modalContainer.append($(data).find('.main-container'));
-			
+
 			//$modal = container;
 			$modal = $modalContainer.data('nodeFormModal')['modal'];
 			contentTypeName = $modalContainer.data('nodeFormModal')['contentTypeName'];
 			$relatedFormElement = $modalContainer.data('nodeFormModal')['relatedFormElement'];
+
+			/**
+			 * Recursively applies the click handler for all buttons within AJAX-loaded content
+			 * @todo Refactor?
+			 *
+			 */
+			$modalContainer.find('.add-node-modal').click(function(e) {
+
+				$relatedFormElement.click(e);
+			    });
 
 			$form = $modalContainer.find('form#' + contentTypeName + '-node-form');
 			$modalContainer.empty();
@@ -368,7 +384,7 @@ else {
 			$submit.data('nodeFormModal', {
 				
 				relatedFormElement: $relatedFormElement,
-				form: $form,
+				    form: $form,
 				    //container: $(this)
 				    container: $modal
 				    });

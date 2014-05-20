@@ -717,6 +717,9 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   //$form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '<div class="node-add-subject form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Patron</button></div></div>';
   $form['field_bib_rel_subject'][$form['field_bib_rel_subject']['#language']]['#suffix'] = '</div>';
 
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#prefix'] = '<div id="field-bib-rel-object-add-more-wrapper">';
+  $form['field_bib_rel_object'][$form['field_bib_rel_object']['#language']]['#suffix'] = '<div class="node-add-item form-item"><button class="add-node-modal btn btn-info" id="add-item-modal" type="button">Create Item Record</button></div></div>';
+
   $form['field_loan_shareholder']['#attributes']['disabled'] = true;
 
   // For the Issues Loaned, Volumes Loaned, Months Loaned, and Years Loaned
