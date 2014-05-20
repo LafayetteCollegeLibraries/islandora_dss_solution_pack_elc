@@ -1,6 +1,15 @@
 <div class="loan-record">
 <?php if($form): ?>
 
+<div class="add-form-legend">
+
+<ul>
+<li><span class="add-form-legend-asterisk">*</span> = Required field</li>	
+<li><span class="add-form-legend-circle">&#9702;</span> = Features autocomplete; if value not listed, please create new record</li>
+</ul>
+
+</div>
+
 <div class="loan-subset-selection">
 
 <button id="edit-loan-subset-1-3" class="btn form-submit active" type="button" value="Ledger 1-3" name="op" >Ledger 1-3</button>

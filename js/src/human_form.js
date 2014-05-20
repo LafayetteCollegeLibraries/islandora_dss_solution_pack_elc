@@ -18,7 +18,11 @@
 
 	    $('#edit-publish').attr('tabindex', '4');
 
-	    $('[name="field_human_pers_rels_add_more"]').parents('.form-item').prepend($('[name="field_human_pers_rels_add_more"]').parent().detach().show());
+	    /**
+	     * Resolves EDDC-96
+	     *
+	     */
+	    //$('[name="field_human_pers_rels_add_more"]').parents('.form-item').prepend($('[name="field_human_pers_rels_add_more"]').parent().detach().show());
 	}
     };
 }(jQuery, Drupal));

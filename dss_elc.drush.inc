@@ -74,6 +74,15 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-ml'));
 
+  $items['dss-elc-publish-loans'] =
+    array(
+	  'description' => dt('Publish all ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-publish-loans',
+			      ),
+	  'aliases' => array('elc-pl'));
+
   $items['dss-elc-delete-loans'] =
     array(
 	  'description' => dt('Delete all Loan Nodes'),
@@ -390,9 +399,9 @@ PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too
 
 function drush_dss_elc_migrate_books($mysql_user,
 				     $mysql_pass,
+				     $mysql_database='elc_production',
 				     $limit=0,
 				     $bookId=NULL,
-				     $mysql_database='elc_production',
 				     $mysql_server='localhost') {
 
   return dss_elc_migrate_books(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass), $limit, $bookId);
@@ -564,8 +573,8 @@ function dss_elc_migrate_person_type($db, $limit, $person_type) {
 
 function drush_dss_elc_migrate_humans($mysql_user,
 				      $mysql_pass,
-				      $limit=0,
 				      $mysql_database='elc_production',
+				      $limit=0,
 				      $mysql_server='localhost') {
 
   return dss_elc_migrate_person_type(dss_elc_migrate_person_type(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8",
@@ -841,8 +850,8 @@ function dss_elc_get_book_title($db, $book_record_id) {
 define('LOAN_FILENAMES_TAXON', 'loan_filenames');
 function drush_dss_elc_migrate_loans($mysql_user,
 				     $mysql_pass,
-				     $limit=0,
 				     $mysql_database='elc_production',
+				     $limit=0,
 				     $mysql_server='localhost') {
 
 
@@ -1231,6 +1240,29 @@ function drush_dss_elc_migrate_loans($mysql_user,
   // Retrieve all loan records and serialize them as Personal Relationship Nodes
 }
 
+function drush_dss_elc_publish_loans() {
+
+  $drupalQuery = new EntityFieldQuery();
+  
+  $result = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
+    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
+    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
+    ->propertyCondition('status', 0)
+    ->range(0, 1000)
+    ->execute();
+
+  if(isset($result['node'])) {
+    
+    foreach(entity_load('node', array_keys($result['node'])) as $loan) {
+
+      drush_log('Publishing ' . $loan->title . '...', 'ok');
+      $loan->status = 1;
+      entity_save('node', $loan);
+    }
+  }
+}
 
 function drush_dss_elc_delete_loans() {
 
