@@ -196,7 +196,15 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
      */
     var $ = NodeFormModal.jQuery;
 
-    $modalContainer = $('.modal-content-container').last();
+    //$modalContainer = $('.modal-content-container').last();
+    /**
+     * Work-around
+     * Cannot pass the reference to the global context for handling AJAX response
+     * @todo Refactor
+     */
+    var dssNodeFormModal = $(document).data('currentNodeFormModal');
+    var $modalContainer = dssNodeFormModal.$container;
+
     /*
       $modal = $modalContainer.data('nodeFormModal')['modal'];
       contentTypeName = $modalContainer.data('nodeFormModal')['contentTypeName'];
@@ -245,8 +253,13 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 		
 	$relatedFormElement = $submit.data('nodeFormModal').relatedFormElement;
 		
-	// This updates the form element to which the button was related
-	$relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
+	/**
+	 * Work-around
+	 * This updates the form element to which the button was related
+	 * @todo Refactor
+	 */
+	//$relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
+	$relatedInputField = dssNodeFormModal.$input;
 		
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
@@ -260,68 +273,30 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
 	entityRefStr += ' (' + nodeId + ')';
 		
-		/*
-		  / **
-		  * Work-around
-		  * One must query Drupal again for the entity ID
-		  *
-		  * /
-		  
-		  var m = /edit\-(.+?)\-und/.exec($relatedInputField.attr('id'));
-		  var inputFieldName = m[1];
-		  inputFieldName = inputFieldName.replace(/\-/g, '_', 'g');
-		  $.get('/entityreference/autocomplete/tags/' + inputFieldName + '/node/item/NULL/' + encodeURI(entityRefStr), function(data) {
-		  
-		  var entities = Object.keys(data).sort(function(u, v) {
-		  
-		  u = /\((\d+)\)/.exec(u)[1];
-		  v = /\((\d+)\)/.exec(v)[1];
-		  
-		  if(u < v) {
-		  
-		  return -1;
-		  }
-		  if(u > v) {
-		  
-		  return 1;
-		  }
-							    
-		  return 0;
-		  });
-		  var m = /(".+?")/.exec(entities.pop());
-		  
-		  if(m) {
-		  
-		  //islandoraDssElc['autoCompleteItem'] = m[1];
-		  //entityRefStr += ' (' + entityRefId + ')';
-		  
-		  entityRefStr = m[1];
-		  }
-		  });
-		*/
-		
-		//$relatedInputField.val(entityRefStr);
-		
-		/**
-		 * Handling for personal relationship nodes
-		 *
-		 */
-		if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
+	/**
+	 * Work-around
+	 * Handling for personal relationship nodes
+	 * @todo Refactor
+	 *
+	 */
+	if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
 		    
-		    $relatedInputField.val(entityRefStr);
-		    //$relatedInputField.change();
-		} else {
+	    $relatedInputField.val(entityRefStr);
+	    //$relatedInputField.change();
+	} else {
 		    
-		    /**
-		     * Integration for tokenization
-		     * @todo Refactor
-		     */
-		    $("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
-		    $relatedInputField.val('');
-		}
+	    /**
+	     * Integration for tokenization
+	     * @todo Refactor
+	     */
+	    $("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+	    $relatedInputField.val('');
+	}
 
 	// Trigger any handlers bound to the form field using the jQuery "change" event
 	$relatedInputField.change();
+
+	dssNodeFormModal.closeDialog();
     }
 };
 
@@ -414,17 +389,53 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
     var contentTypeName = dssNodeFormModal.contentTypeName;
     var $relatedFormElement = $(dssNodeFormModal.button);
 
+    /*
+    /**
+     * Work-around for imce integration
+     * @todo Refactor
+     *
+     * /
+    if(imce && !imce.hasOwnProperty('msgBox')) {
+
+	imce.msgBox = $('<div class="dss-node-modal-imce-container" style="display:none;"></div>').appendTo('body');
+    }
+    var $scripts = $(data).filter(function(i,e) { return e.tagName == 'SCRIPT'
+						  && !/jquery/i.test(e.getAttribute('src'))
+						  && !/themes/i.test(e.getAttribute('src'))
+						  &&!/devel/i.test(e.getAttribute('src'))
+						  &&!/bootstrap/i.test(e.getAttribute('src'))
+						  &&!/imce/i.test(e.getAttribute('src'))
+						  &&!/ckeditor/i.test(e.getAttribute('src'))
+						  &&!/wysiwyg/i.test(e.getAttribute('src'))
+						  &&!/buttons/i.test(e.getAttribute('src'))
+	});
+    */
+
     // Retrieve the requested form by using the identifier specific to the bundle
     $form = $modalContainer.find('form#' + contentTypeName + '-node-form');
 
     // Empty the modal container, the modal itself, and insert the content into the dialog
     $modalContainer.empty();
     $modal.empty();
+
+    /**
+     * Append the markup containing the JavaScript functionality
+     *
+     */
+    //$form.append(NodeFormModal.STYLE_ELEMENTS);
+    //$modal.append($scripts).append($form);
     $modal.append($form);
 
     /**
+     * Recursively applies the tokenization for the form
+     * @todo Refactor
+     *
+     */
+    Drupal.behaviors.dssElcAutocomplete.attach($modal, dssNodeFormModal.modalSettings);
+
+    /**
      * Recursively applies the click handler for all buttons within AJAX-loaded content
-     * @todo Refactor?
+     * @todo Refactor
      *
      */
     //$form.find('.add-node-modal').click($relatedFormElement.click);
@@ -454,7 +465,7 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      */
     $('<input type="hidden" value="Publish" name="op" />').appendTo($form);
     // Work-around
-    $form.append(NodeFormModal.STYLE_ELEMENTS);
+
     
     // Ensure that the object can be dereferenced from the form Submit button itself
     $submit.data('nodeFormModal', {
@@ -532,6 +543,7 @@ function NodeFormModal(options) {
     // The unique key for the Object
     this.key = settings.key;
 
+    // The <button> element to which this dialog is linked
     this.button = settings.button;
     // Reference the Object from within the DOM
     //$(this.button).data('dssNodeFormModal', this);
@@ -539,6 +551,13 @@ function NodeFormModal(options) {
 
     // Legacy
     this.$element = $(settings.button);
+
+    /**
+     * The <input> element into which the new Entity is being added
+     * @todo Resolve
+     *
+     */
+    this.$input = $(settings.input || this.$element.parent().parent().find('input.form-text:last'));
 
     // Retrieve the method name for the Form
     this.method = this.getMethodForElement();
@@ -572,6 +591,52 @@ function NodeFormModal(options) {
 	this.dialogTitle = 'Add ' + this.contentTypeName[0].toUpperCase() + this.contentTypeName.slice(1);
     }
 
+    // Setting the dialog settings for JavaScript invocations
+    var fields = [];
+    /*
+    $autocomplete_fields = array(
+				 //'persRels' => array('[id^="field-human-pers-rels-values"]'),
+				 'entityRefs' => array('#edit-field-person-membership-und', '#edit-field-person-location-und'),
+				 'terms' => array("#edit-field-human-occupation-und", '#edit-field-person-type-und')
+				 );
+     */
+    /*
+  $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
+			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
+			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
+			       );
+    */
+    switch(this.contentTypeName) {
+
+    case 'human':
+
+	fields = {
+
+	    entityRefs: ['#edit-field-person-membership-und', '#edit-field-person-location-und'],
+	    terms: ["#edit-field-human-occupation-und", '#edit-field-person-type-und']
+	};
+	break;
+
+    case 'item':
+
+	fields = {
+
+	    entityRefs: ['#edit-field-person-membership-und', '#edit-field-person-location-und'],
+	    terms: ["#edit-field-human-occupation-und", '#edit-field-person-type-und']
+	};
+	break;
+    }
+
+    this.modalSettings = {};
+    this.modalSettings.dssElcAutocomplete = {};
+
+    switch(this.contentTypeName) {
+
+    default:
+
+	this.modalSettings.dssElcAutocomplete.fields = {};
+    }
+
     // Set the handler for the jQuery "click" event
     $(this.button).click(NodeFormModal.onClickHandler);
 };
@@ -601,6 +666,7 @@ function NodeFormModal(options) {
 			button: $(e),
 			contentType: $(e).attr('data-content-type'),
 			nodeType: $(e).attr('data-node-type'),
+			input: $(e).attr('data-input'),
 			key: key
 		    });
 		$(document).data('dssNodeFormModals', dssNodeFormModals);
