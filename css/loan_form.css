@@ -1,0 +1,15 @@
+/**
+ * @file Styling for core functionality of Loan Node forms
+ * @author griffinj@lafayette.edu
+ */
+
+/**
+ * Resolves EDDC-100
+ * @todo Properly resolve by modifying this within dss_elc_field_loan_duration_after_build()
+ *
+ */
+[for^="edit-field-loan-duration-und-0-value-"].control-label,
+[for^="edit-field-loan-duration-und-0-value2-"].control-label {
+
+    display:none;
+}
