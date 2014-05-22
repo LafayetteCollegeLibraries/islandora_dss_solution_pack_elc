@@ -47,6 +47,66 @@
     };
 
     /**
+     * Static Methods
+     *
+     */
+    DssElcAutocomplete.onSubmitHandler = function(e) {
+
+	$.each($(this).data('islandoraDssElc.autocomplete'), (function(i, autocomplete) {
+
+		    if($('#' + autocomplete.input.attr('id') + '-tokens li a').length > 0) {
+			
+			// Specific to loan forms
+			/**
+			 * @todo Refactor
+			 *
+			 */
+			if($('[name="field_bib_rel_object[und][0][target_id]"]').length > 1) {
+				
+			    $('[name="field_bib_rel_object[und][0][target_id]"]:first').remove();
+			}
+			    
+			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
+					    
+				    /**
+				     * @todo Refactor
+				     *
+				     */
+				    var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
+				    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
+				    
+				    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
+				    
+				    $(item).siblings('span.token-volumes').each(function(j, item) {
+					    
+					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
+					    
+					    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
+						    
+						    return $(e).val();
+						}).length;
+					    
+					    $('.node-form').append('<input id="edit-field-loan-volumes-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_volumes_text[und][' + nameIndex + '][value]" style="display:none">');
+					});
+
+				    $(item).siblings('span.token-issues').each(function(j, item) {
+					    
+					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
+					    
+					    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
+						    
+						    return $(e).val();
+						}).length;
+					    
+					    $('.node-form').append('<input id="edit-field-loan-issues-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_issues_text[und][' + nameIndex + '][value]" style="display:none">');
+					});
+			    });
+		    }
+		})
+	    );
+    };
+
+    /**
      * Mutator
      * @params [Object] prop [Object] val
      * @returns [Object] val
@@ -887,8 +947,15 @@
     $.fn.dssElcAutocomplete = function(options) {
 
 	//settings = $.extend(options, {type: DssElcAutocomplete});
-	settings = $.extend({type: DssElcAutocomplete}, options);
+	settings = $.extend({
+		type: DssElcAutocomplete,
+		context: document
+	    }, options);
 	DssElcAutocompleteClass = settings.type;
+	var context = settings.context;
+
+	// Append the form submission handler for the current form
+	$(context).find('.node-form').submit(DssElcAutocomplete.onSubmitHandler);
 
 	return this.each(function() {
 
@@ -968,81 +1035,21 @@
 
 		    if(field == 'loans') {
 
-			$(settings.dssElcAutocomplete.fields[field].join(',')).first().dssElcAutocomplete({type: FIELD_CLASS_MAP[field] });
+			$(context).find(settings.dssElcAutocomplete.fields[field].join(',')).first().dssElcAutocomplete({type: FIELD_CLASS_MAP[field], context: context });
 		    } else {
 
-			$(settings.dssElcAutocomplete.fields[field].join(',')).dssElcAutocomplete({type: FIELD_CLASS_MAP[field] });
+			$(context).find(settings.dssElcAutocomplete.fields[field].join(',')).dssElcAutocomplete({type: FIELD_CLASS_MAP[field], context: context });
 		    }
 		}
 	    }
-	    $(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete();
+	    /**
+	     * Resolves EDDC-117
+	     *
+	     */
+	    if(settings.dssElcAutocomplete.fields.hasOwnProperty('terms')) {
 
-	    $('.node-form').submit(function(e) {
-
-		    $.each($(this).data('islandoraDssElc.autocomplete'), (function(i, autocomplete) {
-
-				//$(autocomplete.input.attr('id') + '-tokens li a').slice(1).each(function(j, item) {
-				if($('#' + autocomplete.input.attr('id') + '-tokens li a').length > 0) {
-
-				    // Specific to loan forms
-				    /**
-				     * @todo Refactor
-				     *
-				     */
-				    //if(i == 0 && /field_bib_rel_object/.test(autocomplete.input.attr('name'))) {
-				    if($('[name="field_bib_rel_object[und][0][target_id]"]').length > 1) {
-
-					$('[name="field_bib_rel_object[und][0][target_id]"]:first').remove();
-				    }
-
-				    $('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
-					    
-					    //$(this).append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + $(item).text().split('×').slice(0,-1).join(', ') + '" name="field_bib_rel_object[und][' + j + '][target_id]" autocomplete="OFF" aria-autocomplete="list"></input>');
-					    //$('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + $(item).text().split('×').slice(0,-1).join(', ') + '" name="field_bib_rel_object[und][' + j + '][target_id]" autocomplete="OFF" aria-autocomplete="list"></input>');
-
-					    /**
-					     * @todo Refactor
-					     *
-					     */
-					    var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
-					    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
-
-					    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
-
-					    //$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-issues').each(function(j, item) {
-					    $(item).siblings('span.token-volumes').each(function(j, item) {
-
-						    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
-
-						    //var m = /\[(\d+)\]/.exec($(item).parents('.token-list').siblings('.form-text').attr('name'));
-						    //var nameIndex = m[1];
-						    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
-
-							    return $(e).val();
-							}).length;
-
-						    $('.node-form').append('<input id="edit-field-loan-volumes-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_volumes_text[und][' + nameIndex + '][value]" style="display:none">');
-						});
-
-					    //$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-issues').each(function(j, item) {
-					    $(item).siblings('span.token-issues').each(function(j, item) {
-						    
-						    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
-						    
-						    //var m = /\[(\d+)\]/.exec($(item).parents('.token-list').siblings('.form-text').attr('name'));
-						    //var nameIndex = m[1];
-						    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
-
-							    return $(e).val();
-							}).length;
-
-						    $('.node-form').append('<input id="edit-field-loan-issues-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_issues_text[und][' + nameIndex + '][value]" style="display:none">');
-						});
-					});
-				}
-			    })
-			);
-		});
+		$(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete({context: context});
+	    }
 	}
     };
     

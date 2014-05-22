@@ -42,7 +42,7 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
   dss_elc_preprocess_node_form($variables);
 
   $autocomplete_fields = array('entityRefs' => array('#edit-field-pers-rel-subject-und', '#edit-field-pers-rel-object-und'),
-			       'terms' => array("#edit-field-pers-rel-role-und", '#edit-field-pers-rel-type-und')
+			       //'terms' => array("#edit-field-pers-rel-role-und", '#edit-field-pers-rel-type-und')
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
