@@ -804,13 +804,17 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
     * Ensure that the fields are added in the proper order
     *
     */
-  //$form['field_human_gender'][$form['field_human_gender']['#language']]['_none']['#title'] = 'Unknown';
+
 
   //$form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#submit'][] = 'dss_elc_field_human_pers_rels_add_more_submit';
   //$form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#ajax']['callback'] = array('field_add_more_js', 'dss_elc_field_human_pers_rels_add_more_submit');
 
-  dpm($form);
-  //dpm($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
+  /**
+   * Rename the label "N/A" to "Unknown"
+   * Resolves EDDC-85
+   *
+   */
+  $form['field_human_gender'][$form['field_human_gender']['#language']]['_none']['#title'] = 'Unknown';
 
   $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
   $new_field = array('add_more' => $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
@@ -820,12 +824,12 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
 
     $new_field[$key] = $value;
   }
-  dpm($new_field);
+  //dpm($new_field);
   
   $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']] = $new_field;
 
-  dpm($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]);
-  dpm($form['field_human_pers_rels']);
+  //dpm($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]);
+  //dpm($form['field_human_pers_rels']);
 
   /*
   //$form['field_person_type'] = array();

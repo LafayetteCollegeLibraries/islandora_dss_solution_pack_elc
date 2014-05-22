@@ -34,7 +34,8 @@
 </div>
 </div>
 <div class="loan-persons-add">
-  <div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button" data-content-type="human" data-node-type="shareholder">Create New Person</button></div>
+  <!-- @todo Migrate this into the $form field field_loan_shareholder -->
+  <div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button" data-content-type="human" data-node-type="shareholder" data-input="#edit-field-loan-shareholder-und">Create New Person</button></div>
 </div>
 </div>
 </div>
