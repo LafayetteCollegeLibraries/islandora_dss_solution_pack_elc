@@ -180,7 +180,6 @@ function template_preprocess_human_node_form(&$variables) {
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
 }
 
-
 /**
  * Preprocessor for loan_node_form
  */
@@ -239,7 +238,7 @@ function template_preprocess_loan_node_form(&$variables) {
 
   hide($variables['form']['field_loan_other_notes'][$variables['form']['field_loan_other_notes']['#language']][0]['format']);
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
-  }
+}
 
 /**
  * Implements template_preprocess_page()

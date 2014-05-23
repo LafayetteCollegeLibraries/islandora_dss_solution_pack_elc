@@ -599,6 +599,9 @@ function NodeFormModal(options) {
     if(this.humanType) {
 
 	this.dialogTitle = 'Add ' + this.humanType[0].toUpperCase() + this.humanType.slice(1);
+    } else if(this.contentTypeName == 'human') {
+
+	this.dialogTitle = 'Add Person';
     } else {
 
 	this.dialogTitle = 'Add ' + this.contentTypeName[0].toUpperCase() + this.contentTypeName.slice(1);
