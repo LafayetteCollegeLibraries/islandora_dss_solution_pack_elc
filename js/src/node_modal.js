@@ -424,7 +424,15 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      */
     //$form.append(NodeFormModal.STYLE_ELEMENTS);
     //$modal.append($scripts).append($form);
-    $modal.append($form);
+
+    /**
+     * Work-around
+     * Resolves EDDC-143
+     * @todo Refactor
+     * Why are there multiple <form> elements inserted into $modalContainer?
+     * (And, why aren't these removed with $modalContainer.empty()?
+     */
+    $modal.append($form.first());
 
     /**
      * Recursively integrates tokenization for the form
@@ -479,7 +487,6 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
     $('<input type="hidden" value="Publish" name="op" />').appendTo($form);
     // Work-around
 
-    
     // Ensure that the object can be dereferenced from the form Submit button itself
     $submit.data('nodeFormModal', {
 	    
