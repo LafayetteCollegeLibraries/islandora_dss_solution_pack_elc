@@ -986,7 +986,7 @@ function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 			       'terms' => array("#edit-field-item-number-taxon-und", "#edit-field-item-subject-und")
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
 
   hide($form['field_item_total_volumes']);
   // Issue
