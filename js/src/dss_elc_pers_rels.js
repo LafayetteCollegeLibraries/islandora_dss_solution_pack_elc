@@ -55,13 +55,24 @@ DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
 		 * @todo Decouple and implement within the appropriate Drupal hook implementations
 		 *
 		 */
-		$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button></div>');
+		//$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button></div>');
+
+		/**
+		 * @todo Refactor
+		 *
+		 */
+		$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button></div>');
 	    }
 	});
 
-    this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
+    //this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
     this.$personFields = $('#edit-field-pers-rel-object-und-autocomplete');
-    //this.$roleFields = $('#edit-field-pers-rel-role-und');
+
+    /**
+     * Work-around for using a <select> field element
+     *
+     */
+    this.$roleFields = $('#edit-field-pers-rel-role-und');
     //this.$personFields = $('#edit-field-pers-rel-object-und');
     //}).call()
 };
@@ -211,6 +222,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    $objectFieldElem.val(m[2]);
 			}
 		    });
+	    }
+	});
 
 		/**
 		 * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
@@ -218,7 +231,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		 *
 		 */
 		//$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
-		$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+                //$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+    $('#edit-field-pers-rel-object-und').blur(function(e) {
 				
 			var $relationFieldElem = $(this).parents('.controls').children('.form-text');
 				
@@ -228,7 +242,7 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 				    
 			    if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
 				
-					humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
+				humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
 			    }
 			    
 			    if($('#edit-field-human-surname-und-0-value').val().length > 0) {
@@ -238,8 +252,20 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    
 			    var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
 			    var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
-			    
-			    $relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
+
+			    /**
+			     * Resolving terms to string literals
+			     * @todo Refactor
+			     *
+			     */
+			    var role = $roleFieldElem.children('[value="' + $roleFieldElem.val() + '"]').text().toLowerCase();
+			    var objectName = $objectFieldElem.val().replace(/\(\d+\)/, '');
+			    var m = /"(.+?)"/.exec(objectName);
+			    if(m) {
+
+				objectName = m[1];
+			    }
+			    $relationFieldElem.val((humanName + ' is a ' + role + ' in relation to ' + objectName).trim());
 				    
 			    // Trigger the autocompletion
 			    //$relationFieldElem.keyup();
@@ -253,8 +279,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    $relationFieldElem.val('');
 			}
 		    });
-	    }
-	});
+		//}
+    //});
 };
 
 /**
