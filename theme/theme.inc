@@ -14,7 +14,14 @@ function dss_elc_preprocess_node_form(&$variables) {
 
   hide($variables['form']['additional_settings']);
   #$variables['form']['actions']['submit']['#value'] = 'Submit for Review';
-  #$variables['form']['actions']['publish']['#value'] = 'Save';
+
+  if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+
+    $variables['form']['actions']['publish']['#value'] = 'Save New Record';
+  } else {
+
+    $variables['form']['actions']['publish']['#value'] = 'Save Record';
+  }
   }
 
 /**
