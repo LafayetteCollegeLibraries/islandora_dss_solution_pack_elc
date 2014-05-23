@@ -427,12 +427,18 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
     $modal.append($form);
 
     /**
-     * Recursively applies the tokenization for the form
+     * Recursively integrates tokenization for the form
      * @todo Refactor
      *
      */
-    //Drupal.behaviors.dssElcAutocomplete.attach($modal, dssNodeFormModal.modalSettings);
     $(document).dssElcAutocompleteForm($modal, dssNodeFormModal.modalSettings);
+
+    /**
+     * Recursively integrates autocompletion for the form
+     * @todo Refactor
+     *
+     */
+    Drupal.behaviors.autocomplete.attach($modal, Drupal.settings);
 
     /**
      * Recursively applies the click handler for all buttons within AJAX-loaded content
