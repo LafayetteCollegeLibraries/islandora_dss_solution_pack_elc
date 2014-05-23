@@ -80,24 +80,92 @@
 			//$('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="' + name + '" tabindex="9">').keyup(function(event) {
 
 			// Insert <div> wrapper
-			$('<div class="date-wrapper-' + id + '"><label class="control-label" for="' + id + '">' + fieldNameMap[j] + ' </label></div>').appendTo(e).append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
-			    
+			/**
+			 * Resolves EDDC-121
+			 *
+			 */
+			var defaultValueHandler = function(type) {
+
+			    var defaultText = '';
+			    if(!$(this).val()) {
+
+				switch(type) {
+
+				case 'year':
+				
+				defaultText = 'YYYY';
+				break;
+				case 'month':
+				defaultText = 'MM';
+				break;
+				case 'day':
+				defaultText = 'DD';
+				break;
+				}
+
+				$(this).val(defaultText);
+			    }
+			};
+
+			$('<div class="date-wrapper-' + id + ' date-wrapper"></div>').appendTo(e).append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function(event) {
+				    
 				    var $input = $(this).parent().siblings('[id$="-date"]');
 				    var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
 
-				    switch(type) {
+				    /**
+				     * @todo Refactor
+				     *
+				     */
+				    if(!($(this).val() == 'YYYY'
+					 && $(this).val() == 'MM'
+					 && $(this).val() == 'DD')) {
+					switch(type) {
 
-				    case 'year':
+					case 'year':
 					$input.val( $input.val().replace(/^\d{0,4}/, $(this).val()) );
 					break;
-				    case 'month':
+					case 'month':
 					$input.val( $input.val().replace(/^(\d{0,4})\-?\d{0,2}/, '$1-' + $(this).val()) );
 					break;
-				    default:
-					$input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
+					default:
+					    $input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
+					}
+
+					defaultValueHandler.call(this, type);
 				    }
 				    //}).appendTo($(e)));
 				}));
+
+			$('.date-wrapper .form-text').each(function(i,e) {
+
+				var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(e.id)[1];
+				defaultValueHandler.call(e, type);
+
+				$(e).click(function(event) {
+
+					/**
+					 * @todo Refactor
+					 *
+					 */
+					switch($(this).val()) {
+					    
+					case 'YYYY':
+					case 'MM':
+					case 'DD':
+					    
+					    $(this).val('');
+					    break;
+					}
+				    }).blur(function(event) {
+
+					    /**
+					     * @todo Refactor
+					     *
+					     */
+					    var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
+					    defaultValueHandler.call(this, type);
+					});
+			    });
 
 			// Populate the field based upon submitted values
 			if(date) {
@@ -108,12 +176,15 @@
 			     * @todo Resolve why j is a String Object
 			     *
 			     */
-			    $('#' + id).val(m[ parseInt(j) + 1]);
+			    if(m) {
+
+				$('#' + id).val(m[ parseInt(j) + 1]);
+			    }
 			}
 		    }
 		    
 		    // Ensure that the actual field is hidden
-		    $(e).children('input:first').hide();
+		    //$(e).children('input:first').hide();
 		});
 
 	    //$('div.date-no-float.end-date-wrapper.container-inline-date').hide();

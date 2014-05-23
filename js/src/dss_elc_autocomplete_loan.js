@@ -1021,35 +1021,45 @@
     };
 
     /**
+     * jQuery plug-in
+     * @params [bool] isEntityRef
+     *
+     */
+    $.fn.dssElcAutocompleteForm = function(context, settings) {
+
+	var FIELD_CLASS_MAP = {loans: DssElcAutocompleteLoan,
+			       entityRefs: DssElcAutocompleteEntityRef };
+	for(var field in FIELD_CLASS_MAP) {
+
+	    if(settings.dssElcAutocomplete.fields.hasOwnProperty(field)) {
+
+		if(field == 'loans') {
+
+		    $(context).find(settings.dssElcAutocomplete.fields[field].join(',')).first().dssElcAutocomplete({type: FIELD_CLASS_MAP[field], context: context });
+		} else {
+
+		    $(context).find(settings.dssElcAutocomplete.fields[field].join(',')).dssElcAutocomplete({type: FIELD_CLASS_MAP[field], context: context });
+		}
+	    }
+	}
+	/**
+	 * Resolves EDDC-117
+	 *
+	 */
+	if(settings.dssElcAutocomplete.fields.hasOwnProperty('terms')) {
+
+	    $(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete({context: context});
+	}
+    };
+
+    /**
      * jQuery plug-in integration for Drupal
      *
      */
     Drupal.behaviors.dssElcAutocomplete = {
 	attach: function (context, settings) {
 
-	    var FIELD_CLASS_MAP = {loans: DssElcAutocompleteLoan,
-				   entityRefs: DssElcAutocompleteEntityRef };
-	    for(var field in FIELD_CLASS_MAP) {
-
-		if(settings.dssElcAutocomplete.fields.hasOwnProperty(field)) {
-
-		    if(field == 'loans') {
-
-			$(context).find(settings.dssElcAutocomplete.fields[field].join(',')).first().dssElcAutocomplete({type: FIELD_CLASS_MAP[field], context: context });
-		    } else {
-
-			$(context).find(settings.dssElcAutocomplete.fields[field].join(',')).dssElcAutocomplete({type: FIELD_CLASS_MAP[field], context: context });
-		    }
-		}
-	    }
-	    /**
-	     * Resolves EDDC-117
-	     *
-	     */
-	    if(settings.dssElcAutocomplete.fields.hasOwnProperty('terms')) {
-
-		$(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete({context: context});
-	    }
+	    $(document).dssElcAutocompleteForm(context, settings);
 	}
     };
     

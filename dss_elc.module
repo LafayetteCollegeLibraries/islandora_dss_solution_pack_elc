@@ -553,10 +553,12 @@ function dss_elc_field_loan_duration_after_build(&$element) {
       hide($value['show_todate']);
 
       $value['value']['#title'] = 'Check-out';
-      $value['value']['date']['#description'] = 'YYYY-MM-DD';
+      //$value['value']['date']['#description'] = 'YYYY-MM-DD';
+      unset($value['value']['date']['#description']);
 
       $value['value2']['#title'] = 'Check-in';
-      $value['value2']['date']['#description'] = 'YYYY-MM-DD';
+      //$value['value2']['date']['#description'] = 'YYYY-MM-DD';
+      unset($value['value2']['date']['#description']);
     }
   }
 
@@ -665,6 +667,7 @@ function dss_elc_form_node_form_alter(&$form, $form_state) {
  */
 function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 
+  drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/loan_form.css');
   dss_elc_form_insert_js();
 
   // Apply theming for the field_bib_rel_object Field
@@ -691,6 +694,8 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
     //$form[$field_name][$form[$field_name]['#language']]['#after_build'][] = 'dss_elc_' . $field_name . '_after_build';
     hide($form[$field_name]);
   }
+
+  dpm($form['field_loan_duration']);
 
   /**
    * 

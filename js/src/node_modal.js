@@ -431,7 +431,8 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      * @todo Refactor
      *
      */
-    Drupal.behaviors.dssElcAutocomplete.attach($modal, dssNodeFormModal.modalSettings);
+    //Drupal.behaviors.dssElcAutocomplete.attach($modal, dssNodeFormModal.modalSettings);
+    $(document).dssElcAutocompleteForm($modal, dssNodeFormModal.modalSettings);
 
     /**
      * Recursively applies the click handler for all buttons within AJAX-loaded content
@@ -447,7 +448,13 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
     // Retrieve the type of Human being added, and prepopulate the form
     if(dssNodeFormModal.humanType) {
 
-	$modal.find('#edit-field-person-type-und').val(dssNodeFormModal.humanType);
+	//$modal.find('#edit-field-person-type-und').val(dssNodeFormModal.humanType);
+
+	/**
+	 * Ensure that this value is tokenized
+	 * @todo Refactor
+	 */
+	$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
     }
 
     // Hide the preview and submit buttons
@@ -630,8 +637,27 @@ function NodeFormModal(options) {
     this.modalSettings = {};
     this.modalSettings.dssElcAutocomplete = {};
 
+    /**
+     * Work-around for nested forms
+     * @todo Refactor
+     */
     switch(this.contentTypeName) {
 
+    case 'human':
+
+	this.modalSettings.dssElcAutocomplete.fields = {
+	    entityRefs: ['#edit-field-person-membership-und', '#edit-field-person-location-und'],
+	    terms: ["#edit-field-human-occupation-und", '#edit-field-person-type-und']
+	};
+	break;
+    case 'item':
+
+	this.modalSettings.dssElcAutocomplete.fields = {
+
+	    entityRefs: ["#edit-field-artifact-was-authored-by-und"],
+	    terms: ["#edit-field-item-number-taxon-und", "#edit-field-item-subject-und"]
+	};
+	break;
     default:
 
 	this.modalSettings.dssElcAutocomplete.fields = {};
