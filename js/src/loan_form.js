@@ -196,12 +196,27 @@
 	    $('#edit-loan-subset-1-3').click(function(e) {
 
 		    $(this).addClass('active').siblings().removeClass('active');
-		    $('.type-column, .fine-column').show();
+		    $('.type-column, .fine-column, .patron-column').show();
 		});
 	    $('#edit-loan-subset-4-5').click(function(e) {
 
 		    $(this).addClass('active').siblings().removeClass('active');
-		    $('.type-column, .fine-column').hide();
+		    $('.type-column, .fine-column, .patron-column').hide();
+		});
+
+	    /**
+	     * Work-around
+	     * @todo Refactor
+	     * Representative is the object of the bib. relationship
+	     * This field must be automatically populated if it's hidden
+	     *
+	     */
+	    $('#edit-field-loan-shareholder-und').blur(function(e) {
+
+		    if($('#edit-loan-subset-4-5').hasClass('active')) {
+
+			$('#edit-field-bib-rel-subject-und').val(this.value);
+		    }
 		});
 
 	    // Focus on...
