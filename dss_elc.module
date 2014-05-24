@@ -916,6 +916,13 @@ function dss_elc_form_ajax_item_node_form_alter(&$form) {
     $form['field_artifact_metadata_record'] = array();
     $form['field_item_embodies'] = array();
   }
+
+  /**
+   * Modify the order and labeling for the format types
+   * Resolves EDDC-155
+   */
+  unset($form['field_item_format'][$form['field_item_format']['#language']]['#options']['_none']);
+  $form['field_item_format'][$form['field_item_format']['#language']]['#options']['_none'] = 'Unknown';
 }
 
 /**
