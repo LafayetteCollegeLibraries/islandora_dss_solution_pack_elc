@@ -254,6 +254,7 @@ function template_preprocess_loan_node_form(&$variables) {
  */
 function dss_elc_preprocess_page(&$variables) {
 
+
   if(isset($variables['page']) && isset($variables['page']['content']['system_main']['#type'])) {
     if($variables['page']['content']['system_main']['#type'] == 'form') {
 
@@ -293,6 +294,12 @@ function dss_elc_preprocess_page(&$variables) {
  */
 function dss_elc_preprocess_views_view(&$vars) {
 
-  drupal_add_js(libraries_get_path('DataTables') . '/media/js/jquery.dataTables.js');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/dss_elc_views_filter.min.js');
+  /**
+   * Work-around for avoiding JS caching issues for dss_elc_preprocess_views_view() implementation
+   * See html.tpl.php for bootstrap_dss_elc theme
+   * @todo Resolve EDDC-160
+   *
+   */
+  //drupal_add_js(libraries_get_path('DataTables') . '/media/js/jquery.dataTables.js');
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/dss_elc_views_filter.min.js');
 }
