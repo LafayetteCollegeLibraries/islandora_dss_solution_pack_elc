@@ -116,22 +116,34 @@
 				     * @todo Refactor
 				     *
 				     */
-				    if(!($(this).val() == 'YYYY'
-					 && $(this).val() == 'MM'
-					 && $(this).val() == 'DD')) {
+				    if($(this).val() != 'YYYY'
+				       && $(this).val() != 'MM'
+				       && $(this).val() != 'DD') {
+
+					var val = $(this).val();
+
+					/**
+					 * Work-around for removing any non-numeric characters
+					 * @todo Refactor
+					 */
+					val = val.replace(/[a-zA-Z]/g, '', 'g');
 					switch(type) {
 
 					case 'year':
-					$input.val( $input.val().replace(/^\d{0,4}/, $(this).val()) );
-					break;
+					    $input.val( $input.val().replace(/^\d{0,4}/, val));
+					    break;
 					case 'month':
-					$input.val( $input.val().replace(/^(\d{0,4})\-?\d{0,2}/, '$1-' + $(this).val()) );
-					break;
+					    $input.val( $input.val().replace(/^(\d{0,4})\-?\d{0,2}/, '$1-' + val));
+					    break;
 					default:
-					    $input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + $(this).val()) );
+					    $input.val( $input.val().replace(/^(\d{0,4})\-?(\d{0,2})\-?\d{0,2}/, '$1-$2-' + val));
 					}
 
-					defaultValueHandler.call(this, type);
+					/** Ensure that the textbox is not populated should the user clear the value with delete or backspace */
+					if(event.which != 8 && event.which != 46) {
+
+					    defaultValueHandler.call(this, type);
+					}
 				    }
 				    //}).appendTo($(e)));
 				}));
@@ -184,7 +196,7 @@
 		    }
 		    
 		    // Ensure that the actual field is hidden
-		    //$(e).children('input:first').hide();
+		    $(e).children('input:first').hide();
 		});
 
 	    //$('div.date-no-float.end-date-wrapper.container-inline-date').hide();
