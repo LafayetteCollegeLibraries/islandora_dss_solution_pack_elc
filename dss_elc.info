@@ -13,7 +13,6 @@ dependencies[] = token
 dependencies[] = multi_node_add
 dependencies[] = views
 files[] = tests/node.test
-; scripts[] = js/jquery.waituntilexists.js
 
-stylesheets[all][] = css/islandora_dss_elc
 stylesheets[all][] = css/islandora_dss_elc_autocomplete.css
+stylesheets[all][] = css/dss_elc_views.css

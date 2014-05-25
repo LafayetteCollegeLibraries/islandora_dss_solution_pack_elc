@@ -1246,3 +1246,17 @@ function dss_elc_form_place_of_worship_node_form_alter(&$form, &$form_state, $fo
   $form = dss_elc_set_form_title_to_name($form);
 }
 */
+
+/*
+ * Implementation of hook_views_pre_build().
+ */
+function dss_elc_views_pre_build(&$view) {
+
+  /**
+   * Retrieve the number of items per page for the request from the GET parameter
+   */
+  if(array_key_exists('itemsPerPage', $_GET)) {
+
+    //$view->items_per_page = $_GET['itemsPerPage'];
+  }
+}

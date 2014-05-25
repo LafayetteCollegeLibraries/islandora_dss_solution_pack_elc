@@ -67,22 +67,23 @@ function DssElcViewsFilter(options) {
 	     * Instantiate the DataTable Object
 	     */
 	    var table = $('.views-table').DataTable({
-
+		    
 		    "paging": false
 		});
-
+	    
 	    /**
 	     * Append the input fields
 	     */
 	    $('th.views-field').each(function() {
-
+		    
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup change', function() {
-
+			    
 			    if(this.value != '') {
 				
-				$('.views-table').DataTable.column( $(this).parent().index()+':visible' )
-				.search( this.value )
-				.draw();
+				//$('.views-table').DataTable.column( $(this).parent().index()+':visible' )
+				table.column( $(this).parent().index()+':visible' )
+				    .search( this.value )
+				    .draw();
 			    }
 			}).appendTo(this);
 		});
