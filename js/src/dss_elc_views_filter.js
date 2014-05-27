@@ -68,7 +68,7 @@ function DssElcViewsFilter(options) {
 	     */
 	    var table = $('.views-table').DataTable({
 		    
-		    "paging": false
+		    //"paging": false
 		});
 	    
 	    /**

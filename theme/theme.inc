@@ -254,6 +254,10 @@ function template_preprocess_loan_node_form(&$variables) {
  */
 function dss_elc_preprocess_page(&$variables) {
 
+  /**
+   * Integrate the stylesheets for the DataTables plug-in
+   */
+  drupal_add_css(libraries_get_path('DataTables') . '/media/css/jquery.dataTables.css');
 
   if(isset($variables['page']) && isset($variables['page']['content']['system_main']['#type'])) {
     if($variables['page']['content']['system_main']['#type'] == 'form') {
@@ -286,6 +290,11 @@ function dss_elc_preprocess_page(&$variables) {
       break;
     }
   }
+}
+
+function dss_elc_preprocess_html(&$vars) {
+
+  dpm($vars);
 }
 
 /**
