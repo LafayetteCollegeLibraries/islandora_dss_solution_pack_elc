@@ -256,8 +256,10 @@ function dss_elc_preprocess_page(&$variables) {
 
   /**
    * Integrate the stylesheets for the DataTables plug-in
+   * Migrated into the bootstrap_dss_elc as a caching work-around
+   * @todo Refactor
    */
-  drupal_add_css(libraries_get_path('DataTables') . '/media/css/jquery.dataTables.css');
+  //drupal_add_css(libraries_get_path('DataTables') . '/media/css/jquery.dataTables.css');
 
   if(isset($variables['page']) && isset($variables['page']['content']['system_main']['#type'])) {
     if($variables['page']['content']['system_main']['#type'] == 'form') {

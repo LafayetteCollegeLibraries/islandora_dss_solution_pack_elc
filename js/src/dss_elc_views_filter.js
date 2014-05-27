@@ -74,7 +74,10 @@ function DssElcViewsFilter(options) {
 	    /**
 	     * Append the input fields
 	     */
-	    $('th.views-field').each(function() {
+	    $('th.views-field').filter(function(i,e) {
+
+		    return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
+		}).each(function() {
 		    
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup change', function() {
 			    
