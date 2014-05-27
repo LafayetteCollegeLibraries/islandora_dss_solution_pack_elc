@@ -1260,3 +1260,41 @@ function dss_elc_views_pre_build(&$view) {
     //$view->items_per_page = $_GET['itemsPerPage'];
   }
 }
+
+function dss_elc_views_pre_render(&$view) {
+
+  $results = &$view->result;
+
+  /**
+   * Significant work-around
+   * @todo Refactor
+   */
+  if($view->name == 'loans') {
+
+    foreach($results as $key => $result) {
+
+      /**
+       * Integrating date string parsing for the Views field
+       * @todo Resolve for Date intervals within the Views Module
+       */
+      $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_duration_field_loan_duration_value);
+      $results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
+      $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+    }
+  }
+}
+
+function dss_elc_field_views_data_alter(&$result, $field) {
+
+  if(array_key_exists('field_data_field_loan_duration', $result)) {
+
+    $result['field_data_field_loan_duration'];
+  }
+}
+
+function dss_elc_views_api() {
+
+  return array( 'api' => 3,
+		'path' => drupal_get_path('module', 'dss_elc') . '/views',
+		);
+}

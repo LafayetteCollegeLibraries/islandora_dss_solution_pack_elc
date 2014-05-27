@@ -313,4 +313,6 @@ function dss_elc_preprocess_views_view(&$vars) {
    */
   //drupal_add_js(libraries_get_path('DataTables') . '/media/js/jquery.dataTables.js');
   //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/dss_elc_views_filter.min.js');
+
+  //dpm($vars);
 }
