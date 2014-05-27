@@ -88,7 +88,13 @@ function DssElcViewsFilter(options) {
 				    .search( this.value )
 				    .draw();
 			    }
-			}).appendTo(this);
+			}).on('click', function(event) {
+
+				/**
+				 * Ensures that focusing upon the filtration <input> element doesn't trigger the invoke sorting methods for the resident column
+				 */
+				event.stopImmediatePropagation();
+			    }).appendTo(this);
 		});
 	}
     };
