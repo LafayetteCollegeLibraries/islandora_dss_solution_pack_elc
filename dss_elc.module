@@ -1281,6 +1281,19 @@ function dss_elc_views_pre_render(&$view) {
       $results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
       $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
     }
+  } elseif($view->name == 'loans_by_human' || $view->name == 'loans_by_item') {
+
+    /**
+     * Integrating date string parsing for the Views field
+     * @todo Resolve for Date intervals within the Views Module
+     * @todo Resolve inconsistencies between field_data_field_loan_durationfield_loan_duration_value and field_data_field_loan_duration_field_loan_duration_value (cloned Views cannot refer to the same field?)
+     */
+    foreach($results as $key => $result) {
+
+      $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_durationfield_loan_duration_value);
+      $results[$key]->field_data_field_loan_durationfield_loan_duration_value = $checkout_date;
+      $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+    }
   }
 }
 
