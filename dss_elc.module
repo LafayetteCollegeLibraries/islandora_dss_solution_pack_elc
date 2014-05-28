@@ -1253,15 +1253,37 @@ function dss_elc_form_place_of_worship_node_form_alter(&$form, &$form_state, $fo
 function dss_elc_views_pre_build(&$view) {
 
   /**
-   * Retrieve the number of items per page for the request from the GET parameter
+   * @todo Implemented CSRF token validation
    */
-  if(array_key_exists('itemsPerPage', $_GET)) {
 
-    //$view->items_per_page = $_GET['itemsPerPage'];
+  /**
+   * For integration with DataTables
+   *
+   * Specify the pages for Views
+   * Map request.start to $view->current_page
+   * Map request.length to $view->offset
+   * Map request.order to $view->sort (must be transformed into an array of variables linked to Drupal View field names e.g. field_loan_duration_value)
+   *
+   */
+
+  /**
+   * Should be deprecated by integrating with the services and services_views Modules
+   * Unfortunately, no time to implemeneted the transformation from JSON-serialized Drupal entities into elements which could be parsed by DataTables
+   *
+   */
+  if(array_key_exists('dataTables', $_GET)) {
+
+    $data_tables = json_decode($_GET['dataTables']);
+    $data_tables_settings = $data_tables['settings'];
+
+    $view->current_page = $data_tables_settings['currentPage'];
+    $view->offset = $data_tables_settings['offset'];
   }
 }
 
 function dss_elc_views_pre_render(&$view) {
+
+  dpm($view);
 
   $results = &$view->result;
 
