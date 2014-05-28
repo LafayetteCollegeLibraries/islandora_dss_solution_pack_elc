@@ -1296,6 +1296,15 @@ function dss_elc_views_pre_render(&$view) {
     foreach($results as $key => $result) {
 
       /**
+       * Ensure that the Book/Periodical/Item (rather than the Manifestation Node) is rendered within the link
+       *
+       */
+      $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
+											  $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
+											  $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
+      $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] = $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1;
+
+      /**
        * Integrating date string parsing for the Views field
        * @todo Resolve for Date intervals within the Views Module
        */
