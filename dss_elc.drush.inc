@@ -60,6 +60,14 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-db'));
 
+  $items['dss-elc-normalize-books'] =
+    array(
+	  'description' => dt('Normalize all Book and Periodical Node Titles'),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-normalize-books',
+			      ),
+	  'aliases' => array('elc-nb'));
+
   $items['dss-elc-migrate-loans'] =
     array(
 	  'description' => dt('Migrate the ELC "loan" records into Loan Nodes'),
@@ -432,6 +440,46 @@ function drush_dss_elc_migrate_books($mysql_user,
 				     $mysql_server='localhost') {
 
   return dss_elc_migrate_books(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass), $limit, $bookId);
+}
+
+function drush_dss_elc_normalize_books() {
+
+  $drupalQuery = new EntityFieldQuery();
+
+  foreach(array('book', 'periodical', 'manifestation', 'item') as $content_type) {
+
+    $items = $drupalQuery->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $content_type)
+      //->propertyCondition('title', '%' . '&amp;' . '%', 'LIKE')
+      //->propertyCondition('title', '%' . '&#039;' . '%', 'LIKE')
+      ->propertyCondition('title', '%' . '&%;' . '%', 'LIKE')
+      ->execute();
+
+    if(isset($items['node'])) {
+
+      //$item = array_pop(entity_load('node', array_keys($items['node'])));
+      foreach(entity_load('node', array_keys($items['node'])) as $item) {
+
+	$item = node_load($item->nid);
+	drush_log(dt("Normalizing the title for " . $item->title . '...'), 'ok');
+
+	$item->title = preg_replace('/&amp;/', '&', $item->title);
+
+	//$item->title = preg_replace('/&#039;/', "’", $item->title);
+	$item->title = preg_replace('/&#039;/', "'", $item->title);
+
+	print preg_replace('/&amp;/', '&', $item->title);
+	print preg_replace('/&039;/', '&', $item->title);
+	exit(1);
+
+	//entity_save('node', $item);
+	node_save($item);
+	drush_log(dt("Normalized the title to " . $item->title . '...'), 'success');
+
+	exit(1);
+      }
+    }
+  }
 }
 
 function drush_dss_elc_delete_books() {

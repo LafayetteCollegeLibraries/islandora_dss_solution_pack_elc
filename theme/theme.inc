@@ -247,12 +247,19 @@ function template_preprocess_loan_node_form(&$variables) {
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
 }
 
+function dss_elc_preprocess_node(&$vars) {
+
+  dpm($vars);
+}
+
 /**
  * Implements template_preprocess_page()
  * Integrate the necessary JavaScript widgets necessary for specific Content Types of Nodes
  *
  */
-function dss_elc_preprocess_page(&$variables) {
+function dss_elc_preprocess_page(&$vars) {
+
+  //dpm($vars);
 
   /**
    * Integrate the stylesheets for the DataTables plug-in
@@ -261,10 +268,10 @@ function dss_elc_preprocess_page(&$variables) {
    */
   //drupal_add_css(libraries_get_path('DataTables') . '/media/css/jquery.dataTables.css');
 
-  if(isset($variables['page']) && isset($variables['page']['content']['system_main']['#type'])) {
-    if($variables['page']['content']['system_main']['#type'] == 'form') {
+  if(isset($vars['page']) && isset($vars['page']['content']['system_main']['#type'])) {
+    if($vars['page']['content']['system_main']['#type'] == 'form') {
 
-      switch($variables['page']['content']['system_main']['#form_id']) {
+      switch($vars['page']['content']['system_main']['#form_id']) {
 
       case 'loan_node_form':
       case 'human_node_form':
@@ -272,16 +279,16 @@ function dss_elc_preprocess_page(&$variables) {
       case 'book_node_form':
       case 'periodical_node_form':
 
-	$variables['page']['content']['system_main']['actions']['publish']['#value'] = t('Save');
+	$vars['page']['content']['system_main']['actions']['publish']['#value'] = t('Save');
       break;
       
       default:
 	break;
       }
     }
-  } elseif(isset($variables['node'])) {
+  } elseif(isset($vars['node'])) {
 
-    switch($variables['node']->type) {
+    switch($vars['node']->type) {
       
     case 'loan':
     case 'item':
