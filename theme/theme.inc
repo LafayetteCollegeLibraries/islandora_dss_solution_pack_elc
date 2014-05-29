@@ -294,11 +294,6 @@ function dss_elc_preprocess_page(&$variables) {
   }
 }
 
-function dss_elc_preprocess_html(&$vars) {
-
-  dpm($vars);
-}
-
 /**
  * Implement template_preprocess_views_view().
  *

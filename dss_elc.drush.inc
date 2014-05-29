@@ -74,6 +74,33 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-ml'));
 
+  $items['dss-elc-random-loans'] =
+    array(
+	  'description' => dt('Publish and tag a randomized subset ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-random-loans',
+			      ),
+	  'aliases' => array('elc-rand'));
+
+  $items['dss-elc-publish-humans'] =
+    array(
+	  'description' => dt('Publish all ELC "human" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-publish-humans',
+			      ),
+	  'aliases' => array('elc-ph'));
+
+  $items['dss-elc-publish-items'] =
+    array(
+	  'description' => dt('Publish all ELC "item" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-publish-items',
+			      ),
+	  'aliases' => array('elc-pi'));
+
   $items['dss-elc-publish-loans'] =
     array(
 	  'description' => dt('Publish all ELC "loan" records'),
@@ -1238,6 +1265,112 @@ function drush_dss_elc_migrate_loans($mysql_user,
   }
 
   // Retrieve all loan records and serialize them as Personal Relationship Nodes
+}
+
+function drush_dss_elc_random_loans() {
+
+  $drupalQuery = new EntityFieldQuery();
+  
+  $result = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
+    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
+    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
+    ->propertyCondition('status', 0)
+    ->range(0, 1000)
+    ->execute();
+
+  if(isset($result['node'])) {
+
+    /*
+    foreach(entity_load('node', array_keys($result['node'])) as $loan) {
+
+      drush_log('Publishing ' . $loan->title . '...', 'ok');
+      $loan->status = 1;
+      entity_save('node', $loan);
+    }
+    */
+
+    $rand_subset = entity_load('node', array_keys($result['node']));
+    $rand_indices = array();
+
+    for($i=0;$i<256;$i++) {
+
+      $loan_indices = array_keys($rand_subset);
+      $loan_indices[0];
+      do {
+
+	$rand_index = rand($loan_indices[0],
+			   $loan_indices[count($loan_indices) - 1]);
+      } while(in_array($rand_index, $rand_indices));
+
+      $rand_indices[] = $rand_subset;
+
+      $loan = array_pop(entity_load('node', array($rand_index)));
+
+      drush_log('Publishing ' . $loan->title . '...', 'ok');
+      $loan->status = 1;
+
+      drush_log('Adding the term "Reviewed" to ' . $loan->title . '...', 'ok');
+      $loan_md = entity_metadata_wrapper('node', $loan);
+
+      $term = array_pop(taxonomy_get_term_by_name('Reviewed', 'bib_rel_types'));
+      $loan_md->field_bib_rel_type->set(intval($term->tid));
+
+      $loan_md->save(true);
+      entity_save('node', $loan);
+
+      drush_log('Saving the Loan ' . $loan->title . '...', 'success');
+    }
+  }
+}
+
+function drush_dss_elc_publish_humans() {
+
+  $drupalQuery = new EntityFieldQuery();
+  
+  $result = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'human')
+    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
+    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
+    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
+    ->propertyCondition('status', 0)
+    //->range(0, 1000)
+    ->execute();
+
+  if(isset($result['node'])) {
+    
+    foreach(entity_load('node', array_keys($result['node'])) as $human) {
+
+      drush_log('Publishing ' . $human->title . '...', 'ok');
+      $human->status = 1;
+      entity_save('node', $human);
+    }
+  }
+}
+
+function drush_dss_elc_publish_items() {
+
+  $drupalQuery = new EntityFieldQuery();
+  
+  $result = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('book', 'periodical'))
+    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
+    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
+    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
+    ->propertyCondition('status', 0)
+    //->range(0, 1000)
+    ->execute();
+
+  if(isset($result['node'])) {
+    
+    foreach(entity_load('node', array_keys($result['node'])) as $item) {
+
+      drush_log('Publishing ' . $item->title . '...', 'ok');
+      $item->status = 1;
+      entity_save('node', $item);
+    }
+  }
 }
 
 function drush_dss_elc_publish_loans() {

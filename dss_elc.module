@@ -1321,8 +1321,29 @@ function dss_elc_views_pre_render(&$view) {
      */
     foreach($results as $key => $result) {
 
+      /**
+       * Ensure that the Book/Periodical/Item (rather than the Manifestation Node) is rendered within the link
+       *
+       */
+      $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
+											  $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
+											  $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
+      $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] = $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1;
+
       $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_durationfield_loan_duration_value);
       $results[$key]->field_data_field_loan_durationfield_loan_duration_value = $checkout_date;
+      $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+    }
+  } elseif($view->name == 'loans_presentation') {
+
+    foreach($results as $key => $result) {
+
+      /**
+       * Integrating date string parsing for the Views field
+       * @todo Resolve for Date intervals within the Views Module
+       */
+      $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_duration_field_loan_duration_value);
+      $results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
       $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
     }
   }
