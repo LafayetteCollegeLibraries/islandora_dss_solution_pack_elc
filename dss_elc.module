@@ -260,6 +260,7 @@ function dss_elc_field_attach_view_alter(&$output, $context) {
 
     // Set content for fields they are empty.
     if (empty($node->{$field_name})) {
+
       $display = field_get_display($instance, 'full', $node);
       // Do not add field that is hidden in current display.
       if ($display['type'] == 'hidden') {
@@ -272,6 +273,7 @@ function dss_elc_field_attach_view_alter(&$output, $context) {
 				   '#theme' => 'field',
 				   '#title' => $instance['label'],
 				   '#label_display' => 'above',
+				   '#formatter' => $display['type'], // Please see field_default_view()
 				   '#field_type' => $field['type'],
 				   '#field_name' => $field_name,
 				   '#bundle' => $node->type,
@@ -1326,6 +1328,7 @@ function dss_elc_views_pre_render(&$view) {
        * Ensure that the Book/Periodical/Item (rather than the Manifestation Node) is rendered within the link
        *
        */
+      if(!empty($results[$key]->field_field_bib_rel_object)) {
       $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
 											  $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
 											  $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
@@ -1342,14 +1345,19 @@ function dss_elc_views_pre_render(&$view) {
       $bib_rel_object_markup = preg_replace('/&#039;/', "'", $bib_rel_object_markup);
       $bib_rel_object_markup = preg_replace('/&quot;/', '"', $bib_rel_object_markup);
       $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = $bib_rel_object_markup;
+      }
 
       /**
        * Integrating date string parsing for the Views field
        * @todo Resolve for Date intervals within the Views Module
        */
-      $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_duration_field_loan_duration_value);
-      $results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
-      $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+
+      if(!empty($results[$key]->field_field_loan_duration)) {
+
+	$checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_duration_field_loan_duration_value);
+	$results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
+	$results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+      }
     }
   } elseif($view->name == 'loans_by_human' || $view->name == 'loans_by_item') {
 
@@ -1364,26 +1372,32 @@ function dss_elc_views_pre_render(&$view) {
        * Ensure that the Book/Periodical/Item (rather than the Manifestation Node) is rendered within the link
        *
        */
-      $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
-											  $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
-											  $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
-      $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] = $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1;
+      if(!empty($results[$key]->field_field_bib_rel_object)) {
 
-      /**
-       * Implemented in response to there being no clear means by which to decode the HTML character entity references within the Drupal stack
-       * EDDC-184
-       * @todo Refactor
-       */
-      $bib_rel_object_markup = $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'];
-      $bib_rel_object_markup = preg_replace('/&amp;amp;/', '&', $bib_rel_object_markup);
-      $bib_rel_object_markup = preg_replace('/&amp;/', '&', $bib_rel_object_markup);
-      $bib_rel_object_markup = preg_replace('/&#039;/', "'", $bib_rel_object_markup);
-      $bib_rel_object_markup = preg_replace('/&quot;/', '"', $bib_rel_object_markup);
-      $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = $bib_rel_object_markup;
+	$results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
+											    $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
+											    $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
+	$results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] = $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1;
 
-      $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_durationfield_loan_duration_value);
-      $results[$key]->field_data_field_loan_durationfield_loan_duration_value = $checkout_date;
-      $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+	/**
+	 * Implemented in response to there being no clear means by which to decode the HTML character entity references within the Drupal stack
+	 * EDDC-184
+	 * @todo Refactor
+	 */
+	$bib_rel_object_markup = $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'];
+	$bib_rel_object_markup = preg_replace('/&amp;amp;/', '&', $bib_rel_object_markup);
+	$bib_rel_object_markup = preg_replace('/&amp;/', '&', $bib_rel_object_markup);
+	$bib_rel_object_markup = preg_replace('/&#039;/', "'", $bib_rel_object_markup);
+	$bib_rel_object_markup = preg_replace('/&quot;/', '"', $bib_rel_object_markup);
+	$results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = $bib_rel_object_markup;
+      }
+
+      if(!empty($results[$key]->field_field_loan_duration)) {
+
+	$checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_durationfield_loan_duration_value);
+	$results[$key]->field_data_field_loan_durationfield_loan_duration_value = $checkout_date;
+	$results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+      }
     }
   } elseif($view->name == 'loans_presentation') {
 
@@ -1393,7 +1407,7 @@ function dss_elc_views_pre_render(&$view) {
        * Ensure that the Book/Periodical/Item (rather than the Manifestation Node) is rendered within the link
        *
        */
-      if(count($results[$key]->field_field_bib_rel_object)) {
+      if(!empty($results[$key]->field_field_bib_rel_object)) {
 
 	$results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
 											    $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
@@ -1417,9 +1431,13 @@ function dss_elc_views_pre_render(&$view) {
        * Integrating date string parsing for the Views field
        * @todo Resolve for Date intervals within the Views Module
        */
-      $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_duration_field_loan_duration_value);
-      $results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
-      $results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+
+      if(!empty($results[$key]->field_field_loan_duration)) {
+
+	$checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_duration_field_loan_duration_value);
+	$results[$key]->field_data_field_loan_duration_field_loan_duration_value = $checkout_date;
+	$results[$key]->field_field_loan_duration[0]['raw']['value'] = $checkout_date;
+      }
     }
   }
 }
@@ -1429,6 +1447,32 @@ function dss_elc_field_views_data_alter(&$result, $field) {
   if(array_key_exists('field_data_field_loan_duration', $result)) {
 
     $result['field_data_field_loan_duration'];
+  }
+}
+
+function dss_elc_preprocess_islandora_book_book(array &$variables) {
+
+  $islandora_object = $variables['object'];
+
+  if(in_array('islandora:elc', $islandora_object->getParents())) {
+
+    // Determine if OpenSeadragon is the viewer...
+    //if(preg_match('/openseadragon/', $variables['viewer'])) {
+    if(true) {
+
+      module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+      $init_pages = islandora_paged_content_get_pages($islandora_object);
+
+      /*
+      // If these are East Asia Image Collection postcards, modify the text for the links...
+      $prev_content = t('Previous');
+      $next_content = t('Next');
+
+      $viewer_page_controls = array();
+      
+      $variables['viewer_page_controls'] = drupal_render($viewer_page_controls);
+      */
+    }
   }
 }
 
