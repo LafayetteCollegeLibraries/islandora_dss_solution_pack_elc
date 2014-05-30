@@ -68,7 +68,6 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-rpro'));
 
-  //drush_dss_elc_relate_bib_rel_objects() {
   $items['dss-elc-relate-bib-rel-objects'] =
     array(
 	  'description' => dt(''),
@@ -76,6 +75,14 @@ function dss_elc_drush_command() {
 			      'Standard example' => 'drush dss-elc-relate-bib-rel-objects',
 			      ),
 	  'aliases' => array('elc-rbro'));
+
+  $items['dss-elc-relate-subjects'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => '',
+			      ),
+	  'aliases' => array('elc-rsub'));
 
   $items['dss-elc-normalize-books-utf8'] =
     array(
@@ -495,6 +502,48 @@ function drush_dss_elc_relate_pers_rel_objects() {
       $item_md->save(true);
       entity_save('node', $item);
       */
+    }
+  }
+}
+
+function drush_dss_elc_relate_subjects($mysql_user,
+				       $mysql_pass,
+				       $mysql_database='elc_production') {
+  
+  $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
+  $query = "SELECT title,subject FROM books;";
+
+  foreach($db->query($query) as $original_item) {
+
+    $drupalQuery = new EntityFieldQuery();
+
+    $original_item_title = mb_convert_encoding($original_item['title'], "UTF-8", 'ASCII');
+
+    $items = $drupalQuery->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', array('book', 'periodical', 'item'))
+      ->propertyCondition('title', $original_item_title)
+      ->execute();
+
+    foreach(entity_load('node', array_keys($items['node'])) as $item) {
+
+      if($original_item['subject'] and $original_item['subject'] != '') {
+
+	$item_md = entity_metadata_wrapper('node', $item);
+	$terms = taxonomy_get_term_by_name($original_item['subject'], 'item_subjects');
+
+	if(!empty($terms)) {
+
+	  $subject_term = array_shift($terms);
+
+	  // Set the type of the item
+	  $item_md->field_item_subject->set(array(intval($subject_term->tid)));
+
+	  drush_log(dt('Linking ' . $item->title . ' to the subject heading ' . $subject_term->name), 'ok');
+	  $item_md->save(true);
+	  entity_save('node', $item);
+	  drush_log(dt('Successfully linked ' . $item->title . ' to the subject heading ' . $subject_term->name), 'success');
+	}
+      }
     }
   }
 }
