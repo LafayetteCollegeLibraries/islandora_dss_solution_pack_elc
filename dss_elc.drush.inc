@@ -60,6 +60,31 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-db'));
 
+  $items['dss-elc-relate-pers-rel-objects'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-relate-bib-rel-objects',
+			      ),
+	  'aliases' => array('elc-rpro'));
+
+  //drush_dss_elc_relate_bib_rel_objects() {
+  $items['dss-elc-relate-bib-rel-objects'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-relate-bib-rel-objects',
+			      ),
+	  'aliases' => array('elc-rbro'));
+
+  $items['dss-elc-normalize-books-utf8'] =
+    array(
+	  'description' => dt('Normalize all Book and Periodical Node Titles'),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-normalize-books',
+			      ),
+	  'aliases' => array('elc-nb'));
+
   $items['dss-elc-normalize-books'] =
     array(
 	  'description' => dt('Normalize all Book and Periodical Node Titles'),
@@ -442,6 +467,134 @@ function drush_dss_elc_migrate_books($mysql_user,
   return dss_elc_migrate_books(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass), $limit, $bookId);
 }
 
+function drush_dss_elc_relate_pers_rel_objects() {
+
+  $drupalQuery = new EntityFieldQuery();
+
+  $items = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'personal_relationship')
+    //->fieldCondition('field_pers_rel_object', 'target_id', 0)
+    ->fieldCondition('field_pers_rel_subject', 'target_id', 0)
+    ->execute();
+
+  if(isset($items['node'])) {
+
+    foreach(entity_load('node', array_keys($items['node'])) as $item) {
+
+      /*
+      $item_md = entity_metadata_wrapper('node', $item);
+      drush_log(dt("Normalizing the title for " . $item->title . '...'), 'ok');
+      */
+
+      //print_r($item);
+
+      drush_log(dt("Linking the object for " . $item->title . ' (' . $item->nid . ')...'), 'ok');
+
+      /*
+      //node_save($item);
+      $item_md->save(true);
+      entity_save('node', $item);
+      */
+    }
+  }
+}
+
+function drush_dss_elc_relate_bib_rel_objects($mysql_user,
+					      $mysql_pass,
+					      $mysql_database='elc_production') {
+
+  $drupalQuery = new EntityFieldQuery();
+
+  $loans = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    ->fieldCondition('field_bib_rel_object', 'target_id', 0)
+    ->execute();
+
+  if(isset($loans['node'])) {
+
+    foreach(entity_load('node', array_keys($loans['node'])) as $loan) {
+
+      /*
+      $loan_md = entity_metadata_wrapper('node', $loan);
+      drush_log(dt("Normalizing the title for " . $loan->title . '...'), 'ok');
+      */
+
+      //print_r($loan);
+
+      drush_log(dt("Linking the object for " . $loan->title . ' (' . $loan->nid . ')...'), 'ok');
+
+      // Wolf, Charles E. borrowed  on 1818/09/26
+      preg_match('/(.+?) borrowed  on (.+)/', $loan->title, $m);
+      $representative = $m[1];
+      $checkout = $m[2];
+      $checkout = preg_replace('/\//', '-', $checkout);
+
+      $pdo = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
+      $query = "SELECT b.title FROM loans INNER JOIN books as b on b.id=loans.book_id INNER JOIN representatives as r ON r.id=loans.representative_id WHERE loans.checkout='$checkout' and r.name='$representative';";
+
+      $drupalQuery = new EntityFieldQuery();
+      foreach($pdo->query($query) as $original_loan) {
+
+	drush_log(dt("Searching for " . $original_loan['title'] . '...'), 'ok');
+
+	$items = $drupalQuery->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'book')
+	  ->propertyCondition('title', '%' . substr($original_loan['title'], 0, 20) . '%' . substr($original_loan['title'], 21), 'LIKE')
+	  ->execute();
+
+	if(isset($items['node'])) {
+
+	  $item = array_pop(entity_load('node', array_keys($items['node'])));
+
+	  drush_log(dt("Found " . $item->title . '...'), 'ok');
+
+	  $loan_md = entity_metadata_wrapper('node', $loan);
+	  $loan_md->field_bib_rel_object[] = intval($item->nid);
+
+	  $loan_md->save(true);
+	  entity_save('node', $loan);
+
+	  drush_log(dt("Successfully related " . $item->title . '(' . $item->nid . ') to ' . $loan->nid), 'success');
+	} else {
+
+	  drush_log(dt("Could not find " . $original_loan['title'] . ' (using "' . substr($original_loan['title'], 0, 20) . '")'), 'error');
+	  exit(1);
+	}
+      }
+    }
+  }
+}
+
+function drush_dss_elc_normalize_books_utf8() {
+
+  $drupalQuery = new EntityFieldQuery();
+
+  foreach(array('book', 'periodical', 'manifestation', 'item') as $content_type) {
+
+    $items = $drupalQuery->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $content_type)
+      ->propertyCondition('title', '%' . '' . '%', 'LIKE')
+      ->execute();
+
+    if(isset($items['node'])) {
+
+      foreach(entity_load('node', array_keys($items['node'])) as $item) {
+
+	$item_md = entity_metadata_wrapper('node', $item);
+	drush_log(dt("Normalizing the title for " . $item->title . '...'), 'ok');
+
+	$item_md->title->set(preg_replace('//', ' ', $item->title));
+
+	drush_log(dt("Normalized " . $item->title . '...'), 'success');
+
+	//node_save($item);
+	$item_md->save(true);
+	entity_save('node', $item);
+      }
+    }
+  }
+}
+
 function drush_dss_elc_normalize_books() {
 
   $drupalQuery = new EntityFieldQuery();
@@ -468,15 +621,9 @@ function drush_dss_elc_normalize_books() {
 	//$item->title = preg_replace('/&#039;/', "’", $item->title);
 	$item->title = preg_replace('/&#039;/', "'", $item->title);
 
-	print preg_replace('/&amp;/', '&', $item->title);
-	print preg_replace('/&039;/', '&', $item->title);
-	exit(1);
-
 	//entity_save('node', $item);
 	node_save($item);
 	drush_log(dt("Normalized the title to " . $item->title . '...'), 'success');
-
-	exit(1);
       }
     }
   }
@@ -1400,23 +1547,26 @@ function drush_dss_elc_publish_humans() {
 function drush_dss_elc_publish_items() {
 
   $drupalQuery = new EntityFieldQuery();
-  
-  $result = $drupalQuery->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', array('book', 'periodical'))
-    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
-    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
-    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
-    ->propertyCondition('status', 0)
-    //->range(0, 1000)
-    ->execute();
 
-  if(isset($result['node'])) {
+  foreach(array('book', 'periodical') as $bundle) {
+
+    $result = $drupalQuery->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $bundle)
+      //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
+      //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
+      //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
+      ->propertyCondition('status', 0)
+      //->range(0, 1000)
+      ->execute();
+
+    if(isset($result['node'])) {
     
-    foreach(entity_load('node', array_keys($result['node'])) as $item) {
-
-      drush_log('Publishing ' . $item->title . '...', 'ok');
-      $item->status = 1;
-      entity_save('node', $item);
+      foreach(entity_load('node', array_keys($result['node'])) as $item) {
+	
+	drush_log('Publishing ' . $item->title . '...', 'ok');
+	$item->status = 1;
+	entity_save('node', $item);
+      }
     }
   }
 }
