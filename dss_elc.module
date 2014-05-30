@@ -1330,7 +1330,7 @@ function dss_elc_views_pre_render(&$view) {
 											  $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
 											  $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
       $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] = $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1;
-
+      
       /**
        * Implemented in response to there being no clear means by which to decode the HTML character entity references within the Drupal stack
        * EDDC-184
@@ -1388,6 +1388,30 @@ function dss_elc_views_pre_render(&$view) {
   } elseif($view->name == 'loans_presentation') {
 
     foreach($results as $key => $result) {
+
+      /**
+       * Ensure that the Book/Periodical/Item (rather than the Manifestation Node) is rendered within the link
+       *
+       */
+      if(count($results[$key]->field_field_bib_rel_object)) {
+
+	$results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = preg_replace('/' . $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] . '/',
+											    $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1,
+											    $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup']);
+	$results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] = $results[$key]->field_field_bib_rel_object[0]['raw']['target_id'] + 1;
+      
+	/**
+	 * Implemented in response to there being no clear means by which to decode the HTML character entity references within the Drupal stack
+	 * EDDC-184
+	 * @todo Refactor
+	 */
+	$bib_rel_object_markup = $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'];
+	$bib_rel_object_markup = preg_replace('/&amp;amp;/', '&', $bib_rel_object_markup);
+	$bib_rel_object_markup = preg_replace('/&amp;/', '&', $bib_rel_object_markup);
+	$bib_rel_object_markup = preg_replace('/&#039;/', "'", $bib_rel_object_markup);
+	$bib_rel_object_markup = preg_replace('/&quot;/', '"', $bib_rel_object_markup);
+	$results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = $bib_rel_object_markup;
+      }
 
       /**
        * Integrating date string parsing for the Views field
