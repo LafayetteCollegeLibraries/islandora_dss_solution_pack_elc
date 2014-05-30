@@ -874,8 +874,6 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
    *
    */
   $form['field_human_gender'][$form['field_human_gender']['#language']]['#options']['_none'] = 'Unknown';
-  dpm($form['field_human_gender'][$form['field_human_gender']['#language']]);
-
   $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
   $new_field = array('add_more' => $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
   unset($form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']);
@@ -1024,8 +1022,6 @@ function dss_elc_form_alter(&$form, &$form_state, $form_id) {
 
   if($form_id == 'multi_node_add_page') {
 
-    //ddebug_backtrace();
-    //dpm($form);
     //hide(form['fields_req']);
     //hide($form['fields_to_utilize']);
     hide($form['shortcut']);
@@ -1083,7 +1079,40 @@ function dss_elc_form_alter(&$form, &$form_state, $form_id) {
   */
 }
 
+/**
+ * Checks whether the user can access the given object.
+ *
+ * Checks for object existance, accessiblitly, namespace permissions,
+ * and user permissions
+ *
+ * @param string $perm
+ *   User permission to test for.
+ * @param FedoraObject $object
+ *   The object to test, if NULL given the object doesn't exist or is
+ *   inaccessible.
+ *
+ * @return bool
+ *   TRUE if the user is allowed to access this object, FALSE otherwise.
+ */
+function dss_elc_object_access_callback($perm, $object = NULL) {
 
+  /*
+  if(in_array('islandora:pageCModel', $object->models)) {
+
+    return islandora_object_access_callback($perm, $object); 
+  }
+  */
+
+  return TRUE;
+}
+
+function dss_elc_menu_alter(&$items) {
+
+  $items['islandora/object/%islandora_object']['page arguments'] = array(2);
+  $items['islandora/object/%islandora_object']['access callback'] = 'dss_elc_object_access_callback';
+  $items['islandora/object/%islandora_object']['access arguments'] = array(FEDORA_VIEW_OBJECTS, 2);
+  //$items['islandora/object/%islandora_object']['access callback'] = TRUE;
+}
 
 /*
   
@@ -1311,6 +1340,7 @@ function dss_elc_views_pre_render(&$view) {
       $bib_rel_object_markup = preg_replace('/&amp;amp;/', '&', $bib_rel_object_markup);
       $bib_rel_object_markup = preg_replace('/&amp;/', '&', $bib_rel_object_markup);
       $bib_rel_object_markup = preg_replace('/&#039;/', "'", $bib_rel_object_markup);
+      $bib_rel_object_markup = preg_replace('/&quot;/', '"', $bib_rel_object_markup);
       $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = $bib_rel_object_markup;
 
       /**
@@ -1348,6 +1378,7 @@ function dss_elc_views_pre_render(&$view) {
       $bib_rel_object_markup = preg_replace('/&amp;amp;/', '&', $bib_rel_object_markup);
       $bib_rel_object_markup = preg_replace('/&amp;/', '&', $bib_rel_object_markup);
       $bib_rel_object_markup = preg_replace('/&#039;/', "'", $bib_rel_object_markup);
+      $bib_rel_object_markup = preg_replace('/&quot;/', '"', $bib_rel_object_markup);
       $results[$key]->field_field_bib_rel_object[0]['rendered']['#markup'] = $bib_rel_object_markup;
 
       $checkout_date = date('Y-m-d', (int) $results[$key]->field_data_field_loan_durationfield_loan_duration_value);
