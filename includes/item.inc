@@ -60,8 +60,6 @@ function dss_elc_item_node_presave($node) {
     // Establish the FRBR relationship between the book/periodical/item Node and the Manifestation Node
     $node->field_item_embodies[$node->language][0]['target_id'] = intval($manifest_entity->nid);
   }
-
-
   }
 
 function dss_elc_item_node_insert($node) {
