@@ -542,9 +542,9 @@ function dss_elc_form_insert_js() {
 
     drupal_add_library('system', 'ui.dialog');
     drupal_add_library('system', 'ui.autocomplete');
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node_modal.js');
     drupal_add_js(array('dssElc' => array('isAjaxRequest' => !empty($_SERVER['HTTP_X_REQUESTED_WITH']))), 'setting');
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node.js');
   }
 }
 
@@ -893,7 +893,7 @@ function dss_elc_form_ajax_item_node_form_alter(&$form) {
 function dss_elc_form_book_node_form_alter(&$form, $form_state) {
 
   dss_elc_form_insert_js();
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/book_form.min.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/book_form.js');
 
   hide($form['field_item_total_volumes']);
 
@@ -914,8 +914,8 @@ function dss_elc_form_book_node_form_alter(&$form, $form_state) {
 function dss_elc_form_periodical_node_form_alter(&$form, $form_state) {
 
   dss_elc_form_insert_js();
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/book_form.min.js');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/periodical_form.min.js');
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/book_form.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/periodical_form.js');
 
   hide($form['field_item_total_volumes']);
   // Issue
@@ -947,7 +947,7 @@ function dss_elc_form_personal_relationship_node_form_alter(&$form, $form_state)
 function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 
   dss_elc_form_insert_js();
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/item_form.min.js');
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/item_form.js');
 
   $autocomplete_fields = array('entityRefs' => array("#edit-field-artifact-was-authored-by-und"),
 			       'terms' => array("#edit-field-item-number-taxon-und", "#edit-field-item-subject-und")

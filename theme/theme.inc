@@ -5,7 +5,7 @@
  */
 function dss_elc_preprocess_node_form(&$variables) {
 
-  //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/build/jquery.tokeninput.min.js');
+  //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/src/jquery.tokeninput.js');
   //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/src/jquery.tokeninput.js');
 
   // bootstrap-tokenfield/js/
@@ -55,8 +55,8 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node_modal.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node.js');
 
   hide($variables['form']['field_pers_rel_type']);
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
@@ -141,9 +141,9 @@ function template_preprocess_human_node_form(&$variables) {
     drupal_add_js(array('dssElcPersRelsField' => array('button' => 'button[name="field_human_pers_rels_add_more"]')), 'setting');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_pers_rels.js');
 
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/human_form.min.js');
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node_modal.min.js');
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/human_form.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node_modal.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node.js');
     drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/human_form.css');
   }
 
@@ -186,7 +186,7 @@ function template_preprocess_human_node_form(&$variables) {
  */
 function template_preprocess_loan_node_form(&$variables) {
 
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/loan_form.min.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/loan_form.js');
 
   $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
 			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
@@ -197,7 +197,7 @@ function template_preprocess_loan_node_form(&$variables) {
 
   if(strpos($variables['form']['#action'], 'multi_node_add') == 0) {
 
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/node.min.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node.js');
   }
 
   if(!strpos($variables['form']['#action'], 'edit')) {
@@ -301,5 +301,5 @@ function dss_elc_preprocess_views_view(&$vars) {
    *
    */
   //drupal_add_js(libraries_get_path('DataTables') . '/media/js/jquery.dataTables.js');
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/dss_elc_views_filter.min.js');
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_views_filter.js');
 }
