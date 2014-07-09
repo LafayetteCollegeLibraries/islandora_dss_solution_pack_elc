@@ -266,7 +266,7 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		    //if($fields.length > dssElcPersRelsFieldTotal) {
 
 		    // Retrieve the slice of elements which exceed the number of field elements captured within the Object state...
-		    $fields.slice(0, dssElcPersRelsFieldTotal - 1).each(function(index, element) {
+		    $fields.slice(0, (dssElcPersRelsFieldTotal == 1 ? -2 : dssElcPersRelsFieldTotal - 1)).each(function(index, element) {
 			    //$fields.slice(dssElcPersRelsFieldTotal).each(function(index, element) {
 
 			    // ...and remove each of these elements.
