@@ -5,7 +5,7 @@
  */
 function dss_elc_preprocess_node_form(&$variables) {
 
-  //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/build/jquery.tokeninput.min.js');
+  //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/src/jquery.tokeninput.js');
   //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/src/jquery.tokeninput.js');
 
   // bootstrap-tokenfield/js/
@@ -22,7 +22,7 @@ function dss_elc_preprocess_node_form(&$variables) {
 
     $variables['form']['actions']['publish']['#value'] = 'Save Record';
   }
-  }
+}
 
 /**
  * Preprocessor for node_form
@@ -52,7 +52,7 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
 			       //'terms' => array("#edit-field-pers-rel-role-und", '#edit-field-pers-rel-type-und')
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node_modal.js');
@@ -121,12 +121,6 @@ function template_preprocess_human_node_form(&$variables) {
 
     if(array_key_exists('isModalQuery', $_GET) and $_GET['isModalQuery']) {
 
-      /*
-      hide($variables['form']['field_human_pers_rels']);
-      hide($variables['form']['field_person_location']);
-      hide($variables['form']['field_person_membership']);
-      hide($variables['form']['field_human_occupation']);
-      */
       $variables['form']['field_human_pers_rels'] = array();
       $variables['form']['field_person_location'] = array();
       $variables['form']['field_person_membership'] = array();
@@ -142,7 +136,7 @@ function template_preprocess_human_node_form(&$variables) {
 				 'terms' => array("#edit-field-human-occupation-und", '#edit-field-person-type-und')
 				 );
     drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
+    drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
     drupal_add_js(array('dssElcPersRelsField' => array('button' => 'button[name="field_human_pers_rels_add_more"]')), 'setting');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_pers_rels.js');
@@ -199,7 +193,7 @@ function template_preprocess_loan_node_form(&$variables) {
 			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete_loan.js');
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   if(strpos($variables['form']['#action'], 'multi_node_add') == 0) {
 
@@ -247,19 +241,12 @@ function template_preprocess_loan_node_form(&$variables) {
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
 }
 
-function dss_elc_preprocess_node(&$vars) {
-
-  dpm($vars);
-}
-
 /**
  * Implements template_preprocess_page()
  * Integrate the necessary JavaScript widgets necessary for specific Content Types of Nodes
  *
  */
 function dss_elc_preprocess_page(&$vars) {
-
-  //dpm($vars);
 
   /**
    * Integrate the stylesheets for the DataTables plug-in

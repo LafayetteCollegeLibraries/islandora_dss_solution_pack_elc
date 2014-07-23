@@ -3,13 +3,14 @@
  * @author griffinj@lafayette.edu
  *
  */
+
 (function($, Drupal) {
 
     Drupal.behaviors.dssElcLoanForm = {
 
 	attach: function(context, settings) {
-
-	    // Work-around for Drupal form tabindex attribute values
+	    
+	    /*
 	    $('#edit-field-loan-filename-und').attr('tabindex', '1');
 	    $('#edit-field-loan-shareholder-und').attr('tabindex', '2');
 	    $('#edit-field-bib-rel-subject-und').attr('tabindex', '3');
@@ -25,6 +26,7 @@
 	    $('#edit-field-loan-fine-und-0-value').attr('tabindex', '11');
 
 	    $('#edit-publish').attr('tabindex', '12');
+	    */
 
 	    // Usability feature to the Shareholder and Representative form fields
 	    $('#edit-field-loan-shareholder-und').change(function(event) {
@@ -151,7 +153,11 @@
 			$('.date-wrapper .form-text').each(function(i,e) {
 
 				var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(e.id)[1];
-				defaultValueHandler.call(e, type);
+
+				if(!e.text) {
+
+				    defaultValueHandler.call(e, type);
+				}
 
 				$(e).click(function(event) {
 
@@ -231,6 +237,10 @@
 		    }
 		});
 
+	    /**
+	     * @todo griffinj@lafayette.edu will integrate these fields for the tab indexing
+	     *
+	     */
 	    // Focus on...
 
 	    '<input id="edit-field-loan-duration-und-0-value-date" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="field_loan_duration[und][0][value][date]" tabindex="9">'

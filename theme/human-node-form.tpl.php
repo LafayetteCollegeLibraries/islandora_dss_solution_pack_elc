@@ -50,7 +50,7 @@
 
 <div id="human-fields-b">
 <div class="human-column">
-    <?php print drupal_render_children($form['field_human_pers_rels']); ?>
+    <?php print drupal_render_children($form['field_human_pers_rels']);?>
 </div>
 
 </div>
@@ -77,7 +77,7 @@
 </div>
 
 <div class="human-column">
-<?php print drupal_render_children($form); ?>
+<?php print drupal_render_children($form);?>
 </div>
 </div>
 

@@ -22,6 +22,9 @@ function DssElcPersRelsField(document, options) {
     this.bindButtonHandlers();
     this.bindAjaxHandlers();
 
+    // Set the fields to the number of DOM <form> child elements
+    this.fields = $('[id^="edit-field-human-pers-rels-und-"].form-text').length;
+
     $('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
 
 	    // testHumanName is a Representative in relation to Peter (137661)
@@ -41,11 +44,11 @@ function DssElcPersRelsField(document, options) {
 };
 
 DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
-
+	
     var $ = this.$ || jQuery;
-    //$('#field-human-pers-rels-values .form-text').each(function(i,e) {
-    $('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
 
+    $('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i,e) {
+		
 	    if($(e).siblings('.field-human-pers-rels-fields').length == 0) {
 		
 		/**
@@ -61,8 +64,28 @@ DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
 		 * @todo Refactor
 		 *
 		 */
-		$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button></div>');
+		  	
+		$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal-' + i + '" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button></div>');
+		
 	    }
+
+	    // Adding functionality to remove the extra "create new person" buttons, currently changes it to a '-' sign
+	    
+	    $('#add-human-modal-' + (i-1)).html('-');
+		
+	    // Changing button so that it removes the current person from the form
+	    $('#add-human-modal-' + (i-1)).die();
+	    $('#add-human-modal-' + (i-1)).click(function(){
+			
+		    $('#add-human-modal-' + (i-1)).parent().parent().parent().parent().parent().remove();
+		    //			$("table[id|='field-human-pers-rels-values'").val(function(){return value - 1;});
+
+		    // Also, update the total number of fields on the form by "popping" the last of the field elements
+
+		    var dssElcPersRelsFieldTotal = $(document).data('dssElcPersRelsFieldTotal');
+		    dssElcPersRelsFieldTotal--;
+		    $(document).data('dssElcPersRelsFieldTotal', dssElcPersRelsFieldTotal);
+		});
 	});
 
     //this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
@@ -222,22 +245,56 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    $objectFieldElem.val(m[2]);
 			}
 		    });
-	    }
-	});
 
 		/**
-		 * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
-		 * @todo Refactor with this.$roleFields and this.$personFields
+		 * Remove extraneous relationship fields
+		 * Conflict within the form state within the PHP and the browser (i. e. server vs. client)
+		 * The form within the PHP still retains fields which we've removed within the browser
+		 * These must be removed from the responses handled from the server
 		 *
 		 */
-		//$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
-                //$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+
+		//$('[id="edit-field-pers-rel-object-und"]').hide();
+		var $fields = $('[id="edit-field-pers-rel-object-und"]');
+		$fields = $fields.slice(0, -1);
+
+		// Retrieve the dssElcPersRelsField from the global scope
+		var dssElcPersRelsFieldTotal = $(document).data('dssElcPersRelsFieldTotal');
+
+		// Compare the number of form fields currently on the form (i. e. after these fields have been appended to the DOM by Drupal)...
+		if($fields.length > dssElcPersRelsFieldTotal + 1) {
+		    //if($fields.length > dssElcPersRelsFieldTotal) {
+
+		    // Retrieve the slice of elements which exceed the number of field elements captured within the Object state...
+		    $fields.slice(0, (dssElcPersRelsFieldTotal == 1 ? -2 : dssElcPersRelsFieldTotal - 1)).each(function(index, element) {
+			    //$fields.slice(dssElcPersRelsFieldTotal).each(function(index, element) {
+
+			    // ...and remove each of these elements.
+			    $(element).parent().parent().parent().parent().parent().remove();
+			});
+		} else {
+
+		    dssElcPersRelsFieldTotal = $fields.length;
+		    $(document).data('dssElcPersRelsFieldTotal', dssElcPersRelsFieldTotal);
+		}
+
+		$('[id="edit-field-pers-rel-object-und"]').show();
+	    }
+	});
+    
+    /**
+     * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
+     * @todo Refactor with this.$roleFields and this.$personFields
+     *
+     */
+    //$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
+    //$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
     $('#edit-field-pers-rel-object-und').blur(function(e) {
-				
-			var $relationFieldElem = $(this).parents('.controls').children('.form-text');
-				
-			if($(this).val().length > 0) {
-				    
+
+	    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
+	    
+	    if($(this).val().length > 0) {
+
 			    var humanName = $('#edit-field-person-name-und-0-value').val();
 				    
 			    if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
@@ -295,8 +352,17 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
      */
     Drupal.behaviors.dssElcPersRelsField = {
 	attach: function (context, settings) {
-	    
+
 	    $(document).data('dssElcPersRelsField', new DssElcPersRelsField(document, {jquery: $, button: settings.dssElcPersRelsField.button}));
+
+	    /**
+	     * This was repeatedly updating the total number of fields on the form
+	     *
+	     */
+	    if(typeof($(document).data('dssElcPersRelsFieldTotal')) == 'undefined') {
+
+		$(document).data('dssElcPersRelsFieldTotal', $('[id^="edit-field-human-pers-rels-und-"].form-text').length);
+	    }
 	}
     };
 }(jQuery, Drupal, DssElcPersRelsField));

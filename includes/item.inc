@@ -9,6 +9,21 @@ function dss_elc_item_node_presave($node) {
 
   $itemTitle = $node->field_artifact_title[$node->language][0]['value'];
 
+  //removing duplicate authors
+  foreach($node->field_artifact_was_authored_by['und'] as $key => $value){
+
+  	for($comp_key = $key + 1; $comp_key < count($node->field_artifact_was_authored_by['und']); $comp_key ++ ){
+  		
+		if($value['target_id'] == $node->field_artifact_was_authored_by['und'][$comp_key]['target_id']){
+			
+			unset($node->field_artifact_was_authored_by['und'][$comp_key]);
+			
+		}
+		
+  	}
+	
+  }
+
   // Append the volume number to the node title field
   if(isset($node->field_item_volume) && isset($node->field_item_volume[$node->language][0])) {
     
@@ -60,12 +75,11 @@ function dss_elc_item_node_presave($node) {
     // Establish the FRBR relationship between the book/periodical/item Node and the Manifestation Node
     $node->field_item_embodies[$node->language][0]['target_id'] = intval($manifest_entity->nid);
   }
-
-
   }
 
 function dss_elc_item_node_insert($node) {
 
+  dpm('got here');
   $author_entity = array_pop(entity_load('node',
 					 array(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']))));
 
@@ -93,7 +107,7 @@ function dss_elc_item_node_insert($node) {
       
     $authorship_md = entity_metadata_wrapper('node', $authorship_entity);
       
-    // Set the author as the subject
+    // Set the author as 1 (Array, 1 elemthe subject
     //$authorship_md->field_bib_rel_subject->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id'] ));
     $authorship_md->field_bib_rel_subject->set(intval($author_entity->nid ));
     

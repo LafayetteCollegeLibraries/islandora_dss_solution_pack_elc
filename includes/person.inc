@@ -2,9 +2,9 @@
 
 define('PERSON_TYPES_TAXON', 'person_types');
 
-  /**
-   * Refactor into the data access
-   */
+/**
+ * Refactor into the data access
+ */
 function dss_elc_get_persons($field, $value, $contentType='person', $personType=NULL) {
 
   $drupalQuery = new EntityFieldQuery();
@@ -50,7 +50,6 @@ function dss_elc_get_human($name, $personType=NULL) {
     }
   } else {
 
-    // 
     $human_entity = array_pop($results);
     $human_md = entity_metadata_wrapper('node', $human_entity);
     $human_term = dss_elc_get_taxonomy_term($personType, PERSON_TYPES_TAXON);
