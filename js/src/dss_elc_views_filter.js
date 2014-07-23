@@ -371,7 +371,7 @@ function DssElcViewsFilter(options) {
 
 		    return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
 		    
-		}).each(function() {
+		}).each(function() { 
 	    
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'change', function() {
 			    
