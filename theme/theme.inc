@@ -22,7 +22,7 @@ function dss_elc_preprocess_node_form(&$variables) {
 
     $variables['form']['actions']['publish']['#value'] = 'Save Record';
   }
-  }
+}
 
 /**
  * Preprocessor for node_form

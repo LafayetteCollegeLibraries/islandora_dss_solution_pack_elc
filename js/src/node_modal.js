@@ -15,7 +15,12 @@ function NodeFormModal() {};
  * Integrate with jQuery
  *
  */
-NodeFormModal.jQuery = jQuery;
+if(jQuery) {
+    
+    NodeFormModal.jQuery = jQuery;
+} else {
+    NodeFormModal.jQuery = {};
+}
 
 /**
  * Static constants
@@ -554,10 +559,16 @@ NodeFormModal.onClickHandler = function(event) {
 //NodeFormModal.prototype.constructor = function NodeFormModal(options) {
 function NodeFormModal(options) {
 
+    // To be refactored
+    if(!options) {
+
+	var options = {jQuery : null};
+    }
+
     // Require jQuery integration
-    this.$ = options.jQuery || jQuery;
+    this.$ = options.jQuery || NodeFormModal.jQuery;
     var $ = this.$;
-    
+
     settings = $.extend({}, options);
 
     // The unique key for the Object

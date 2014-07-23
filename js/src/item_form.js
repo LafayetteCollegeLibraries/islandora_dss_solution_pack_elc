@@ -17,6 +17,7 @@
 	    islandoraDssElc['autoCompleteKey'] = false;
 	    $(document).data('islandoraDssElc', islandoraDssElc);
 
+	    /*
 	    $('#edit-field-item-format-und').attr('tabindex', '1');
 	    $('#edit-field-item-number-und-0-value').attr('tabindex', '2');
 	    $('#edit-field-item-volume-und').attr('tabindex', '3');
@@ -26,6 +27,7 @@
 	    $('#edit-field-item-subject-und').attr('tabindex', '6');
 
 	    $('#edit-publish').attr('tabindex', '7');
+	    */
 
 	    /**
 	     * Modify the DOM for the addition of tokenized form values

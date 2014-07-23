@@ -64,12 +64,14 @@ function DssElcViewsFilter(options) {
      */
     //
     // Pipelining function for DataTables. To be used to the `ajax` option of DataTables
-    //
+    // making table a global var
+
     $.fn.dataTable.pipeline = function(opts) {
+    
 	// Configuration options
 	var conf = $.extend( {
 		pages: 5,     // number of pages to cache
-		url: '',      // script url
+		url: ($(document).context.title == 'Browse Items | The Easton Library Company Project') ? '/datatable_item/views/items' : '/datatable_person/views/people' ,      // script url
 		data: null,   // function or object with parameters to send to the server
 		// matching how `ajax.data` works in DataTables
 		method: 'GET' // Ajax HTTP method
@@ -87,6 +89,7 @@ function DssElcViewsFilter(options) {
 	    var requestStart  = request.start;
 	    var requestLength = request.length;
 	    var requestEnd    = requestStart + requestLength;
+	    var drawStart     = request.start;
          
 	    var isSearch = false;
 	    if ( settings.clearCache ) {
@@ -107,11 +110,11 @@ function DssElcViewsFilter(options) {
 		 * Unfortunately, integration with the Views API must be further extended in order to specify only select columns or to refine the View with a search
 		 * @todo Integrate with the View and Search API's
 		 */
+		
 		isSearch = true;
 		// properties changed (ordering, columns, searching)
-		//ajax = true;
+		ajax = true;
 	    }
-         
 	    // Store the request for checking next time around
 	    cacheLastRequest = $.extend( true, {}, request );
  
@@ -175,53 +178,145 @@ function DssElcViewsFilter(options) {
 		};
 		//var params = $.extend({}, request);
 
+		//Checking to make sure that the search values havent been deleted
+		if($('input:first','tr').text()!=''){
+			request.columns[0].search.value = '';
+		}
+		if($('input:last','tr').text()!=''){
+			request.columns[1].search.value = '';
+		}
+
 		settings.jqXHR = $.ajax( {
 			"type":     conf.method,
 			"url":      conf.url,
-			"data":     params,
-			"dataType": "html",
+			"data":     request,
+			"dataType": "json",
 			"cache":    false,
-			"success":  function(xml) {
+			"success":  function(json) {
 
-			    /**
-			     * Here is where we primarily diverge from the approach implemented within the tutorial
-			     */
-			    var json = {data: []};
-			    // Parse the DOM requests for the data
-			    // Map each <td> as an element within a nested array
-			    $(xml).find('.views-table tbody tr').each(function(i, row) {
-
-				    json.data = json.data.concat($(row).children('td').map(function(i,e) {
-
-						return e.textContent.trim();
-					    }));
-				});
-
-			    cacheLastJson = $.extend(true, {}, json);
+                    cacheLastJson = $.extend(true, {}, json);
  
-			    if ( cacheLower != requestStart ) {
-				json.data.splice( 0, requestStart-cacheLower );
-			    }
-			    json.data.splice( requestLength, json.data.length );
-                     
-			    drawCallback( json );
-			},
+                    if ( cacheLower != drawStart ) {
+                        json.aaData.splice( 0, drawStart-cacheLower );
+                    }
+                    
+                    json.aaData.splice( requestLength, json.aaData.length );
+	                    
+	                    drawCallback( json );
+						cleanUp();
+                    },
 			"error":  function(jqXHR, textStatus, errorThrown) {
 
 			    console.error(errorThrown);
+			    console.error(jqXHR);
+			    console.error(textStatus);
 			}
 		    });
 	    }
 	    else {
 		json = $.extend( true, {}, cacheLastJson );
 		json.draw = request.draw; // Update the echo for each response
-		json.data.splice( 0, requestStart-cacheLower );
-		json.data.splice( requestLength, json.data.length );
- 
+		json.aaData.splice( 0, requestStart-cacheLower );
+		json.aaData.splice( requestLength, json.aaData.length );
+ 		
 		drawCallback(json);
+		cleanUp();
 	    }
-	}
+	};
     };
+    /*
+     * Reads the node values from each view/edit cell and replaces it with a hyperlink to the correct page
+     */
+	function formatLinks(){
+	
+		if(window.location.pathname == '/items'){
+		
+			$('td:eq(6)','tr').each(function(i,e){
+				var temp = $(e).text();
+				$(e).text('');
+				$('<a href="'+'/node/'+temp+'">'+'View'+'</a>').appendTo($(e));
+				
+			});
+			
+			$('td:eq(7)','tr').each(function(i,e){
+				var temp = $(e).text();
+				$(e).text('');
+				$('<a href="'+'/node/'+temp+'/edit">'+'Edit'+'</a>').appendTo($(e));
+				
+			});
+			
+		}
+		else if(window.location.pathname == '/people'){
+			
+			$('td:eq(2)','tr').each(function(i,e){
+				var temp = $(e).text();
+				$(e).text('');
+				$('<a href="'+'/node/'+temp+'">'+'View'+'</a>').appendTo($(e));
+				
+			});
+			
+			$('td:eq(3)','tr').each(function(i,e){
+				var temp = $(e).text();
+				$(e).text('');
+				$('<a href="'+'/node/'+temp+'/edit">'+'Edit'+'</a>').appendTo($(e));
+				
+			});
+			
+		}
+	}
+	/*
+	 * Parses the date and changes it to a human-readable form
+	 */
+	function formatDate(){
+	
+		if(window.location.pathname == '/people'){
+			jQuery('td:eq(1)','tr').each(function(i,e){
+			
+				var temp = parseInt($(e).text());
+				var dateObj = new Date((temp+2678400)*1000);
+				$(e).text(dateObj.getFullYear() + '-' + dateObj.getMonth() + '-' + dateObj.getDate());
+				
+			});
+		}
+		else if(window.location.pathname == '/items'){
+			jQuery('td:eq(5)','tr').each(function(i,e){
+			
+				var temp = parseInt($(e).text());
+				var dateObj = new Date((temp+2678400)*1000);
+				$(e).text(dateObj.getFullYear() + '-' + dateObj.getMonth() + '-' + dateObj.getDate());
+				
+			});
+		}
+		
+	}
+	function updateSortable(){
+	
+		if(window.location.pathname == '/items'){
+		
+			jQuery('th:eq(2)','tr').attr('aria-controls','');
+			jQuery('th:eq(3)','tr').die();
+			jQuery('th:eq(4)','tr').die();
+		
+		}
+	
+	}
+	/*
+	 * Does various tasks related to cleaning up the DataTables object to make it presentable in the end
+	 */
+	function cleanUp(){
+	
+		formatDate();
+		formatLinks();
+		updateSortable();
+		jQuery('#DataTables_Table_2_filter').remove();
+		jQuery('.dataTables_filter').remove();
+		jQuery('.views-field-changed').children('input').remove();
+		jQuery('.views-field-field-item-volume').children().remove();
+		jQuery('.views-field-type').children().remove();
+		jQuery('.views-field-field-item-subject').children().remove();
+	
+	}
+	
 
     /**
      * Modify the cache-clearing setting within the scope of the method
@@ -245,60 +340,28 @@ function DssElcViewsFilter(options) {
 	    /**
 	     * Instantiate the DataTable Object
 	     */
-	    var table = $('.views-table').DataTable({
+	    table = $('.views-table').DataTable({
 		    
-		    //"paging": false
-
-		    /*
-		    "ajax": {
-		        "url": document.URL,
-			"dataSrc": function(xml) {
-
-			    $(xml).find('').each(function(i,e) {
-
-				    
-				});
-			}
-		    }
-		    */
-
-		    /*
-		    "processing": true,
-		    "serverSide": true,
-		    "ajax": $.fn.dataTable.pipeline({
-
-			    url: '/items',
-			    pages: 1 // number of pages to cache
-			})
-		    */
+		  "processing": true,
+          "serverSide": true,
+           "ajax": $.fn.dataTable.pipeline( {
+            url: ($(document).context.title == 'Browse Items | The Easton Library Company Project') ? '/datatable_item/views/items' : '/datatable_person/views/people' ,
+            pages: 5 // number of pages to cache
+        } )
+           
 		});
 
-	    /**
-	     * Iterate over all results
-	     *
-	     */
-	    var termPage = parseInt(/page\=(\d+)/.exec($('.pager-last a').attr('href'))[1]);
-	    var range = function(u, v) {
-
-		return v >= u ? range(u, v - 1).concat(v) : [];
-	    };
-	    //$.each(range(1, termPage), function(j) {
-	    $.each(range(1, 2), function(j) {
-
-		    //$.get('/items', {page: j}, function(xml) {
-
-			    /*
-		    $.get('/ajax/items', {
-			    sort: 'field_loan_duration_value',
-			    page: j
-				}, function(rows) {
-
-			    for(row in rows) {
-
-				table.add(row);
-			    }
-			});
-			    */
+		jQuery('th.views-field').filter(function(i,e) {
+		
+			return !/View/.test(this.textContent) && !/Edit/.test(this.textContent) && !/Vols./.test(this.textContent) && !/Type/.test(this.textContent) && !/Subject/.test(this.textcontext);
+		
+		}).on('click',function(event){
+		
+			$.fn.dataTable.pipeline( {
+	            url: ($(document).context.title == 'Browse Items | The Easton Library Company Project') ? '/datatable_item/views/items' : '/datatable_person/views/people' ,
+	            pages: 5, // number of pages to cache
+	        } );
+		
 		});
 
 	    /**
@@ -307,17 +370,15 @@ function DssElcViewsFilter(options) {
 	    $('th.views-field').filter(function(i,e) {
 
 		    return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
-		}).each(function() {
 		    
-		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup change', function() {
+		}).each(function() {
+	    
+		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'change', function() {
 			    
-			    if(this.value != '') {
-				
-				//$('.views-table').DataTable.column( $(this).parent().index()+':visible' )
-				table.column( $(this).parent().index()+':visible' )
-				    .search( this.value )
-				    .draw();
-			    }
+			table.column( $(this).parent().index()+':visible' )
+			    .search( this.value )
+			    .draw();
+			    
 			}).on('click', function(event) {
 
 				/**
@@ -326,6 +387,7 @@ function DssElcViewsFilter(options) {
 				event.stopImmediatePropagation();
 			    }).appendTo(this);
 		    });
+		    
 	}
     };
 }(jQuery, Drupal));

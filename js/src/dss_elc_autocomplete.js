@@ -77,6 +77,16 @@
 				    
 				    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
 				    
+				    var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1,-1).map(function(i,e){
+				    	
+				    	return e.defaultValue;
+				    	
+				    	})).toArray().join('","');
+				    	
+				    var $lastElem = $('input[name="' + inputName + '"]');
+				    
+				    $lastElem.val(finalInput);
+				    
 				    $(item).siblings('span.token-volumes').each(function(j, item) {
 					    
 					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
@@ -280,9 +290,9 @@
 	    } else if($fieldElem.val().indexOf(',') > 0) {
 		
 		//items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
-		items = $fieldElem.val().split(/\",/).map(function(e) {
+		items = $fieldElem.val().split('","').map(function(e) {
 			
-			return (e.slice(-1) == '"') ? e : e + '"';
+			return (e.slice(-1) == '"') ? e : e ;
 		    });
 	    } else {
 
