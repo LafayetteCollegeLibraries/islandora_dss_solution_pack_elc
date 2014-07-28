@@ -408,7 +408,7 @@ PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too
 
 	foreach(preg_split('/;/', $book['subject']) as $subject) {
 
-	  $book_md->field_item_subject[] = intval(dss_elc_get_taxonomy_term($subject, 'item_subjects')->nid);
+	  $book_md->field_item_subject[] = dss_elc_get_taxonomy_term($subject, 'item_subjects')->tid;
 	}
       }
       
@@ -440,23 +440,15 @@ PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too
       // Relate the book or periodical to the manifestation entity being instantiated
       $book_md->field_item_embodies->set(intval($manifestation_entity->nid));
 
-      // Serialize the book Node
-      $book_md->save(true);
-      entity_save('node', $book_entity);
-
-      /*
       try {
 
 	// Serialize the book Node
 	$book_md->save(true);
 	entity_save('node', $book_entity);
-
-	$frbr_entities[] = $book_entity;
       } catch(Exception $e) {
 
-	drush_log(dt('Failed to migrate: ' . $book_title), 'error');
+	drush_log(dt("Failed to migrate $book_title: {$e->getMessage()}"), 'error');
       }
-      */
     }
 
     // Relate an author to the manifestation, as well as to the items within a single relationship
@@ -694,6 +686,7 @@ function drush_dss_elc_delete_books() {
       if(isset($items['node'])) {
 
 	entity_delete_multiple('node', array_keys($items['node']));
+	drush_log(dt("Deleted " . (string) array_keys($items['node']) . '...'), 'success');
       }
     }
   }
