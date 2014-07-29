@@ -1113,8 +1113,54 @@ function dss_elc_views_pre_render(&$view) {
    * Significant work-around
    * @todo Refactor
    */
-  if($view->name == 'loans') {
 
+  if($view->name == 'items') {
+
+    dpm($results[0]);
+
+    foreach($results as $key => $result) {
+
+      $manifestation = $result->_field_data['nid']['entity'];
+
+      $items = dss_elc_items_by_manifestation($manifestation);
+
+      foreach($items as $i => $item) {
+
+	$volume = $item->field_item_volume_migrate[$item->language][0]['tid'];
+
+	// Retrieve the individual loans for volumes
+	$result->field_field_item_volume_migrate[] = array('rendered' => array('#markup' => '<a href="/node/' . $item->nid . '">' . $volume . '</a>'));
+      }
+
+      // If there were items in relation to this manifestation...
+      if(count($items) > 0) {
+
+	$first_item = reset($items);
+
+	// Iterate through the subject taxonomy terms
+	if(array_key_exists($first_item->language, $first_item->field_item_subject)) {
+
+	  foreach($first_item->field_item_subject[$first_item->language] as $tid) {
+
+	      // field_field_item_subject	      
+	      $term = taxonomy_term_load($tid);
+
+	      if($term) {
+
+		$result->field_field_item_subject[] = array('rendered' => array('#markup' => '<a href="/taxonomy/' . $term->tid . '">' . $term->label . '</a>'));
+	      }
+	  }
+	}
+
+	// Obtain and set the individual type
+	$result->node_type = $first_item->type;
+
+	// Set the link to the initial item
+	
+      }
+    }
+  } elseif($view->name == 'loans') {
+    
     foreach($results as $key => $result) {
 
       /**
