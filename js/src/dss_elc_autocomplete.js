@@ -49,7 +49,7 @@
     /**
      * Static Methods
      *
-     */
+     */ 
     DssElcAutocomplete.onSubmitHandler = function(e) {
 
 	$.each($(this).data('islandoraDssElc.autocomplete'), (function(i, autocomplete) {

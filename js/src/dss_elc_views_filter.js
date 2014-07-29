@@ -68,10 +68,28 @@ function DssElcViewsFilter(options) {
 
     $.fn.dataTable.pipeline = function(opts) {
     
+    var this_url;
+
+	//deciding which url to make the ajax request to
+	switch (document.title){
+            
+             case 'Browse Items | The Easton Library Company Project': 
+             	this_url = '/datatable_item/views/items';
+             	break;
+             	
+             case 'Browse People | The Easton Library Company Project':
+             	this_url = '/datatable_person/views/people';
+             	break;
+             	
+             case 'Browse Loans | The Easton Library Company Project':
+             	this_url = '/datatable_loan/views/loans';
+             	break;
+             };
+    
 	// Configuration options
 	var conf = $.extend( {
 		pages: 5,     // number of pages to cache
-		url: ($(document).context.title == 'Browse Items | The Easton Library Company Project') ? '/datatable_item/views/items' : '/datatable_person/views/people' ,      // script url
+		url: this_url,
 		data: null,   // function or object with parameters to send to the server
 		// matching how `ajax.data` works in DataTables
 		method: 'GET' // Ajax HTTP method
@@ -229,7 +247,7 @@ function DssElcViewsFilter(options) {
      */
 	function formatLinks(){
 	
-		if(window.location.pathname == '/items'){
+		if(window.location.pathname == '/items' || '/loans'){
 		
 			$('td:eq(6)','tr').each(function(i,e){
 				var temp = $(e).text();
@@ -273,32 +291,37 @@ function DssElcViewsFilter(options) {
 			jQuery('td:eq(1)','tr').each(function(i,e){
 			
 				var temp = parseInt($(e).text());
-				var dateObj = new Date((temp+2678400)*1000);
-				$(e).text(dateObj.getFullYear() + '-' + dateObj.getMonth() + '-' + dateObj.getDate());
+				var dateObj = new Date((temp)*1000);
+				$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
 				
 			});
 		}
-		else if(window.location.pathname == '/items'){
+		else if(window.location.pathname == '/items' || '/loans'){
 			jQuery('td:eq(5)','tr').each(function(i,e){
 			
 				var temp = parseInt($(e).text());
-				var dateObj = new Date((temp+2678400)*1000);
-				$(e).text(dateObj.getFullYear() + '-' + dateObj.getMonth() + '-' + dateObj.getDate());
+				var dateObj = new Date((temp)*1000);
+				$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
 				
 			});
+			if(window.location.pathname =='/loans'){
+			
+				jQuery('td:eq(2)','tr').each(function(i,e){
+					
+					var temp = parseInt($(e).text());
+					if(temp > 0){
+						var dateObj = new Date((temp)*1000);
+						$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+					}
+					else{
+						var dateObj = new Date((temp)*1000);
+						$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+					}
+			});
+			
+			}
 		}
 		
-	}
-	function updateSortable(){
-	
-		if(window.location.pathname == '/items'){
-		
-			jQuery('th:eq(2)','tr').attr('aria-controls','');
-			jQuery('th:eq(3)','tr').die();
-			jQuery('th:eq(4)','tr').die();
-		
-		}
-	
 	}
 	/*
 	 * Does various tasks related to cleaning up the DataTables object to make it presentable in the end
@@ -307,13 +330,10 @@ function DssElcViewsFilter(options) {
 	
 		formatDate();
 		formatLinks();
-		updateSortable();
 		jQuery('#DataTables_Table_2_filter').remove();
 		jQuery('.dataTables_filter').remove();
 		jQuery('.views-field-changed').children('input').remove();
-		jQuery('.views-field-field-item-volume').children().remove();
-		jQuery('.views-field-type').children().remove();
-		jQuery('.views-field-field-item-subject').children().remove();
+		jQuery('.views-field-field-loan-duration').children('input').remove();
 	
 	}
 	
@@ -337,6 +357,24 @@ function DssElcViewsFilter(options) {
 
 	attach: function(context, settings) {
 
+	var this_url;
+
+	//deciding which url to make the ajax request to
+	switch (document.title){
+            
+             case 'Browse Items | The Easton Library Company Project': 
+             	this_url = '/datatable_item/views/items';
+             	break;
+             	
+             case 'Browse People | The Easton Library Company Project':
+             	this_url = '/datatable_person/views/people';
+             	break;
+             	
+             case 'Browse Loans | The Easton Library Company Project':
+             	this_url = '/datatable_loan/views/loans';
+             	break;
+             };
+
 	    /**
 	     * Instantiate the DataTable Object
 	     */
@@ -344,8 +382,8 @@ function DssElcViewsFilter(options) {
 		    
 		  "processing": true,
           "serverSide": true,
-           "ajax": $.fn.dataTable.pipeline( {
-            url: ($(document).context.title == 'Browse Items | The Easton Library Company Project') ? '/datatable_item/views/items' : '/datatable_person/views/people' ,
+          "ajax": $.fn.dataTable.pipeline( {
+            url: this_url,
             pages: 5 // number of pages to cache
         } )
            
@@ -358,7 +396,7 @@ function DssElcViewsFilter(options) {
 		}).on('click',function(event){
 		
 			$.fn.dataTable.pipeline( {
-	            url: ($(document).context.title == 'Browse Items | The Easton Library Company Project') ? '/datatable_item/views/items' : '/datatable_person/views/people' ,
+	            url: this_url,
 	            pages: 5, // number of pages to cache
 	        } );
 		
@@ -371,7 +409,7 @@ function DssElcViewsFilter(options) {
 
 		    return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
 		    
-		}).each(function() {
+		}).each(function() { 
 	    
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'change', function() {
 			    

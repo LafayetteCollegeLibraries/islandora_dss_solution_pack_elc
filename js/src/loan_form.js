@@ -9,34 +9,16 @@
     Drupal.behaviors.dssElcLoanForm = {
 
 	attach: function(context, settings) {
-	    
-	    /*
-	    $('#edit-field-loan-filename-und').attr('tabindex', '1');
-	    $('#edit-field-loan-shareholder-und').attr('tabindex', '2');
-	    $('#edit-field-bib-rel-subject-und').attr('tabindex', '3');
-	    $('#edit-field-bib-rel-object-und-0-target-id').attr('tabindex', '4');
-
-	    $('#edit-field-loan-issues-loaned-und-0-value').attr('tabindex', '5');
-	    $('#edit-field-loan-volumes-loaned-und-0-value').attr('tabindex', '6');
-	    $('#edit-field-loan-months-loaned-und-0-value').attr('tabindex', '7');
-	    $('#edit-field-loan-years-loaned-und-0-value').attr('tabindex', '8');
-
-	    $('#edit-field-loan-duration-und-0-value-date').attr('tabindex', '9');
-	    $('#edit-field-loan-duration-und-0-value2-date').attr('tabindex', '10');
-	    $('#edit-field-loan-fine-und-0-value').attr('tabindex', '11');
-
-	    $('#edit-publish').attr('tabindex', '12');
-	    */
 
 	    // Usability feature to the Shareholder and Representative form fields
 	    $('#edit-field-loan-shareholder-und').change(function(event) {
 
 		    if(!$(this).data('loanForm')) {
 
-			$(this).data('loanForm', {
-			    
-				prevPatron: ''
-				    });
+				$(this).data('loanForm', {
+				    
+					prevPatron: ''
+				});
 		    } else {
 
 			prevPatron = $(this).data('loanForm')['prevPatron'];
@@ -313,6 +295,15 @@
 
 	    // html.js body.html div.main-container div.row-fluid section.span12 form#loan-node-form.node-form div div.loan-record div.loan-row div#loan-fields-b div.items-column div#field-bib-rel-object-add-more-wrapper--2 div.form-item table#field-bib-rel-object-values--2.field-multiple-table tbody tr.draggable td div.ajax-new-content div.control-group div.controls input#edit-field-bib-rel-object-und-1-target-id.form-text
 	    $('#edit-field-bib-rel-object-und-0-target-id');
+	    
+		//propogate the year from the check out date to the check in date
+		$('#edit-field-loan-duration-und-0-value2-year').on('blur',function(){
+	
+		$('#edit-field-loan-duration-und-0-value-year').val($('#edit-field-loan-duration-und-0-value2-year').val());
+	
+	}); 
+	    
 	}
-    }
+	
+    };
 }(jQuery, Drupal));
