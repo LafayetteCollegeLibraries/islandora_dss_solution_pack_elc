@@ -1116,21 +1116,24 @@ function dss_elc_views_pre_render(&$view) {
 
   if($view->name == 'items') {
 
-    dpm($results[0]);
-
     foreach($results as $key => $result) {
 
       $manifestation = $result->_field_data['nid']['entity'];
 
       $items = dss_elc_items_by_manifestation($manifestation);
 
+      $volume_refs = array();
       foreach($items as $i => $item) {
 
 	$volume = $item->field_item_volume_migrate[$item->language][0]['tid'];
 
 	// Retrieve the individual loans for volumes
-	$result->field_field_item_volume_migrate[] = array('rendered' => array('#markup' => '<a href="/node/' . $item->nid . '">' . $volume . '</a>'));
+	$volume_refs[$volume] = array('rendered' => array('#markup' => '<a href="/node/' . $item->nid . '">' . $volume . '</a>'));
       }
+
+      ksort($volume_refs);
+
+      $result->field_field_item_volume_migrate = $volume_refs;
 
       // If there were items in relation to this manifestation...
       if(count($items) > 0) {
@@ -1140,15 +1143,15 @@ function dss_elc_views_pre_render(&$view) {
 	// Iterate through the subject taxonomy terms
 	if(array_key_exists($first_item->language, $first_item->field_item_subject)) {
 
-	  foreach($first_item->field_item_subject[$first_item->language] as $tid) {
+	  foreach($first_item->field_item_subject[$first_item->language] as $term_ref) {
 
-	      // field_field_item_subject	      
-	      $term = taxonomy_term_load($tid);
+	    // field_field_item_subject	      
+	    $term = taxonomy_term_load($term_ref['tid']);
 
-	      if($term) {
-
-		$result->field_field_item_subject[] = array('rendered' => array('#markup' => '<a href="/taxonomy/' . $term->tid . '">' . $term->label . '</a>'));
-	      }
+	    if($term) {
+	      
+	      $result->field_field_item_subject[] = array('rendered' => array('#markup' => '<a href="/taxonomy/term/' . $term->tid . '">' . $term->name . '</a>'));
+	    }
 	  }
 	}
 

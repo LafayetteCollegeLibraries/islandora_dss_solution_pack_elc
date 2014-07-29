@@ -64,7 +64,7 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
 
 function template_preprocess_item_node_form(&$variables) {
 
-  hide($variables['form']['field_artifact_type']);
+  //hide($variables['form']['field_artifact_type']);
   hide($variables['form']['field_artifact_metadata_record']);
   hide($variables['form']['field_item_embodies']);
   hide($variables['form']['field_item_volume_migrate']);

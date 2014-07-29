@@ -1,5 +1,0 @@
-<div class="loan-row">
-<div id="edit-actions" class="form-actions form-wrapper">
-   <?php print drupal_render_children($form['actions']); ?>
-</div>
-</div>
