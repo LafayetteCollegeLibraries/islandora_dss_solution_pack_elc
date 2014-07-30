@@ -333,7 +333,6 @@ function DssElcViewsFilter(options) {
 		formatDate();
 		formatLinks();
 		jQuery('#DataTables_Table_2_filter').remove();
-		jQuery('.dataTables_filter').remove();
 		jQuery('.views-field-changed').children('input').remove();
 		jQuery('.views-field-field-loan-duration').children('input').remove();
 	
@@ -413,7 +412,7 @@ function DssElcViewsFilter(options) {
 		    
 		}).each(function() { 
 	    
-		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'change', function() {
+		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup', function() {
 			    
 			table.column( $(this).parent().index()+':visible' )
 			    .search( this.value ) 
@@ -429,10 +428,10 @@ function DssElcViewsFilter(options) {
 		    });
 		    //implementing a checkbox for deciding whether or not to search authors
 		    if(window.location.pathname == '/people'){	   
-				jQuery('#DataTables_Table_0_wrapper').append('<div id="search_authors" class="DataTables_Control" />');
+				jQuery('.view-content').prepend('<div id="search_authors" class="DataTables_Control" align=middle />');
 				jQuery('#search_authors').append('<input type="checkbox" name="search_authors" />');
-				jQuery('#search_authors').append('<p align=top/>');
-				jQuery('p','#search_authors').append('Search Authors');
+				jQuery('#search_authors').append('<p align=middle/>');
+				jQuery('p','#search_authors').append('Search Authors').width(100);
 				jQuery('input','#search_authors').on('click',function(event){
 				
 					table.clearPipeline().draw();
