@@ -100,6 +100,7 @@ function DssElcViewsFilter(options) {
 	var cacheUpper = null;
 	var cacheLastRequest = null;
 	var cacheLastJson = null;
+	var cacheLastAuthor = null;
  
 	return function(request, drawCallback, settings) {
 
@@ -108,7 +109,7 @@ function DssElcViewsFilter(options) {
 	    var requestLength = request.length;
 	    var requestEnd    = requestStart + requestLength;
 	    var drawStart     = request.start;
-         
+        
 	    var isSearch = false;
 	    if ( settings.clearCache ) {
 		// API requested that the cache be cleared
@@ -202,8 +203,9 @@ function DssElcViewsFilter(options) {
 		}
 		if($('input:last','tr').text()!=''){
 			request.columns[1].search.value = '';
-		}
-
+		}	
+		request.authors = jQuery('input','#search_authors').prop('checked');
+		
 		settings.jqXHR = $.ajax( {
 			"type":     conf.method,
 			"url":      conf.url,
@@ -247,7 +249,7 @@ function DssElcViewsFilter(options) {
      */
 	function formatLinks(){
 	
-		if(window.location.pathname == '/items' || '/loans'){
+		if(window.location.pathname == '/items' || window.location.pathname == '/loans'){
 		
 			$('td:eq(6)','tr').each(function(i,e){
 				var temp = $(e).text();
@@ -391,7 +393,7 @@ function DssElcViewsFilter(options) {
 
 		jQuery('th.views-field').filter(function(i,e) {
 		
-			return !/View/.test(this.textContent) && !/Edit/.test(this.textContent) && !/Vols./.test(this.textContent) && !/Type/.test(this.textContent) && !/Subject/.test(this.textcontext);
+			return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
 		
 		}).on('click',function(event){
 		
@@ -414,7 +416,7 @@ function DssElcViewsFilter(options) {
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'change', function() {
 			    
 			table.column( $(this).parent().index()+':visible' )
-			    .search( this.value )
+			    .search( this.value ) 
 			    .draw();
 			    
 			}).on('click', function(event) {
@@ -425,7 +427,18 @@ function DssElcViewsFilter(options) {
 				event.stopImmediatePropagation();
 			    }).appendTo(this);
 		    });
-		    
-	}
+		    //implementing a checkbox for deciding whether or not to search authors
+		    if(window.location.pathname == '/people'){	   
+				jQuery('#DataTables_Table_0_wrapper').append('<div id="search_authors" class="DataTables_Control" />');
+				jQuery('#search_authors').append('<input type="checkbox" name="search_authors" />');
+				jQuery('#search_authors').append('<p align=top/>');
+				jQuery('p','#search_authors').append('Search Authors');
+				jQuery('input','#search_authors').on('click',function(event){
+				
+					table.clearPipeline().draw();
+					
+				});
+			}
+		}
     };
 }(jQuery, Drupal));
