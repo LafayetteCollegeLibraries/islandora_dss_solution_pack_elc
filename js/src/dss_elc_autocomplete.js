@@ -68,48 +68,59 @@
 			    
 			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
 					    
-				    /**
-				     * @todo Refactor
-				     *
-				     */
-				    var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
-				    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
+				/**
+				 * @todo Refactor
+				 *
+				 */
+
+				// Retrieve the value from the token
+				var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
+				var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
+				
+				//$('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + $('<div/>').text(inputValue).html() + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
+				$('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>').attr('value', '"' + inputValue + '"').attr('name', inputName).appendTo('.node-form');
 				    
-				    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
-				    
-				    var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1,-1).map(function(i,e){
+				var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1,-1).map(function(i,e){
 				    	
-				    	return e.defaultValue;
+					    return e.defaultValue;
 				    	
 				    	})).toArray().join('","');
 				    	
-				    var $lastElem = $('input[name="' + inputName + '"]');
+				var $lastElem = $('input[name="' + inputName + '"]');
 				    
-				    $lastElem.val(finalInput);
+				$lastElem.val(finalInput);
 				    
-				    $(item).siblings('span.token-volumes').each(function(j, item) {
+				/**
+				 * Retrieve the volumes from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value
+				 *
+				 */
+				$(item).siblings('span.token-volumes').each(function(j, item) {
 					    
-					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
+					inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
 					    
-					    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
+					var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
 						    
-						    return $(e).val();
-						}).length;
+						return $(e).val();
+					    }).length;
 					    
-					    $('.node-form').append('<input id="edit-field-loan-volumes-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_volumes_text[und][' + nameIndex + '][value]" style="display:none">');
-					});
+					$('.node-form').append('<input id="edit-field-loan-volumes-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_volumes_text[und][' + nameIndex + '][value]" style="display:none">');
+				    });
 
-				    $(item).siblings('span.token-issues').each(function(j, item) {
+				/**
+				 * Retrieve the issues from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value
+				 *
+				 */
+				$(item).siblings('span.token-issues').each(function(j, item) {
 					    
-					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
+					inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
 					    
-					    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
+					var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
 						    
-						    return $(e).val();
-						}).length;
+						return $(e).val();
+					    }).length;
 					    
-					    $('.node-form').append('<input id="edit-field-loan-issues-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_issues_text[und][' + nameIndex + '][value]" style="display:none">');
-					});
+					$('.node-form').append('<input id="edit-field-loan-issues-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_issues_text[und][' + nameIndex + '][value]" style="display:none">');
+				    });
 			    });
 		    }
 		})
