@@ -66,12 +66,15 @@
 			    $('[name="field_bib_rel_object[und][0][target_id]"]:first').remove();
 			}
 			    
-			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
+			$('#' + autocomplete.input.attr('id') + '-tokens li a span').each(function(j, item) {
 					    
 				    /**
 				     * @todo Refactor
 				     *
 				     */
+				    if($(item).text() == '×'){
+				    	return;
+				    }
 				    var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
 				    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
 				    

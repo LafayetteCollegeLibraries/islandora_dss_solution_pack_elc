@@ -268,7 +268,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 		
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
-	entityRefStr = $(data).find('em.placeholder').text();
+	entityRefStr = $(data).find('em.placeholder:last').text();
 		
 	/**
 	 * Work-around
@@ -294,7 +294,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	     * Integration for tokenization
 	     * @todo Refactor
 	     */
-	    $("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+	    $("<li><a href='#' class='token'><span>"  + entityRefStr  + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
 	    $relatedInputField.val('');
 	}
 
@@ -339,10 +339,10 @@ NodeFormModal.onSubmitHandler = function(event) {
     //var nodeFormModal = $(this).data('dssNodeFormModal');
     var nodeFormModal = $(this).data('nodeFormModal');
     //$form = $(this).data('nodeFormModal').form;
-    $form = nodeFormModal.form;
+    $form = nodeFormModal.form[0];
 
     //$.post('/node/' + method + '/' + contentTypeName, form.serialize(), function(data, textStatus) {
-    $.post($form.attr('action'), $form.serialize(), NodeFormModal.onFormAjaxSuccessHandler);
+    $.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
 };
 
 /**
@@ -469,16 +469,19 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 
 	//$modal.find('#edit-field-person-type-und').val(dssNodeFormModal.humanType);
 
-	/**
-	 * Ensure that this value is tokenized
-	 * @todo Refactor
-	 */
-	$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
+		/**
+		 * Ensure that this value is tokenized
+		 * @todo Refactor
+		 */
+		if($modal.find('#edit-field-person-type-und').siblings('.token-list').children().length < 1){
+			$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
+	    }
     }
 
-    // Hide the preview and submit buttons
+    // Hide the preview, submit, and save and add another buttons
     $modal.find('#edit-preview').hide();
     $modal.find('#edit-submit').hide();
+    $modal.find('#edit-publish-and-save').hide();
 
     // Set the submit form button to the publish button
     dssNodeFormModal.$submit = $modal.find('#edit-publish');
