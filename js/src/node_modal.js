@@ -284,6 +284,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor
 	 *
 	 */
+	// Anomalous handling for the addition of multiple personal relationships
 	if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
 		    
 	    $relatedInputField.val(entityRefStr);
@@ -294,7 +295,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	     * Integration for tokenization
 	     * @todo Refactor
 	     */
-	    $("<li><a href='#' class='token'><span>" + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+	    $('<li><a href="#" class="token"><span class="token-object">' + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
 	    $relatedInputField.val('');
 	}
 
