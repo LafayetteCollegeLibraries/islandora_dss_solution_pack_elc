@@ -284,6 +284,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor
 	 *
 	 */
+	// Anomalous handling for the addition of multiple personal relationships
 	if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
 		    
 	    $relatedInputField.val(entityRefStr);
@@ -294,7 +295,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	     * Integration for tokenization
 	     * @todo Refactor
 	     */
-	    $("<li><a href='#' class='token'><span>"  + entityRefStr  + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+	    $('<li><a href="#" class="token"><span class="token-object">' + '"' + entityRefStr + '"' + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
 	    $relatedInputField.val('');
 	}
 
@@ -339,10 +340,10 @@ NodeFormModal.onSubmitHandler = function(event) {
     //var nodeFormModal = $(this).data('dssNodeFormModal');
     var nodeFormModal = $(this).data('nodeFormModal');
     //$form = $(this).data('nodeFormModal').form;
-    $form = nodeFormModal.form[0];
+    $form = nodeFormModal.form;
 
     //$.post('/node/' + method + '/' + contentTypeName, form.serialize(), function(data, textStatus) {
-    $.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
+    $.post($form.attr('action'), $form.serialize(), NodeFormModal.onFormAjaxSuccessHandler);
 };
 
 /**
@@ -469,13 +470,11 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 
 	//$modal.find('#edit-field-person-type-und').val(dssNodeFormModal.humanType);
 
-		/**
-		 * Ensure that this value is tokenized
-		 * @todo Refactor
-		 */
-		if($modal.find('#edit-field-person-type-und').siblings('.token-list').children().length < 1){
-			$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
-	    }
+	/**
+	 * Ensure that this value is tokenized
+	 * @todo Refactor
+	 */
+	$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
     }
 
     // Hide the preview, submit, and save and add another buttons

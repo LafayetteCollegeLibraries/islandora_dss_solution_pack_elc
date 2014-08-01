@@ -360,11 +360,20 @@ function DssElcViewsFilter(options) {
 
 	var this_url;
 
+	/**
+	 * @author griffinj@lafayette.edu
+	 * Abstract the default sorting to vary by each View
+	 *
+	 */
+
+	order = [[ 0, "asc" ]];
+
 	//deciding which url to make the ajax request to
 	switch (document.title){
             
              case 'Browse Items | The Easton Library Company Project': 
              	this_url = '/datatable_item/views/items';
+	        order = [[ 1, "asc" ]];
              	break;
              	
              case 'Browse People | The Easton Library Company Project':
@@ -373,6 +382,7 @@ function DssElcViewsFilter(options) {
              	
              case 'Browse Loans | The Easton Library Company Project':
              	this_url = '/datatable_loan/views/loans';
+	        order = [[ 2, "asc" ]];
              	break;
              };
 
@@ -381,6 +391,7 @@ function DssElcViewsFilter(options) {
 	     */
 	    table = $('.views-table').DataTable({
 		    
+		    "order": order,
 		  "processing": true,
           "serverSide": true,
           "ajax": $.fn.dataTable.pipeline( {

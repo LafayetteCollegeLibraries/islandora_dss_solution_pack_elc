@@ -987,7 +987,7 @@ function dss_elc_form_personal_relationship_node_form_alter(&$form, $form_state)
 function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 
   dss_elc_form_insert_js();
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/build/item_form.js');
+  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/item_form.js');
 
   $autocomplete_fields = array('entityRefs' => array("#edit-field-artifact-was-authored-by-und"),
 			       'terms' => array("#edit-field-item-number-taxon-und", "#edit-field-item-subject-und")
@@ -1113,8 +1113,57 @@ function dss_elc_views_pre_render(&$view) {
    * Significant work-around
    * @todo Refactor
    */
-  if($view->name == 'loans') {
 
+  if($view->name == 'items') {
+
+    foreach($results as $key => $result) {
+
+      $manifestation = $result->_field_data['nid']['entity'];
+
+      $items = dss_elc_items_by_manifestation($manifestation);
+
+      $volume_refs = array();
+      foreach($items as $i => $item) {
+
+	$volume = $item->field_item_volume_migrate[$item->language][0]['tid'];
+
+	// Retrieve the individual loans for volumes
+	$volume_refs[$volume] = array('rendered' => array('#markup' => '<a href="/node/' . $item->nid . '">' . $volume . '</a>'));
+      }
+
+      ksort($volume_refs);
+
+      $result->field_field_item_volume_migrate = $volume_refs;
+
+      // If there were items in relation to this manifestation...
+      if(count($items) > 0) {
+
+	$first_item = reset($items);
+
+	// Iterate through the subject taxonomy terms
+	if(array_key_exists($first_item->language, $first_item->field_item_subject)) {
+
+	  foreach($first_item->field_item_subject[$first_item->language] as $term_ref) {
+
+	    // field_field_item_subject	      
+	    $term = taxonomy_term_load($term_ref['tid']);
+
+	    if($term) {
+	      
+	      $result->field_field_item_subject[] = array('rendered' => array('#markup' => '<a href="/taxonomy/term/' . $term->tid . '">' . $term->name . '</a>'));
+	    }
+	  }
+	}
+
+	// Obtain and set the individual type
+	$result->node_type = $first_item->type;
+
+	// Set the link to the initial item
+	
+      }
+    }
+  } elseif($view->name == 'loans') {
+    
     foreach($results as $key => $result) {
 
       /**

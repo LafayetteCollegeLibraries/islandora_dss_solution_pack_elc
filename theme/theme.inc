@@ -64,7 +64,7 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
 
 function template_preprocess_item_node_form(&$variables) {
 
-  hide($variables['form']['field_artifact_type']);
+  //hide($variables['form']['field_artifact_type']);
   hide($variables['form']['field_artifact_metadata_record']);
   hide($variables['form']['field_item_embodies']);
   hide($variables['form']['field_item_volume_migrate']);
@@ -302,4 +302,6 @@ function dss_elc_preprocess_views_view(&$vars) {
    */
   //drupal_add_js(libraries_get_path('DataTables') . '/media/js/jquery.dataTables.js');
   //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_views_filter.js');
+
+  //dpm($vars);
 }

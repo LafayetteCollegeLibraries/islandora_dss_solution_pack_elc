@@ -1,5 +1,25 @@
 <?php
 
+function dss_elc_items_by_manifestation($manifestation) {
+
+  // Does the related Manifestation exist?
+  $drupalQuery = new EntityFieldQuery();
+
+  $result = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('item', 'book', 'periodical'), 'IN')
+    ->fieldCondition('field_item_embodies', 'target_id', $manifestation->nid)
+    ->execute();
+
+  $items = array();
+
+  if(isset($result['node'])) {
+
+    $items = entity_load('node', array_keys($result['node']));
+  }
+
+  return $items;
+  }
+
   /**
    * Operations for the node before it is saved
    *
