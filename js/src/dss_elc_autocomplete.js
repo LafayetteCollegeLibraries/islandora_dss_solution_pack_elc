@@ -78,9 +78,11 @@
 				var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
 				
 				//$('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + $('<div/>').text(inputValue).html() + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
-				$('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>').attr('value', '"' + inputValue + '"').attr('name', inputName).appendTo('.node-form');
-				    
-				var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1,-1).map(function(i,e){
+				$('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>').attr('value', '"' + inputValue + '"').val('"' + inputValue + '"').attr('name', inputName).appendTo('.node-form');
+		
+				// This integrates all values from the previous fields into a single, comma-separated field value
+				// e. g. "Person A (1234)" and "Person B (2345)" from two tokenized fields is reduced to "Person A (1234), Person B(2345)"
+				var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
 				    	
 					    return e.defaultValue;
 				    	
@@ -89,7 +91,7 @@
 				var $lastElem = $('input[name="' + inputName + '"]');
 				    
 				$lastElem.val(finalInput);
-				    
+
 				/**
 				 * Retrieve the volumes from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value
 				 *
