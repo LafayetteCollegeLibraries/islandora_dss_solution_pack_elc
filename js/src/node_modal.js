@@ -268,7 +268,7 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 		
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
-	entityRefStr = $(data).find('em.placeholder').text();
+	entityRefStr = $(data).find('em.placeholder:last').text();
 		
 	/**
 	 * Work-around
@@ -477,7 +477,7 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 	$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
     }
 
-    // Hide the preview and submit buttons
+    // Hide the preview, submit, and save and add another buttons
     $modal.find('#edit-preview').hide();
     $modal.find('#edit-submit').hide();
 

@@ -66,8 +66,9 @@
 			    $('[name="field_bib_rel_object[und][0][target_id]"]:first').remove();
 			}
 			    
-			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
+			$('#' + autocomplete.input.attr('id') + '-tokens li a span').each(function(j, item) {
 					    
+<<<<<<< HEAD
 				/**
 				 * @todo Refactor
 				 *
@@ -83,6 +84,21 @@
 				// This integrates all values from the previous fields into a single, comma-separated field value
 				// e. g. "Person A (1234)" and "Person B (2345)" from two tokenized fields is reduced to "Person A (1234), Person B(2345)"
 				var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
+=======
+				    /**
+				     * @todo Refactor
+				     *
+				     */
+				    if($(item).text() == '×'){
+				    	return;
+				    }
+				    var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
+				    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
+				    
+				    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
+				    
+				    var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1,-1).map(function(i,e){
+>>>>>>> 65c004b3ff412cf728d959478bc15b7a5aae5821
 				    	
 					    return e.defaultValue;
 				    	

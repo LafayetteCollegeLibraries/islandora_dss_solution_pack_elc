@@ -423,11 +423,14 @@ function DssElcViewsFilter(options) {
 		    
 		}).each(function() { 
 	    
-		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup', function() {
+		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').keypress(function(e){
 			    
-			table.column( $(this).parent().index()+':visible' )
-			    .search( this.value ) 
-			    .draw();
+			if(e.which == 13){
+				table.column( $(this).parent().index()+':visible' )
+				    .search( this.value ) 
+				    .draw();
+				e.stopImmediatePropagation();
+		    }
 			    
 			}).on('click', function(event) {
 
