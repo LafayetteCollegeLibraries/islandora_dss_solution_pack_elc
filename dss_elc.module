@@ -727,15 +727,6 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 
   drupal_set_title(t('Add a Loan'));
 
-  // Set the tabindex values
-  // No time, implementing this in Javascript (refactor)
-  /*
-  $form['field_loan_filename']['#attributes']['tabindex'] = '1';
-  $form['field_loan_shareholder']['#attributes']['tabindex'] = '2';
-  $form['field_bib_rel_subject']['#attributes']['tabindex'] = '3';
-  $form['field_bib_rel_object']['#attributes']['tabindex'] = '4';
-  */
-
   $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#prefix'] = '<div id="field-loan-shareholder-add-more-wrapper">';
   //$form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '<div class="node-add-shareholder form-item"><button class="add-node-modal btn btn-info" id="add-human-modal">New Shareholder</button></div></div>';
   $form['field_loan_shareholder'][$form['field_loan_shareholder']['#language']]['#suffix'] = '</div>';
@@ -797,18 +788,14 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   	session_cache_set('type',NULL);
   	
   	$node = node_load($_SESSION['nid']);
-  	
-	$shareholder_node = dss_elc_get_node('nid', $node->field_loan_shareholder['und']['0']['target_id'], 'human');
+  	if(isset($node->field_loan_shareholder['und'])){
+		$shareholder_node = dss_elc_get_node('nid', $node->field_loan_shareholder['und']['0']['target_id'], 'human');
+	}
 	$representative_node = dss_elc_get_node('nid', $node->field_bib_rel_subject['und']['0']['target_id'], 'human');
-	
-	dpm($node);
-	dpm($shareholder_node);
-	dpm($representative_node);
-	dpm(rtrim($node->field_loan_duration['und']['0']['value'],'T00:00:00'));
-	
-	$form['field_loan_shareholder']['und']['#value'] = $shareholder_node->title;
-	
-	$form['field_bib_rel_subject']['und']['#default_value'] = $representative_node->title;
+	if(isset($shareholder_node->title)){
+		$form['field_loan_shareholder']['und']['#value'] = $shareholder_node->title . ' (' . $shareholder_node->nid . ')';
+	}
+	$form['field_bib_rel_subject']['und']['#default_value'] = $representative_node->title . ' (' . $representative_node->nid . ')';
  		
 	$form['field_loan_duration']['und']['0']['#default_value']['value'] = rtrim($node->field_loan_duration['und']['0']['value'],'T00:00:00');
 
@@ -871,26 +858,6 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   }
 
   $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']] = $new_field;
-
-  /*
-  //$form['field_person_type'] = array();
-  $form['field_human_pers_rels'] = array();
-  $form['field_person_location'] = array();
-  $form['field_person_membership'] = array();
-  $form['field_human_gender'] = array();
-  $form['field_human_occupation'] = array();
-  */
-
-  /*
-    $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['#prefix'] = '<div id="field-human-pers-rels-add-more-wrapper">';
-    $form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['#suffix'] = '<div class="node-add-field-human-pers-rels">Add a new ' . l(t('personal relationship'), 'node/add/personal-relationship', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-personal-relationship-modal'))) . '</div></div>';
-
-  $form['field_person_membership'][$form['field_person_membership']['#language']]['#prefix'] = '';
-  $form['field_person_membership'][$form['field_person_membership']['#language']]['#suffix'] = '<div class="node-add-field-person-membership">Add a new ' . l(t('organization'), 'node/add/organization', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-organization-modal'))) . '</div>';
-  
-  $form['field_person_location'][$form['field_person_location']['#language']]['#prefix'] = '<div id="field-person-location-add-more-wrapper">';
-  $form['field_person_location'][$form['field_person_location']['#language']]['#suffix'] = '<div class="node-add-person-location">Add a new ' . l(t('location'), 'node/add/location', array('attributes' => array('class' => 'add-node-modal', 'id' => 'add-location-modal'))) . '</div></div>';
-  */
   
   //Populates field if save and add another was clicked
   if(isset($_SESSION['type'])&&$_SESSION['type']=='human_node_form'){
@@ -898,9 +865,11 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   	session_cache_set('type',NULL);
 	  
 	$this_human_node = node_load($_SESSION['nid']);
+	dpm($this_human_node);
 	
-	$form['field_human_surname']['und']['0']['value']['#value'] = $this_human_node->field_human_surname['und']['0']['value'];
-	
+	if(isset($this_human_node->field_human_surname['und'])){
+		$form['field_human_surname']['und']['0']['value']['#value'] = $this_human_node->field_human_surname['und']['0']['value'];
+	}
 	session_cache_set('nid', NULL);
 	
   }
@@ -1347,6 +1316,14 @@ function dss_elc_views_api() {
 		);
 }
 
+function hold_button_publish_node($form, &$form_state){
+	
+	$form['values']['status'] = 0;
+	
+	publish_add_node_form_submit($form, $form_state);
+	
+}
+
 //overriding publish button to add functionality for repopulation of fields.
 function publish_add_button_publish_node($form, &$form_state) {
   // The original functionality from publish_button.module
@@ -1359,7 +1336,7 @@ function publish_add_button_publish_node($form, &$form_state) {
 
 }
 
-/*
+/* 
  * Edited node_form_submit() or the publish and add another button, only changing redirect function
  */
 function publish_add_node_form_submit($form, &$form_state) {
@@ -1390,7 +1367,8 @@ function publish_add_node_form_submit($form, &$form_state) {
   }
   
   $node_link = l(t('view'), 'node/' . $node->nid);
-  //dpm($node);
+  dpm($node);
+  dpm($form_state);
   $watchdog_args = array('@type' => $node->type, '%title' => $node->title);
   $t_args = array('@type' => node_type_get_name($node), '%title' => $node->title);
 

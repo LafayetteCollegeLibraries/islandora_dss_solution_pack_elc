@@ -296,7 +296,7 @@
 	    var elems = $('[id^="' + /(.+?und)/.exec($fieldElem.attr('id'))[1] + '"].form-text');
 	    if(elems.length > 1) {
 
-		items = elems.map(function(i,e) { return $(e).val() }).filter(function(i,e) { return e; });
+		items = elems.map(function(i,e) { return $(e).val(); }).filter(function(i,e) { return e; });
 		elems.slice(1).remove();
 	    } else if($fieldElem.val().indexOf(',') > 0) {
 		
@@ -394,6 +394,7 @@
 		    /**
 		     * Work-around for enabling autocompletion from multiple elements
 		     * @todo Refactor for the invocation of $.once()
+		     * @see autocomplete.js (Lines 8 - 23)
 		     *
 		     */
 		    //Drupal.behaviors.autocomplete.attach(document, Drupal.settings);
@@ -427,7 +428,7 @@
 					.append($('<span class="element-invisible" aria-live="assertive"></span>')
 						.attr('id', $input.attr('id') + '-autocomplete-aria-live')
 						);
-				    new Drupal.jsAC($input, acdb[uri]);
+				    new Drupal.jsAC($input, acdb[uri]); // This finalizes the Drupal autocomplete.js integration
 
 				    /**
 				     * Populating the fields with serialized values
@@ -1073,7 +1074,7 @@
 	}
     };
 
-    /**
+    /** 
      * jQuery plug-in integration for Drupal
      *
      */

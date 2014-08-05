@@ -22,8 +22,15 @@
 	     */
 	    // Specify whether or not this is an AJAX request
 	    $('.add-node-modal, .edit-node-modal').each(function(i, element) {
-
+			
+		   //try-catch is a workaround for an uncaught error. This is the solution
+		   //for EDDC-295. In the future, find out why settings.dssElc.isAjaxRequest is null
+		   try{
 		    $(element).nodeFormModal(settings.dssElc.isAjaxRequest);
+		   }
+		   catch(exception){
+		    //$(element).nodeFormModal(false);
+		   }
 		});
 	    
 	    addSubjectContainer = $('div.node-add-subject');
@@ -179,6 +186,6 @@
 		});
 	    
 	}
-    }
+    };
 
 }(jQuery, Drupal));
