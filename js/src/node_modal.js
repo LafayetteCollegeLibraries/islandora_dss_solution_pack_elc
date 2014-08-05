@@ -255,6 +255,8 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 
 	$submit = $thisModal.find('#edit-publish');
 	//$submit = $thisModal.find('#edit-submit');
+	
+	//dssNodeFormModal = $thisModal;
 		
 	$relatedFormElement = $submit.data('nodeFormModal').relatedFormElement;
 		
@@ -264,8 +266,14 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor
 	 */
 	//$relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
-	$relatedInputField = dssNodeFormModal.$input;
+	$relatedInputField = jQuery($relatedFormElement).parent().parent().find('input:first');
+	
+	//Implementation for fixing the functionality of multiple modal windows
+	if($relatedInputField.context == $relatedFormElement.context){
 		
+		//find the correct input field
+		
+	}
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
 	entityRefStr = $(data).find('em.placeholder:last').text();
@@ -302,7 +310,10 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	// Trigger any handlers bound to the form field using the jQuery "change" event
 	$relatedInputField.change();
 
-	dssNodeFormModal.closeDialog();
+	//workaround to close the outer most dialog widget -- this is not ideal 
+	//implementation, but currently it is impossible to submit one dialog without first
+	//finishing the one above it, so This will work.
+	$('.ui-icon-closethick:visible').last().click();
     }
 };
 
@@ -343,6 +354,18 @@ NodeFormModal.onSubmitHandler = function(event) {
     $form = nodeFormModal.form[0];
 
     //$.post('/node/' + method + '/' + contentTypeName, form.serialize(), function(data, textStatus) {
+    
+    var inputStr = '';
+	jQuery('li a .token-object',jQuery($form)).each(function(i,e){
+		if(inputStr == ''){
+    		inputStr = jQuery(e).text();            
+		}   
+		else{            
+    		inputStr = inputStr + ',' + jQuery(e).text();        
+    	}
+	});
+	jQuery('#edit-field-artifact-was-authored-by-und').val(inputStr);
+    
     $.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
 };
 
