@@ -19,6 +19,7 @@ if(jQuery) {
     
     NodeFormModal.jQuery = jQuery;
 } else {
+
     NodeFormModal.jQuery = {};
 }
 
@@ -473,8 +474,11 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 	/**
 	 * Ensure that this value is tokenized
 	 * @todo Refactor
+	 * EDDC-264: The tokenized tag MUST match the Drupal Taxonomy Term
 	 */
-	$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
+
+	var humanType = dssNodeFormModal.humanType[0].toUpperCase() + dssNodeFormModal.humanType.slice(1);
+	$('<li><a href="#" class="token"><span class="token-object">' + humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
     }
 
     // Hide the preview, submit, and save and add another buttons

@@ -26,11 +26,11 @@
 </div>
 
 <div class="loan-persons">
-<div class="shareholder-column loan-column single-value-field">
-    <?php print drupal_render_children($form['field_loan_shareholder']); ?>
-</div>
 <div class="patron-column loan-column single-value-field">
     <?php print drupal_render_children($form['field_bib_rel_subject']); ?>
+</div>
+<div class="shareholder-column loan-column single-value-field">
+    <?php print drupal_render_children($form['field_loan_shareholder']); ?>
 </div>
 </div>
 <div class="loan-persons-add">

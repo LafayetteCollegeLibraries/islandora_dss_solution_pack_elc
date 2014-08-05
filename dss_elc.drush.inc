@@ -780,7 +780,7 @@ function dss_elc_migrate_person_type($db, $limit, $person_type) {
   // Retrieve all person records and serialize them as Human Person Nodes
   foreach(drush_dss_elc_get_records($db, $table_name, $limit) as $person) {
 
-    $person_term = dss_elc_get_taxonomy_term($person_type == SHAREHOLDER ? 'Shareholder' : 'Patron', PERSON_TYPES_TAXON);
+    $person_term = dss_elc_get_taxonomy_term($person_type == SHAREHOLDER ? 'Shareholder' : 'Representative', PERSON_TYPES_TAXON);
 
     $person_name = trim($person['name']);
 
