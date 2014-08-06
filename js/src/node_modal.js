@@ -266,13 +266,14 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor
 	 */
 	//$relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
-	$relatedInputField = jQuery($relatedFormElement).parent().parent().find('input:first');
+	
+	$relatedInputField = dssNodeFormModal.$input;
 	
 	//Implementation for fixing the functionality of multiple modal windows
-	if($relatedInputField.context == $relatedFormElement.context){
+	if($relatedFormElement.attr('id') == 'add-item-modal'){
 		
-		//find the correct input field
-		
+		$relatedInputField = jQuery($relatedFormElement).parent().parent().find('input:first');
+	
 	}
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
