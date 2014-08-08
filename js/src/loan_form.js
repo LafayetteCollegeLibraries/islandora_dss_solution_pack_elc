@@ -258,6 +258,8 @@
 
                         if ($(this).val() && (/,$/.exec($(this).val()) || event.which == '13')) {
 
+							event.preventDefault();
+			
                             if (/,$/.exec($(this).val())) {
 
                                 $(this).val($(this).val().slice(0, -1));

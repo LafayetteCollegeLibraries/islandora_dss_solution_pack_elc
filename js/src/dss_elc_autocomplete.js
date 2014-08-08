@@ -61,9 +61,9 @@
 			 * @todo Refactor
 			 *
 			 */
-			if($('[name="field_bib_rel_object[und][0][target_id]"]').length > 1) {
+			if($('[name="field_bib_rel_object[und]"]').length > 1) {
 				
-			    $('[name="field_bib_rel_object[und][0][target_id]"]:first').remove();
+			    $('[name="field_bib_rel_object[und]"]:first').remove();
 			}
 			    
 			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
@@ -121,6 +121,7 @@
 					    
 					$('.node-form').append('<input id="edit-field-loan-issues-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_issues_text[und][' + nameIndex + '][value]" style="display:none">');
 				    });
+				    
 			    });
 		    }
 		})
@@ -234,13 +235,14 @@
 
 	if((event.which == 188 || event.which == 13) && $(this.input).val().length > 1) {
 
-	    //that.tokenizeTerm(e);
-	    this.tokenize(event);
-			
 	    event.preventDefault();
 	}
     };
 
+    /**
+     * @todo Is this being called twice?
+     *
+     */
     DssElcAutocomplete.prototype.keyup = function(event) {
 
 	return this.keydown(event);
@@ -260,7 +262,7 @@
     function DssElcAutocompleteEntityRef(input, $) {
 
 	DssElcAutocomplete.call(this, input, $);
-	//this.bindAjaxHandlers();
+	this.bindAjaxHandlers();
     };
 
     /**
@@ -276,7 +278,7 @@
      */
     DssElcAutocompleteEntityRef.prototype.tokenizeField = function($fieldElem) {
 
-	// Only tokenize for non-existing values
+	// Only tokenize for non-existing values (?)
 	if($fieldElem.val() && $fieldElem.siblings('.token-list').find('.token').filter(function(i,token) {
 		    
 		    return $(token).children('span:first').text() == $fieldElem.val();
@@ -358,7 +360,7 @@
 		    } else {
 
 			/**
-			 * Serialized the form values within the DOM
+			 * Serialize the form values within the DOM
 			 * Again, this should, ideally, be integrated with Drupal hook implementations relating to AJAX response generation
 			 * @todo Decouple and implement in Drupal
 			 *
@@ -389,7 +391,7 @@
 	$(document).ajaxComplete(function(event, xhr, settings) {
 
 		if(settings && /system\/ajax/.exec(settings.url)) {
-
+		    
 		    // Work-around for autocomplete
 		    /**
 		     * Work-around for enabling autocompletion from multiple elements
@@ -537,7 +539,7 @@
 	    event.preventDefault();
 	    var inputElement = this.input;
 
-	    var $listElem = $(this.input).parents('.controls').find('.reference-autocomplete');
+	    var $listElem = $(this.input).parents('.controls').find('.form-autocomplete');
 	    //var ajaxComplete = $(document).data('islandoraDssElc.autocomplete.ajaxComplete');
 
 
@@ -724,6 +726,7 @@
 			this.set('autoCompleteItem', null);
 		    });
 	    }
+	    
 	}
 	//});
     };
@@ -1036,7 +1039,18 @@
 				autocomplete.tokenize(event);
 			    }
 			});
-
+			$(this).on('keyup', '#autocomplete .selected div, .reference-autocomplete', function(event) {
+		    
+			    if(event.which == 13){
+				    //$(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete').tokenize(event);
+				    var autocomplete = $(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete');
+				    if(autocomplete) {
+	
+						autocomplete.tokenize(event);
+					
+			    	}
+		    	}
+			});
 		    return this;
 		}
 	    });
@@ -1081,8 +1095,53 @@
     Drupal.behaviors.dssElcAutocomplete = {
 	attach: function (context, settings) {
 
+	    // The plug-in is bound to an entire <form> element
+	    // Hence, this method creates multiple instances of DssElcAutocomplete Objects (or, children)
 	    $(document).dssElcAutocompleteForm(context, settings);
 	}
     };
     
+    //Drupal integration for disabling enter input
+
+	Drupal.behaviors.DisableInputEnter = {
+	    attach: function(context, settings) {
+	        $('input', context).once('disable-input-enter', function() {
+	            $(this).keypress(function(e) {
+	                if (e.keyCode == 13) {
+	                	e.preventDefault();
+					    var autocomplete = $(this).data('islandoraDssElc.autocomplete');
+					    var temp = autocomplete.input.val();
+					    if(typeof(autocomplete) !== 'undefined') {
+					    	
+					    	
+				    		window.setTimeout(function(){autocomplete.tokenize(e);},300);
+							
+							if(autocomplete.input.attr('id') != 'edit-field-loan-filename-und'){
+							
+								window.setTimeout(function(){
+								
+									if(temp == ''){
+										
+										autocomplete.input.parent().find('ul li a:last').click();
+								
+									}
+								
+								},100);
+							
+							}
+							
+					    	jQuery(document).find('.token-object').each(function(i,e){
+					    		
+					    	//	autocomplete.input.parent().find('ul li a:last').find('span:first').text(autocomplete.input.val());
+								autocomplete.input.val('');
+					    		
+					    	});
+					    }
+					    
+	                }
+	            });
+	        });
+	    }
+	};
+	    
 }(jQuery, Drupal));
