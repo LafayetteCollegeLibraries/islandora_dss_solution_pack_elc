@@ -17,12 +17,11 @@ function dss_elc_preprocess_node_form(&$variables) {
 
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
-    $variables['form']['actions']['publish']['#value'] = t('Save New Record');
+    //$variables['form']['actions']['publish']['#value'] = t('Save New Record');
   } else {
 
-    $variables['form']['actions']['publish']['#value'] = t('Save & View Record');
+    //$variables['form']['actions']['publish']['#value'] = t('Save & View Record');
 
-    //dpm($variables);
   }
 }
 
@@ -185,6 +184,8 @@ function template_preprocess_human_node_form(&$variables) {
 
 /**
  * Preprocessor for loan_node_form
+ * Implements template_preprocess_FORM_ID_node_form().
+ *
  */
 function template_preprocess_loan_node_form(&$variables) {
 
@@ -241,53 +242,17 @@ function template_preprocess_loan_node_form(&$variables) {
 
   hide($variables['form']['field_loan_other_notes'][$variables['form']['field_loan_other_notes']['#language']][0]['format']);
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
-}
-
-/**
- * Implements template_preprocess_page()
- * Integrate the necessary JavaScript widgets necessary for specific Content Types of Nodes
- *
- */
-function dss_elc_preprocess_page(&$vars) {
 
   /**
-   * Integrate the stylesheets for the DataTables plug-in
-   * Migrated into the bootstrap_dss_elc as a caching work-around
-   * @todo Refactor
-   */
-  //drupal_add_css(libraries_get_path('DataTables') . '/media/css/jquery.dataTables.css');
-
-  if(isset($vars['page']) && isset($vars['page']['content']['system_main']['#type'])) {
-    if($vars['page']['content']['system_main']['#type'] == 'form') {
-
-      switch($vars['page']['content']['system_main']['#form_id']) {
-
-      case 'loan_node_form':
-      case 'human_node_form':
-      case 'item_node_form':
-      case 'book_node_form':
-      case 'periodical_node_form':
-
-	$vars['page']['content']['system_main']['actions']['publish']['#value'] = t('Save');
-      break;
-      
-      default:
-	break;
-      }
-    }
-  } elseif(isset($vars['node'])) {
-
-    switch($vars['node']->type) {
-      
-    case 'loan':
-    case 'item':
-    case 'book':
-    case 'periodical':
-    default:
-      
-      break;
-    }
-  }
+   * 
+  $variables['form']['actions']['publish_and_save'] = array(
+					       '#type' => 'submit',
+					       '#value' => t('Save & Add Another'),
+					       '#weight' => '40',
+					       '#submit' => array('publish_add_button_publish_node'),
+					       );
+  $variables['form']['actions']['publish']['#value'] = t('Save & View Record');											
+  */
 }
 
 /**
