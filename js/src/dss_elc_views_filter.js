@@ -439,10 +439,10 @@ function DssElcViewsFilter(options) {
 		    });
 		    //implementing a checkbox for deciding whether or not to search authors
 		    if(window.location.pathname == '/people'){	   
-				jQuery('#DataTables_Table_0_length').after('<div id="search_authors" class="DataTables_Control" align=middle />');
+				jQuery('#DataTables_Table_0').before('<div id="search_authors" class="DataTables_Control" align=middle />');
 				jQuery('#search_authors').append('<input type="checkbox" name="search_authors" />');
 				jQuery('#search_authors').append('<p align=middle/>');
-				jQuery('p','#search_authors').append('Search Authors').width(100);
+				jQuery('p','#search_authors').append('Include Authors').width(100);
 				jQuery('input','#search_authors').on('click',function(event){
 				
 					table.clearPipeline().draw();
