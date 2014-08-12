@@ -258,6 +258,8 @@
 
                         if ($(this).val() && (/,$/.exec($(this).val()) || event.which == '13')) {
 
+							event.preventDefault();
+			
                             if (/,$/.exec($(this).val())) {
 
                                 $(this).val($(this).val().slice(0, -1));
@@ -290,5 +292,11 @@
             $('#edit-field-bib-rel-object-und-0-target-id');
 
         }
+<<<<<<< HEAD
     }
 }(jQuery, Drupal));
+=======
+
+    };
+}(jQuery, Drupal));
+>>>>>>> 6ad2fbb3819783e93ce7c6c8097d8579adcef31e

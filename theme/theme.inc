@@ -17,10 +17,12 @@ function dss_elc_preprocess_node_form(&$variables) {
 
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
-    $variables['form']['actions']['publish']['#value'] = 'Save New Record';
+    $variables['form']['actions']['publish']['#value'] = t('Save New Record');
   } else {
 
-    $variables['form']['actions']['publish']['#value'] = 'Save Record';
+    $variables['form']['actions']['publish']['#value'] = t('Save & View Record');
+
+    //dpm($variables);
   }
 }
 

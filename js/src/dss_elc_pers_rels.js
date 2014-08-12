@@ -72,6 +72,10 @@ DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
 	    // Adding functionality to remove the extra "create new person" buttons, currently changes it to a '-' sign
 	    
 	    $('#add-human-modal-' + (i-1)).html('-');
+	    
+	    // @author Thom Goodnow added function to set class for these removal buttons //
+	    
+	    $('#add-human-modal-' + (i-1)).attr('class','btn btn-primary form-submit add-node-modal btn-rmv-rel');
 		
 	    // Changing button so that it removes the current person from the form
 	    $('#add-human-modal-' + (i-1)).die();

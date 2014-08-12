@@ -15,15 +15,40 @@
 	     * TypeError: Drupal.theme.prototype[func] is undefined
 	     http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js?mp9pul Line 294
 	    */
-
+	   
+	   
+	    //Disable form submission on 'enter'
+	    $('form:first').attr('onsubmit', 'return false');
+	    
+	    //Enable form submission when a button is clicked
+	    jQuery('button','#edit-actions').click(function(e){
+	    	
+	    		$('form:first').attr('onsubmit', 'return true');
+	    
+	    });
+	    //Enable when selected and enter pressed
+		jQuery('button','#edit-actions').keypress(function(e){
+	    	
+	    	if(e.which == 13){
+	    		$('form:first').attr('onsubmit', 'return true');
+	    	}
+	    	
+	    });
 	    // If this is not an Ajax request...
 	    /**
 	     * Set the Modal handlers for the addition of Human nodes
 	     */
 	    // Specify whether or not this is an AJAX request
 	    $('.add-node-modal, .edit-node-modal').each(function(i, element) {
-
+			
+		   //try-catch is a workaround for an uncaught error. This is the solution
+		   //for EDDC-295. In the future, find out why settings.dssElc.isAjaxRequest is null
+		   try{
 		    $(element).nodeFormModal(settings.dssElc.isAjaxRequest);
+		   }
+		   catch(exception){
+		    //$(element).nodeFormModal(false);
+		   }
 		});
 	    
 	    addSubjectContainer = $('div.node-add-subject');
@@ -64,7 +89,7 @@
 			    url = '/node/get/human/title/' + humanTitle;
 			}
 
-			$shareholderField = $('#edit-field-loan-shareholder-und')
+			$shareholderField = $('#edit-field-loan-shareholder-und');
 			
 			//$.get('/node/get/human/title/' + humanTitle, function(data) {
 			$.get(url, function(data) {
@@ -179,6 +204,6 @@
 		});
 	    
 	}
-    }
+    };
 
 }(jQuery, Drupal));
