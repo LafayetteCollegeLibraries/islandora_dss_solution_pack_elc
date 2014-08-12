@@ -292,11 +292,6 @@
             $('#edit-field-bib-rel-object-und-0-target-id');
 
         }
-<<<<<<< HEAD
-    }
-}(jQuery, Drupal));
-=======
 
     };
 }(jQuery, Drupal));
->>>>>>> 6ad2fbb3819783e93ce7c6c8097d8579adcef31e

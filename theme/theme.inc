@@ -179,6 +179,8 @@ function template_preprocess_human_node_form(&$variables) {
   //$variables['form']['actions']['publish']['#value'] = 'Save';
 
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
+
+  dpm($variables['form']);
 }
 
 /**
@@ -272,18 +274,6 @@ function dss_elc_preprocess_page(&$vars) {
       default:
 	break;
       }
-    }
-  } elseif(isset($vars['node'])) {
-
-    switch($vars['node']->type) {
-      
-    case 'loan':
-    case 'item':
-    case 'book':
-    case 'periodical':
-    default:
-      
-      break;
     }
   }
 }

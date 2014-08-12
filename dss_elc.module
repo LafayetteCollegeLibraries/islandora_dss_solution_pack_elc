@@ -803,38 +803,16 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Implements hook_form_BASE_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
+ *
  */
 function dss_elc_form_human_node_form_alter(&$form, $form_state) {
-	
+
+  // Setting the title
   drupal_set_title(t('Add Person'));
 
-  //$form['field_human_pers_rels']['und']['add_more']['#submit'][] = 'dss_elc_form_human_node_form_add_more_submit';
-
-  //$form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'] = array($form['field_human_pers_rels']['und']['add_more']['#ajax']['callback'], '';
-
-  //$form['field_human_pers_rels']['und']['#suffix'] = '';
-
-  /*
-  // Hide certain fields for the modal
-  if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-    $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']['#value'] = '+';
-    //$variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['#prefix'] = render($variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more']);
-    //$variables['form']['field_human_pers_rels']['add_more'] = $variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more'];
-
-    //array_merge($variables['form']['field_human_pers_rels'][$variables['form']['field_human_pers_rels']['#language']]['add_more'], $variables['form']['field_human_pers_rels']);
-    
-    /**
-    * Ensure that the fields are added in the proper order
-    *
-    */
-
-  //$form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#submit'][] = 'dss_elc_field_human_pers_rels_add_more_submit';
-  //$form['field_human_pers_rels'][$form['field_human_pers_rels']['#language']]['add_more']['#ajax']['callback'] = array('field_add_more_js', 'dss_elc_field_human_pers_rels_add_more_submit');
-
-  //
-  //
-  //
+  // Set the "name" field to "alias"
+  $form['field_person_name'][$form['field_person_name']['#language']][0]['value']['#title'] = 'Alias';
 
   /**
    * Reorder the NULL value for field_human_gender
@@ -1022,23 +1000,6 @@ function dss_elc_form_alter(&$form, &$form_state, $form_id) {
     //hide($form['fields_to_utilize']);
     hide($form['shortcut']);
     $form['number']['#title'] = 'Number of Entities';
-  }
-
-  if($form_id == 'human_node_form' ||
-     $form_id == 'item_node_form' ||
-     $form_id == 'book_node_form' ||
-     $form_id == 'periodical_node_form' ||
-     $form_id == 'personal_relationship_node_form' ||
-     $form_id == 'organization_node_form' ||
-     $form_id == 'location_node_form') {
-
-
-  }
-
-  if($form_id == 'loan_node_form') {
-
-  } elseif($form_id == 'human_node_form') {
-
   }
 }
 
