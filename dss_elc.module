@@ -812,7 +812,7 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
   drupal_set_title(t('Add Person'));
 
   // Set the "name" field to "alias"
-  $form['field_person_name'][$form['field_person_name']['#language']][0]['value']['#title'] = 'Alias';
+  $form['field_person_name'][$form['field_person_name']['#language']][0]['value']['#title'] = 'First Name / Alias';
 
   /**
    * Reorder the NULL value for field_human_gender
