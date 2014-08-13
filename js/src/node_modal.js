@@ -193,6 +193,55 @@ NodeFormModal.prototype.closeDialog = function() {
     this.$container.remove();
 };
 
+/**
+ * Method for tranforming the HTML form data into valid JSON for REST endpoints
+ * @param $form the jQuery Form selector
+ *
+ */
+NodeFormModal.prototype.toJSON = function($form) {
+
+    return $form.serializeArray().map(function(i,e) {
+
+	    var obj = {};
+
+	    // Parse for language
+	    if(/([a-zA-Z]+?)\[(\D+?)\]\[(\d)\]/.test(i.name)) {
+
+		var m = /([a-zA-Z_]+?)\[(\D+?)\]\[(\d)\]/.exec(i.name);
+	       
+		var fieldName = m[1];
+		var fieldLang = m[2];
+		var fieldIndex = m[3];
+		
+		if(typeof(obj[fieldName]) === 'undefined') {
+
+		    var fieldData = {};
+		    fieldData[fieldLang] = [];
+		    obj[fieldName] = fieldData;
+		}
+
+		obj[fieldName][fieldLang][fieldIndex] = { value: i.value };
+	    } else if(/([a-zA-Z]+?)\[(\D+?)\]/.test(i.name)) {
+
+		var m = /([a-zA-Z_]+?)\[(\D+?)\]/.exec(i.name);
+
+		var fieldName = m[1];
+		var fieldLang = m[2];
+		var fieldData = {};
+		fieldData[fieldLang] = { value: i.value };
+		obj[fieldName] = fieldData;
+	    } else {
+
+		obj[i.name] = i.value;
+	    }
+	    return obj;
+	});
+}
+
+/**
+ * Static method for handling successful form POST submissions
+ *
+ */
 NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 
     /**
@@ -285,6 +334,8 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * Find the ID of the newly-saved Node by parsing the HTML
 	 * @todo Refactor with Backbone.js and RESTful service endpoints
 	 */
+
+	
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
 	entityRefStr += ' (' + nodeId + ')';
 		
@@ -368,8 +419,11 @@ NodeFormModal.onSubmitHandler = function(event) {
 	});
 	jQuery('#edit-field-artifact-was-authored-by-und').val(inputStr);
     
+    //$.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
     $.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
 };
+
+
 
 /**
  * Static method for handling AJAX responses
