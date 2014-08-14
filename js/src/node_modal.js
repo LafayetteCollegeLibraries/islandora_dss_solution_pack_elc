@@ -200,7 +200,9 @@ NodeFormModal.prototype.closeDialog = function() {
  */
 NodeFormModal.prototype.toJSON = function($form) {
 
-    return $form.serializeArray().map(function(i,e) {
+    $form = $form || this.$form;
+
+    var values = $form.serializeArray().map(function(i,e) {
 
 	    var obj = {};
 
@@ -236,6 +238,18 @@ NodeFormModal.prototype.toJSON = function($form) {
 	    }
 	    return obj;
 	});
+
+    var obj = {};
+    for(var i in values) {
+
+	key = Object.keys(values[i]);
+	obj[key] = values[i][key];
+    }
+
+    // Add the type
+    obj['type'] = this.contentTypeName;
+
+    return obj;
 }
 
 /**
@@ -335,10 +349,9 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor with Backbone.js and RESTful service endpoints
 	 */
 
-	
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
 	entityRefStr += ' (' + nodeId + ')';
-		
+
 	/**
 	 * Work-around
 	 * Handling for personal relationship nodes
@@ -403,11 +416,10 @@ NodeFormModal.onSubmitHandler = function(event) {
      */
     //var nodeFormModal = $(this).data('dssNodeFormModal');
     var nodeFormModal = $(this).data('nodeFormModal');
-    //$form = $(this).data('nodeFormModal').form;
-    $form = nodeFormModal.form[0];
+    var form = nodeFormModal.form[0];
 
-    //$.post('/node/' + method + '/' + contentTypeName, form.serialize(), function(data, textStatus) {
-    
+    // Tokenize the values from the form for the form submission
+    // @author stathisw@lafayette.edu (?)
     var inputStr = '';
 	jQuery('li a .token-object',jQuery($form)).each(function(i,e){
 		if(inputStr == ''){
@@ -419,8 +431,20 @@ NodeFormModal.onSubmitHandler = function(event) {
 	});
 	jQuery('#edit-field-artifact-was-authored-by-und').val(inputStr);
     
-    //$.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
-    $.post($($form).attr('action'), $($form).serialize(), NodeFormModal.onFormAjaxSuccessHandler);
+    var formData = $(form).serializeArray();
+
+    // Override the default form operation
+    // @todo Refactor
+    for(var i in formData) {
+
+	if(formData[i].name == 'op') {
+
+	    formData[i].value = 'Save & View Record';
+	}
+    }
+
+    // Transmit the POST request
+    $.post($($form).attr('action'), formData, NodeFormModal.onFormAjaxSuccessHandler);
 };
 
 
@@ -551,20 +575,29 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 
 	/** 
 	 *  Ensure that this value is tokenized
-    * @todo Refactor
-    */
-	if($modal.find('#edit-field-person-type-und').siblings('.token-list').children().length < 1){
-		$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
-	}}
+	 * @todo Refactor
+	 */
+	if($modal.find('#edit-field-person-type-und').siblings('.token-list').children().length < 1) {
+
+	    $("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
+	}
+    }
 
     // Hide the preview, submit, and save and add another buttons
     $modal.find('#edit-preview').hide();
     $modal.find('#edit-submit').hide();
     $modal.find('#edit-publish-and-save').hide();
 
+    /**
+     * @todo Refactor into the constructor (?)
+     *
+     */
     // Set the submit form button to the publish button
     dssNodeFormModal.$submit = $modal.find('#edit-publish');
     $submit = dssNodeFormModal.$submit;
+
+    // Set the <form> element
+    dssNodeFormModal.$form = dssNodeFormModal.$submit.parents('form');
 
     /**
      * Forcibly append the hidden form element for the Publish action and the append certain JavaScript <script> elements
@@ -575,12 +608,14 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
     // Work-around
 
     // Ensure that the object can be dereferenced from the form Submit button itself
+    // @todo Restructure and refactor
     $submit.data('nodeFormModal', {
 	    
 	    relatedFormElement: $relatedFormElement,
 		form: $form,
 		//container: $(this)
-		container: $modal
+		container: $modal,
+		object: dssNodeFormModal
 		});
 
     // Submit handler
@@ -620,12 +655,17 @@ NodeFormModal.onClickHandler = function(event) {
     var url = '/node/add/' + contentTypeName;		
     $modalContainer = $('<div id="modal-content-container-' + contentTypeName + '" class="modal-content-container" style="display: none;"></div>').appendTo($('body'));
 
+    /**
+     * @todo Restructure and refactor
+     *
+     */
     $modalContainer.data('nodeFormModal', {
 	    
 	    relatedFormElement: $(this),
 		contentTypeName: nodeFormModal.contentTypeName,
 		humanType: nodeFormModal.humanType,
-		modal: nodeFormModal.container
+		modal: nodeFormModal.container,
+		object: nodeFormModal
 		});
 
     // Submit the AJAX request
@@ -802,7 +842,8 @@ function NodeFormModal(options) {
 			contentType: $(e).attr('data-content-type'),
 			nodeType: $(e).attr('data-node-type'),
 			input: $(e).attr('data-input'),
-			key: key
+			key: key,
+			url: $(e).attr('data-url')
 		    });
 		$(document).data('dssNodeFormModals', dssNodeFormModals);
 	    });
