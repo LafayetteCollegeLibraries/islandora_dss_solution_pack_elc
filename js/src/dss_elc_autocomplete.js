@@ -41,7 +41,22 @@
 	*/
 
 	if(this.input && this.input.val()) {
-
+		
+		 //resolves EDDC-318
+		 if(this.input.attr('id') == 'edit-field-artifact-was-authored-by-und'){
+			var authors = $('#edit-field-artifact-was-authored-by-und').val();
+			if(authors != ''){
+				
+				var author_array = authors.split(',');
+				for(var i = 0;i<author_array.length;i++){
+					
+					$('#edit-field-artifact-was-authored-by-und').val(author_array[i]);
+					this.tokenizeField(this.input);
+				};
+				
+			}
+			return;
+		}
 	    this.tokenizeField(this.input);
 	}
     };
@@ -84,7 +99,7 @@
 				    	
 					    return e.defaultValue;
 				    	
-				    	})).toArray().join('","');
+				    	})).toArray().join(',   ');
 				    	
 				var $lastElem = $('input[name="' + inputName + '"]');
 				    
@@ -303,7 +318,7 @@
 	    } else if($fieldElem.val().indexOf(',') > 0) {
 		
 		//items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
-		items = $fieldElem.val().split('","').map(function(e) {
+		items = $fieldElem.val().split(',   ').map(function(e) {
 			
 			return (e.slice(-1) == '"') ? e : e ;
 		    });
@@ -1093,12 +1108,13 @@
      *
      */
     Drupal.behaviors.dssElcAutocomplete = {
-	attach: function (context, settings) {
-
-	    // The plug-in is bound to an entire <form> element
-	    // Hence, this method creates multiple instances of DssElcAutocomplete Objects (or, children)
-	    $(document).dssElcAutocompleteForm(context, settings);
-	}
+		attach: function (context, settings) {
+			
+		    // The plug-in is bound to an entire <form> element
+		    // Hence, this method creates multiple instances of DssElcAutocomplete Objects (or, children)
+		    $(document).dssElcAutocompleteForm(context, settings);
+		    
+		}
     };
     
     //Drupal integration for disabling enter input

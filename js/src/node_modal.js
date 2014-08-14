@@ -231,6 +231,10 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
     if(error.length > 0) {
 	
 	// For each error, instantiate a jQuery UI Dialog widget
+	/**
+	 * @todo Implement error dialog
+	 *
+	 */
 	$.map(error, function(e, i) {
 	
 		$(e).dialog();

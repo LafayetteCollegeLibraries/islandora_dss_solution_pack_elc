@@ -994,7 +994,7 @@ function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 		
 		if($key < $size - 1){
 			
-			$input_string = $input_string . '","';
+			$input_string = $input_string . ', ';
 			
 		}
 		
@@ -1343,6 +1343,8 @@ function publish_add_node_form_submit($form, &$form_state) {
   $node = node_form_submit_build_node($form, $form_state);
   $insert = empty($node->nid);
   node_save($node);
+  dpm($form);
+  dpm($node);
   
   // The new functionality, values transmitted depend on which form is being submitted  
   session_cache_set('nid',$node->nid);
@@ -1391,7 +1393,7 @@ function publish_add_node_form_submit($form, &$form_state) {
 		case 'human_node_form': 
 			$form_state['redirect'] = 'add/person';
 			break;
-		case 'it,em_node_form': 
+		case 'item_node_form': 
 			$form_state['redirect'] = 'add/item';
 			break;
 		default:
