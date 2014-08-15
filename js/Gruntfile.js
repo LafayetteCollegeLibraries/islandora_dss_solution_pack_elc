@@ -33,11 +33,11 @@ module.exports = function(grunt) {
 
 		customTemplate: {
 
-		    src: 'src/**/my_new_widget.js',
+		    src: 'src/**/*.js',
 		    options: {
 
 			specs: 'spec/*[sS]pec.js',
-			helpers: 'spec/*[hH]elper.js',
+			helpers: 'spec/helpers/**/*[hH]elper.js',
 			vendor: [
 				 'http://code.jquery.com/jquery-1.8.2.min.js'
 				 ]
