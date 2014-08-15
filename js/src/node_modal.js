@@ -172,7 +172,7 @@ NodeFormModal.prototype.openDialog = function() {
     //$(this).data('nodeFormModal')['modalPosition'] = !$(this).data('nodeFormModal')['modalPosition'];
     // Alternate the position of the dialog
 
-    this.$container.dialog(dialogOptions);		
+    this.$container.dialog(dialogOptions);
     this.$container.dialog('open');
 
     /**

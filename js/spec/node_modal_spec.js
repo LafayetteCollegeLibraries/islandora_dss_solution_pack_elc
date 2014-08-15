@@ -16,6 +16,9 @@ describe("NodeFormModal", function() {
 
 	beforeEach(function() {
 
+		// Initialize for AJAX testing
+		jasmine.Ajax.install();
+
 		// @todo Refactor using fixtures
 		e = $('<button class="add-node-modal btn btn-info" id="add-human-modal" type="button" data-content-type="human" data-node-type="" data-input="#edit-field-bib-rel-subject-und">Create New Person</button>').appendTo('body');
 
@@ -42,5 +45,27 @@ describe("NodeFormModal", function() {
 		expect(modal.get('nodeType')).toBe('Author');
 	    });
 
-	
+	/**
+	 * Ensuring that the jQuery UI Dialog widget has been integrated
+	 *
+	 */
+	it("appends the jQuery UI Dialog container", function() {
+
+		expect(modal.$container.dialog).toBeDefined();
+	    });
+
+	/**
+	 * Ensuring that the URL for the AJAX request for the form is properly structured
+	 *
+	 */
+	it('requests a the Content Node form when the "add" button is clicked', function() {
+
+		modal.button.click();
+		expect(jasmine.Ajax.requests.mostRecent().url).toBe('/node/add/human?isModalQuery=true');
+	    });
+
+	afterEach(function() {
+
+		jasmine.Ajax.uninstall();
+	    });
     });

@@ -39,7 +39,9 @@ module.exports = function(grunt) {
 			specs: 'spec/*[sS]pec.js',
 			helpers: 'spec/helpers/**/*[hH]elper.js',
 			vendor: [
-				 'http://code.jquery.com/jquery-1.8.2.min.js'
+				 'http://code.jquery.com/jquery-1.7.1.min.js', // Versioned for the release integrated with jquery_update
+				 'http://code.jquery.com/ui/1.8.7/jquery-ui.min.js', // Versioned for the release integrated with jquery_update
+				 'vendor/mock-ajax.js' // @todo Refactor using bower or requirejs
 				 ]
 		    },
 		}
