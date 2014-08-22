@@ -14,6 +14,13 @@
 	     *
 	     */
 	    //$('[name="field_human_pers_rels_add_more"]').parents('.form-item').prepend($('[name="field_human_pers_rels_add_more"]').parent().detach().show());
+	    
+	    if (document.getElementsByClassName('alert alert-block alert-success').length == 1){
+			
+			$('#edit-field-human-surname-und-0-value').addClass('prepopped');
+			
+		}
+		
 	}
     };
 }(jQuery, Drupal));
