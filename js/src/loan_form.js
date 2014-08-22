@@ -291,6 +291,20 @@
             // html.js body.html div.main-container div.row-fluid section.span12 form#loan-node-form.node-form div div.loan-record div.loan-row div#loan-fields-b div.items-column div#field-bib-rel-object-add-more-wrapper--2 div.form-item table#field-bib-rel-object-values--2.field-multiple-table tbody tr.draggable td div.ajax-new-content div.control-group div.controls input#edit-field-bib-rel-object-und-1-target-id.form-text
             $('#edit-field-bib-rel-object-und-0-target-id');
 
+			/*
+			 * @author goodnowt function to detect whether form has been loaded after "save & add another" was clicked, and add classes to mark-up accordingly 
+			 * 
+			 */
+			
+			if (document.getElementsByClassName('alert alert-block alert-success').length == 1){
+						
+				$('#edit-field-loan-shareholder-und').addClass('prepopped');
+				$('#edit-field-bib-rel-subject-und').addClass('prepopped');
+				$('#edit-field-loan-duration-und-0-value2-year').addClass('prepopped');
+				$('#edit-field-loan-duration-und-0-value2-month').addClass('prepopped');
+				$('#edit-field-loan-duration-und-0-value2-day').addClass('prepopped');
+			}
+			
         }
 
     };
