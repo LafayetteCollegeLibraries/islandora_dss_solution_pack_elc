@@ -437,9 +437,15 @@ function DssElcViewsFilter(options) {
 				event.stopImmediatePropagation();
 			    }).appendTo(this);
 		    });
-		    //implementing a checkbox for deciding whether or not to search authors
+		    /*
+		     * 
+		     * @author stathisw implementing a checkbox for deciding whether or not to search authors
+		     *
+		     * @author goodnowt edited for placement checkbox in mark-up
+		     * 
+		     */
 		    if(window.location.pathname == '/people'){	   
-				jQuery('#DataTables_Table_0').before('<div id="search_authors" class="DataTables_Control" align=middle />');
+				jQuery('#DataTables_Table_0_filter').before('<div id="search_authors" class="DataTables_Control" align=middle />');
 				jQuery('#search_authors').append('<input type="checkbox" name="search_authors" />');
 				jQuery('#search_authors').append('<p align=middle/>');
 				jQuery('p','#search_authors').append('Include Authors').width(100);
