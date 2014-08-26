@@ -1354,7 +1354,7 @@ function publish_add_node_form_submit($form, &$form_state) {
 		case 'human_node_form': 
 			$form_state['redirect'] = 'add/person';
 			break;
-		case 'it,em_node_form': 
+		case 'item_node_form': 
 			$form_state['redirect'] = 'add/item';
 			break;
 		default:

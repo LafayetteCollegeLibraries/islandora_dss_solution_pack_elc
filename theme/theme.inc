@@ -5,13 +5,6 @@
  */
 function dss_elc_preprocess_node_form(&$variables) {
 
-  //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/src/jquery.tokeninput.js');
-  //drupal_add_js(libraries_get_path('jquery-tokeninput') . '/src/jquery.tokeninput.js');
-
-  // bootstrap-tokenfield/js/
-  //drupal_add_js(libraries_get_path('bootstrap-tokenfield') . '/js/bootstrap-tokenfield.js');
-  //drupal_add_js(libraries_get_path('jquery.token-field') . '/javascripts/jquery.token-field.js');
-
   hide($variables['form']['additional_settings']);
   #$variables['form']['actions']['submit']['#value'] = 'Submit for Review';
 
@@ -21,7 +14,6 @@ function dss_elc_preprocess_node_form(&$variables) {
   } else {
 
     //$variables['form']['actions']['publish']['#value'] = t('Save & View Record');
-
   }
 }
 
@@ -64,6 +56,8 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
 }
 
 function template_preprocess_item_node_form(&$variables) {
+
+  dpm('trace1');
 
   //hide($variables['form']['field_artifact_type']);
   hide($variables['form']['field_artifact_metadata_record']);
