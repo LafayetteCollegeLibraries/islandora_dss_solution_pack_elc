@@ -945,6 +945,11 @@ function dss_elc_form_item_node_form_alter(&$form, $form_state) {
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   hide($form['field_item_total_volumes']);
+
+  /**
+   * @author stathisw@lafayette.edu
+   *
+   */
   // Issue
   // Work-around
   hide($form['field_item_volume']);
@@ -957,32 +962,33 @@ function dss_elc_form_item_node_form_alter(&$form, $form_state) {
   $form['field_artifact_was_authored_by'][$form['field_artifact_was_authored_by']['#language']]['#suffix'] = '<div class="node-add-author form-item"><button class="add-node-modal btn btn-info" id="add-human-modal" type="button" data-content-type="human" data-node-type="author">Create New Person</button></div></div>';
   
   //Adding functionality to re-populate fields if it was referenced here from save and add another
-  
   if(isset($_SESSION['type'])&&$_SESSION['type']='item_node_form'){
   	
-  	session_cache_set('type',NULL);
+    session_cache_set('type',NULL);
 	
-	$item_node = node_load($_SESSION['nid']);
-	$input_string = '';
-	$size = count($item_node->field_artifact_was_authored_by['und']);
+    $item_node = node_load($_SESSION['nid']);
+    $input_string = '';
+
+    // Ensure that the value for the field "field_artifact_was_authored_by" actually exists
+    if(array_key_exists('und', $item_node->field_artifact_was_authored_by)) {
+
+      $size = count($item_node->field_artifact_was_authored_by['und']);
+
+      foreach($item_node->field_artifact_was_authored_by['und'] as $key => $value){
+		
+	$author_node = dss_elc_get_node('nid', $value['target_id'], 'human');
 	
-	foreach($item_node->field_artifact_was_authored_by['und'] as $key => $value){
+	$input_string = $input_string . $author_node->title . ' (' . $value['target_id'] . ')';
 		
-		$author_node = dss_elc_get_node('nid', $value['target_id'], 'human');
-		
-		$input_string = $input_string . $author_node->title . ' (' . $value['target_id'] . ')';
-		
-		if($key < $size - 1){
+	if($key < $size - 1) {
 			
-			$input_string = $input_string . '","';
-			
-		}
-		
+	  $input_string = $input_string . '","';
 	}
+      }
+    }
 	
-	$form['field_artifact_was_authored_by']['und']['#value'] = $input_string;
-	session_cache_set('nid', NULL);
-	
+    $form['field_artifact_was_authored_by']['und']['#value'] = $input_string;
+    session_cache_set('nid', NULL);
   }
 }
 

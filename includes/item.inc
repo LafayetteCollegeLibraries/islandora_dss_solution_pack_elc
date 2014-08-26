@@ -20,28 +20,31 @@ function dss_elc_items_by_manifestation($manifestation) {
   return $items;
   }
 
-  /**
-   * Operations for the node before it is saved
-   *
-   */
-
+/**
+ * Operations for the node before it is saved
+ *
+ */
 function dss_elc_item_node_presave($node) {
 
   $itemTitle = $node->field_artifact_title[$node->language][0]['value'];
 
+  /**
+   * @author stathisw@lafayette.edu
+   *
+   */
   //removing duplicate authors
-  foreach($node->field_artifact_was_authored_by['und'] as $key => $value){
+  if(property_exists($node, 'field_artifact_was_authored_by')) {
 
-  	for($comp_key = $key + 1; $comp_key < count($node->field_artifact_was_authored_by['und']); $comp_key ++ ){
+    foreach($node->field_artifact_was_authored_by['und'] as $key => $value){
+
+      for($comp_key = $key + 1; $comp_key < count($node->field_artifact_was_authored_by['und']); $comp_key ++ ){
   		
-		if($value['target_id'] == $node->field_artifact_was_authored_by['und'][$comp_key]['target_id']){
+	if($value['target_id'] == $node->field_artifact_was_authored_by['und'][$comp_key]['target_id']){
 			
-			unset($node->field_artifact_was_authored_by['und'][$comp_key]);
-			
-		}
-		
-  	}
-	
+	  unset($node->field_artifact_was_authored_by['und'][$comp_key]);
+	}
+      }
+    }
   }
 
   // Append the volume number to the node title field
@@ -82,8 +85,12 @@ function dss_elc_item_node_presave($node) {
       $manifest_md->field_artifact_title->set($itemTitle);
 
       // Set the author for the Manifestation
-      //$manifest_md->field_artifact_was_authored_by->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']));
-      $manifest_md->field_artifact_was_authored_by[] = intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']);
+
+      if(property_exists($node, 'field_artifact_was_authored_by')) {
+
+	//$manifest_md->field_artifact_was_authored_by->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']));
+	$manifest_md->field_artifact_was_authored_by[] = intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']);
+      }
 
       // Issue with node_auto_title
       $manifest_md->title = $itemTitle;
@@ -99,51 +106,52 @@ function dss_elc_item_node_presave($node) {
 
 function dss_elc_item_node_insert($node) {
 
-  dpm('got here');
-  $author_entity = array_pop(entity_load('node',
-					 array(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']))));
+  // Only update the authorship Node if an author was specified
+  if(property_exists($node, 'field_artifact_was_authored_by')) {
 
-  $drupalQuery = new EntityFieldQuery();
+    $author_entity = array_pop(entity_load('node',array(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id']))));
 
-  $result = $drupalQuery->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'authorship')
-    ->fieldCondition('field_bib_rel_subject', 'target_id', $author_entity->nid)
-    ->fieldCondition('field_bib_rel_object', 'target_id', $node->nid)
-    ->execute();
+    // Has the authorship been serialized?
+    $drupalQuery = new EntityFieldQuery();
+
+    $result = $drupalQuery->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'authorship')
+      ->fieldCondition('field_bib_rel_subject', 'target_id', $author_entity->nid)
+      ->fieldCondition('field_bib_rel_object', 'target_id', $node->nid)
+      ->execute();
+
+    if(isset($result['node'])) {
+    
+      $authorship_entity = array_pop(entity_load('node', array_keys($result['node'])));
+    } else {
+    
+      // Instantiate the authorship Node for Authors
+      $authorship_entity = entity_create('node', array('type' => 'authorship',
+						       'uid' => 1,
+						       'status' => 1,
+						       'comment' => 1,
+						       'promote' => 0));
+      
+      $authorship_md = entity_metadata_wrapper('node', $authorship_entity);
+      
+      // Set the author as 1 (Array, 1 elemthe subject
+      //$authorship_md->field_bib_rel_subject->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id'] ));
+      $authorship_md->field_bib_rel_subject->set(intval($author_entity->nid ));
+    
+      // auto_nodetitle appends a single space
+      $objectTitle = substr($node->title, 0, 63) . '...';
+    
+      //$title = $author_entity->title . " authored " . $objectTitle;
+      //$title = preg_replace('/\s\(Manifestation\)$/', '', $title);
+    
+      $authorship_md->title = $author_entity->title . " authored " . $objectTitle;
+    }
+
+    // Set the authored works as the objects
+    $authorship_md->field_bib_rel_object[] = intval($node->nid);
   
-  // Has the authorship been serialized?
-  if(isset($result['node'])) {
-    
-    $authorship_entity = array_pop(entity_load('node', array_keys($result['node'])));
-  } else {
-    
-    // Instantiate the authorship Node for Authors
-    $authorship_entity = entity_create('node', array(
-						     'type' => 'authorship',
-						     'uid' => 1,
-						     'status' => 1,
-						     'comment' => 1,
-						     'promote' => 0));
-      
-    $authorship_md = entity_metadata_wrapper('node', $authorship_entity);
-      
-    // Set the author as 1 (Array, 1 elemthe subject
-    //$authorship_md->field_bib_rel_subject->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id'] ));
-    $authorship_md->field_bib_rel_subject->set(intval($author_entity->nid ));
-    
-    // auto_nodetitle appends a single space
-    $objectTitle = substr($node->title, 0, 63) . '...';
-    
-    //$title = $author_entity->title . " authored " . $objectTitle;
-    //$title = preg_replace('/\s\(Manifestation\)$/', '', $title);
-    
-    $authorship_md->title = $author_entity->title . " authored " . $objectTitle;
+    // Instantiate the Personal Relationship
+    $authorship_md->save(true);
+    entity_save('node', $authorship_entity);
   }
-
-  // Set the authored works as the objects
-  $authorship_md->field_bib_rel_object[] = intval($node->nid);
-  
-  // Instantiate the Personal Relationship
-  $authorship_md->save(true);
-  entity_save('node', $authorship_entity);
 }
