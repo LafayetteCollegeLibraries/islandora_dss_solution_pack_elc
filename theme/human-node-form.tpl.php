@@ -18,10 +18,10 @@
     <?php print drupal_render_children($form['field_person_name']); ?>
 </div>
 <div class="human-column">
-    <?php print drupal_render_children($form['field_human_surname']); ?>
+    <?php print drupal_render_children($form['field_human_middle_initials']); ?>
 </div>
 <div class="human-column">
-    <?php print drupal_render_children($form['field_human_middle_initials']); ?>
+    <?php print drupal_render_children($form['field_human_surname']); ?>
 </div>
 <div class="human-column">
     <?php print drupal_render_children($form['field_human_gender']); ?>
