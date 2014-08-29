@@ -2,18 +2,17 @@
 
 /**
  * Operations common to all form preprocessing hooks
+ *
  */
 function dss_elc_preprocess_node_form(&$variables) {
 
   hide($variables['form']['additional_settings']);
   #$variables['form']['actions']['submit']['#value'] = 'Submit for Review';
 
+  // Determine whether or not this is in response to an AJAX request
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
-    //$variables['form']['actions']['publish']['#value'] = t('Save New Record');
-  } else {
-
-    //$variables['form']['actions']['publish']['#value'] = t('Save & View Record');
+    $variables['form']['actions']['publish']['#value'] = t('Save Record');
   }
 }
 
