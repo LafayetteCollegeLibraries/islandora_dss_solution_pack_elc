@@ -73,40 +73,41 @@
 							  ['edit-field-pers-rel-subject-und', 'edit-field-pers-rel-object-und']) != -1;
 
 			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
-					    
-				    /**
-				     * @todo Refactor
-				     *
-				     */
-				    if($(item).text() == '×'){
-				    	return;
-				    }
-				    var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
-				    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
+				
+				/**
+				 * @todo Refactor
+				 *
+				 */
+				if($(item).text() == '×'){
+
+				    return;
+				}
+				var inputValue = $(item).text().replace(/^"(.+)"$/, '$1');
+				var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
 				    
-				    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
+				$('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
 
-				    /*
-				    var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
+				/*
+				  var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
 				    	
-						return e.defaultValue;
-					    })).toArray().join('","');
-				    */
-				    var inputValues = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
+				  return e.defaultValue;
+				  })).toArray().join('","');
+				*/
+				var inputValues = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
 				    	
-						return e.defaultValue;
-					    })).toArray();
+					    return e.defaultValue;
+					})).toArray();
+				
+				// $(item).parents('.token-list').siblings('.form-autocomplete')
 
-				    // $(item).parents('.token-list').siblings('.form-autocomplete')
+				if( isEntityReference ) {
 
-				    if( isEntityReference ) {
-
-					inputValues = inputValues.map(function(e,i) { return '"' + e + '"'; });
-				    }
-				    var finalInput = inputValues.join(',');
-
-				    var $lastElem = $('input[name="' + inputName + '"]');
-				    $lastElem.val(finalInput);
+				    inputValues = inputValues.map(function(e,i) { return '"' + e + '"'; });
+				}
+				var finalInput = inputValues.join(',');
+				
+				var $lastElem = $('input[name="' + inputName + '"]');
+				$lastElem.val(finalInput);
 
 				/**
 				 * Retrieve the volumes from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value

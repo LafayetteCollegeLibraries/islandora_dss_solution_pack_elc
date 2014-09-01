@@ -342,6 +342,9 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
 	entityRefStr = $(data).find('em.placeholder:last').text();
+
+	// Construct the name from page for the newly-created Person
+	
 		
 	/**
 	 * Work-around

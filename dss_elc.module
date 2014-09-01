@@ -175,14 +175,41 @@ function dss_elc_node_presave($node) {
     //Override the title
     //$node->title = $node->field_pers_rel_subject[$node->language][0]['target_id'] . ' is a ' . $node->field_pers_rel_role[$node->language][0]['tid'] . ' in relation to ' . $node->field_pers_rel_object[$node->language][0]['target_id'];
 
-    dpm('trace');
-
     $subjectNode = dss_elc_get_node('nid', $node->field_pers_rel_subject[$node->language][0]['target_id'], 'human');
     $objectNode = dss_elc_get_node('nid', $node->field_pers_rel_object[$node->language][0]['target_id']);
     $roleTerm = taxonomy_term_load($node->field_pers_rel_role[$node->language][0]['tid']);
 
     $node->title = $subjectNode->title . ' is a ' . $roleTerm->name . ' in relation to ' . $objectNode->title;
 
+    break;
+
+  case 'human':
+
+    // Override the title
+    // This could normally be overridden using tokens
+    // @todo Refactor?
+    
+    $fields = array();
+    foreach(array('field_person_name', 'field_human_middle_initials', 'field_human_surname') as $field) {
+
+      //if(array_key_exists($node->language, $node->{$field}) and array_key_exists(0, ($node->{$field}[$node->language]))) {
+      if(array_key_exists($node->language, $node->{$field}) and !empty($node->{$field}[$node->language])) {
+
+	$fields[] = $node->{$field}[$node->language];
+      }
+    }
+
+    $node->title = implode(' ', array_map(function($field) {
+
+	  $result = '';
+	  
+	  if(!empty($field)) {
+
+	    $result = $field[0]['value'];
+	  }
+
+	  return $result;
+	}, $fields));
     break;
 
   case 'book':
