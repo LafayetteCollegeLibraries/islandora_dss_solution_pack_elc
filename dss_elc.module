@@ -939,7 +939,7 @@ function dss_elc_form_item_node_form_alter(&$form, $form_state) {
   //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/item_form.js');
 
   $autocomplete_fields = array('entityRefs' => array("#edit-field-artifact-was-authored-by-und"),
-			       'terms' => array("#edit-field-item-number-taxon-und", "#edit-field-item-subject-und")
+			       'terms' => array("#edit-field-item-number-taxon-und", "#edit-field-item-subject-und", '#edit-field-artifact-type-und')
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
@@ -1379,6 +1379,10 @@ function publish_add_node_form_submit($form, &$form_state) {
   cache_clear_all();
 }
 
+/**
+ * @author stathisw@lafayette.edu
+ *
+ */
 function edit_node_discard_updates($form, &$form_state){
 	
 	drupal_goto($form['path']['source']['#value']);

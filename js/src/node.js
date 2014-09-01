@@ -122,12 +122,9 @@
 					    
 					    persRelNid = person.field_human_pers_rels.und[i].target_id;
 
-					    //console.log(persRelNid);
-
 					    $.get('/node/get/nid/' + persRelNid, function(data) {
 						    
 						    persRel = data;
-						    //console.log(persRel);
 						    // Identify the role
 						    // Verify the relationship between the TID and the value "Representative"
 						    if(persRel.field_pers_rel_role.und[0].tid == '658') {

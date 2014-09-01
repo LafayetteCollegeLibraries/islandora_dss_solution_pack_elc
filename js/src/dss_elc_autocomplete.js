@@ -1101,46 +1101,68 @@
 	}
     };
     
+    /**
+     * @author stathisw@lafayette.edu
+     *
+     */
     //Drupal integration for disabling enter input
 
 	Drupal.behaviors.DisableInputEnter = {
 	    attach: function(context, settings) {
 	        $('input', context).once('disable-input-enter', function() {
-	            $(this).keypress(function(e) {
-	                if (e.keyCode == 13) {
-	                	e.preventDefault();
-					    var autocomplete = $(this).data('islandoraDssElc.autocomplete');
-					    var temp = autocomplete.input.val();
-					    if(typeof(autocomplete) !== 'undefined') {
+			$(this).keypress(function(e) {
+				if (e.keyCode == 13) {
+
+				    e.preventDefault();
+
+				    /**
+				     * @author griffinj@lafayette.edu
+				     * Event Object lies outside of the scope of this closure
+				     */
+				    $(document).data('islandoraDssElc.keypress.event', e);
+
+				    // Work-around
+				    // @todo Refactor
+				    $(document).data('islandoraDssElc.keypressTarget.value', e.currentTarget.value);
+
+				    var autocomplete = $(this).data('islandoraDssElc.autocomplete');
+				    
+				    if(typeof(autocomplete) !== 'undefined') {
 					    	
-					    	
-				    		window.setTimeout(function(){autocomplete.tokenize(e);},300);
+					var temp = autocomplete.input.val();
+					window.setTimeout(function() {
+						
+						var e = $(document).data('islandoraDssElc.keypress.event');
+						var targetValue = $(document).data('islandoraDssElc.keypressTarget.value');
+						e.currentTarget.value = targetValue;
+						autocomplete.tokenize(e);
+					    }, 300);
 							
-							if(autocomplete.input.attr('id') != 'edit-field-loan-filename-und'){
+					if(autocomplete.input.attr('id') != 'edit-field-loan-filename-und'){
 							
-								window.setTimeout(function(){
+					    window.setTimeout(function(){
 								
-									if(temp == ''){
+						    if(temp == ''){
 										
-										autocomplete.input.parent().find('ul li a:last').click();
-								
-									}
-								
-								},100);
-							
-							}
-							
-					    	jQuery(document).find('.token-object').each(function(i,e){
-					    		
-					    	//	autocomplete.input.parent().find('ul li a:last').find('span:first').text(autocomplete.input.val());
-								autocomplete.input.val('');
-					    		
-					    	});
-					    }
+							autocomplete.input.parent().find('ul li a:last').click();
+						
+						    }
 					    
-	                }
-	            });
-	        });
+						},100);
+							
+					}
+							
+					jQuery(document).find('.token-object').each(function(i,e){
+					    		
+						//	autocomplete.input.parent().find('ul li a:last').find('span:first').text(autocomplete.input.val());
+						autocomplete.input.val('');
+					    		
+					    });
+				    }
+			    
+				}
+			    });
+		    });
 	    }
 	};
 	    
