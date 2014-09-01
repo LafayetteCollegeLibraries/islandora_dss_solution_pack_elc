@@ -175,6 +175,8 @@ function dss_elc_node_presave($node) {
     //Override the title
     //$node->title = $node->field_pers_rel_subject[$node->language][0]['target_id'] . ' is a ' . $node->field_pers_rel_role[$node->language][0]['tid'] . ' in relation to ' . $node->field_pers_rel_object[$node->language][0]['target_id'];
 
+    dpm('trace');
+
     $subjectNode = dss_elc_get_node('nid', $node->field_pers_rel_subject[$node->language][0]['target_id'], 'human');
     $objectNode = dss_elc_get_node('nid', $node->field_pers_rel_object[$node->language][0]['target_id']);
     $roleTerm = taxonomy_term_load($node->field_pers_rel_role[$node->language][0]['tid']);

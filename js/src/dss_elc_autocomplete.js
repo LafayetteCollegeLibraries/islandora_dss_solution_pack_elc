@@ -65,7 +65,13 @@
 				
 			    $('[name="field_bib_rel_object[und]"]:first').remove();
 			}
-			    
+			
+			// Work-around
+			// (This ensures that EntityReference values are encapsulated with double quotations)
+			// @todo Refactor
+			var isEntityReference = $.inArray(autocomplete.input.attr('id'),
+							  ['edit-field-pers-rel-subject-und', 'edit-field-pers-rel-object-und']) != -1;
+
 			$('#' + autocomplete.input.attr('id') + '-tokens li a span.token-object').each(function(j, item) {
 					    
 				    /**
@@ -79,16 +85,28 @@
 				    var inputName = $(item).parents('.token-list').siblings('.form-text').attr('name').replace(/\[\d\]/, '[' + j + ']');
 				    
 				    $('.node-form').append('<input class="form-text required form-autocomplete" type="text" maxlength="1024" size="60" value="' + inputValue + '" name="' + inputName + '" autocomplete="OFF" aria-autocomplete="list" style="display:none"></input>');
-				    
-				    var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e){
+
+				    /*
+				    var finalInput = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
 				    	
-					    return e.defaultValue;
+						return e.defaultValue;
+					    })).toArray().join('","');
+				    */
+				    var inputValues = jQuery.unique(jQuery('input[name="' + inputName + '"]').slice(1).map(function(i,e) {
 				    	
-				    	})).toArray().join('","');
-				    	
-				var $lastElem = $('input[name="' + inputName + '"]');
-				    
-				$lastElem.val(finalInput);
+						return e.defaultValue;
+					    })).toArray();
+
+				    // $(item).parents('.token-list').siblings('.form-autocomplete')
+
+				    if( isEntityReference ) {
+
+					inputValues = inputValues.map(function(e,i) { return '"' + e + '"'; });
+				    }
+				    var finalInput = inputValues.join(',');
+
+				    var $lastElem = $('input[name="' + inputName + '"]');
+				    $lastElem.val(finalInput);
 
 				/**
 				 * Retrieve the volumes from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value
