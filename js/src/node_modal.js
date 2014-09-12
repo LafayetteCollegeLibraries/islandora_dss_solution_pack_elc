@@ -443,6 +443,9 @@ NodeFormModal.key = function(e) {
  */
 NodeFormModal.onSubmitHandler = function(event) {
 
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
     /**
      * Integration with jQuery
      * @todo Refactor
@@ -452,9 +455,6 @@ NodeFormModal.onSubmitHandler = function(event) {
 
     /* @todo Refactor */
     $(document).data('currentNodeFormModalSubmit', $(event.target));
-
-    event.preventDefault();
-    event.stopImmediatePropagation();
 
     /**
      * @todo Restructure this for namespace handling
