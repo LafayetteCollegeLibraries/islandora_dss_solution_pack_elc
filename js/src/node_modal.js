@@ -160,13 +160,10 @@ NodeFormModal.prototype.openDialog = function() {
 	width: 600,
 	height: (['book', 'periodical', 'item'].indexOf(this.contentTypeName) != -1 ? 560 : 448),
 	close: function( event, ui ) {
-	
-	    /*
-	    $('#modal-content-container').data('nodeFormModal', {
-		    contentTypeName: $('#modal-content-container').data('nodeFormModal'),
-		    humanType: $('#modal-content-container').data('nodeFormModal')
-		    });
-	    */
+
+	    // Empty the contents of the dialog
+	    $(this).empty();
+	    $(this).dialog('destroy');
 	}
     };
 
@@ -362,7 +359,6 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * Find the ID of the newly-saved Node by parsing the HTML
 	 * @todo Refactor with Backbone.js and RESTful service endpoints
 	 */
-
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
 	entityRefStr += ' (' + nodeId + ')';
 
@@ -633,15 +629,14 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      */
     if(dssNodeFormModal.contentTypeName == 'human' && dssNodeFormModal.humanType == '') {
 
-	/*
-<button id="edit-publish" class="btn btn-primary form-submit" type="submit" value="Save Record" name="op">Save Record</button>
-	 */
-
-	// jQuery('[id=edit-actions]:visible').last()
+	// Retrieve the <div> containining the <button> elements at the bottom of the form
 	$buttonContainer = $('[id=edit-actions]:visible').last();
 
+	// Append <button> elements for each type of Human Node and hide the default submit button
+	/* @todo Refactor */
 	$shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save Shareholder</button>').appendTo($buttonContainer);
 	$representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save Representative</button>').appendTo($buttonContainer);
+	$modal.find('#edit-publish').hide();
 
 	// Set the submit form button to the publish button
 	dssNodeFormModal.$submit = $buttonContainer.children('[id^="edit-publish-"]');
