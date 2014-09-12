@@ -902,7 +902,7 @@ function dss_elc_form_ajax_item_node_form_alter(&$form) {
    * Resolves EDDC-155
    */
   unset($form['field_item_format'][$form['field_item_format']['#language']]['#options']['_none']);
-  $form['field_item_format'][$form['field_item_format']['#language']]['#options']['_none'] = 'Unknown';
+  //$form['field_item_format'][$form['field_item_format']['#language']]['#options']['_none'] = 'Unknown';
 }
 
 /**

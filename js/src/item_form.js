@@ -9,6 +9,18 @@
 
 	attach: function(context, settings) {
 
+		/*
+		* @author goodnowt function to detect whether form has been loaded after "save & add another" was clicked, and add classes to mark-up accordingly 
+		* 
+		*/
+		
+		if (document.getElementsByClassName('alert alert-block alert-success').length == 1){
+					
+			$('#edit-field-artifact-was-authored-by-und').addClass('prepopped');
+				
+		}
+
+
 	    /**
 	     * Initialize the global state
 	     *
@@ -197,6 +209,7 @@
 			    $(elementId).val($(elementId + '-tokens li a').text().split('×').slice(0,-1).join(', '));
 			});
 		});
+		
 	}
-    }
+    };
 }(jQuery, Drupal));

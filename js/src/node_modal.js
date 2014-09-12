@@ -317,10 +317,9 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 		}
 	    });
 
-	$submit = $thisModal.find('#edit-publish');
-	//$submit = $thisModal.find('#edit-submit');
-	
-	//dssNodeFormModal = $thisModal;
+	// Refactor in order to ensure that the currentNodeFormModal
+	$submit = $(document).data('currentNodeFormModalSubmit') || $thisModal.find('#edit-publish');
+	$(document).data('currentNodeFormModalSubmit', null);
 		
 	$relatedFormElement = $submit.data('nodeFormModal').relatedFormElement;
 		
@@ -330,14 +329,26 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor
 	 */
 	//$relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
-	
-	$relatedInputField = dssNodeFormModal.$input;
-	
-	//Implementation for fixing the functionality of multiple modal windows
-	if($relatedFormElement.attr('id') == 'add-item-modal'){
-		
-		$relatedInputField = jQuery($relatedFormElement).parent().parent().find('input:first');
-	
+
+	/**
+	 * Extending for "Shareholder" and "Representative" fields
+	 * @todo Abstract
+	 *
+	 */
+	//if($relatedFormElement.attr('id') == '') {
+	if($submit.attr('id') == 'edit-publish-share') {
+
+	    $relatedInputField = $('#edit-field-bib-rel-subject-und');
+	} else if($submit.attr('id') == 'edit-publish-repr') {
+
+	    $relatedInputField = $('#edit-field-loan-shareholder-und');
+	} else if($relatedFormElement.attr('id') == 'add-item-modal') {
+
+	    // Implementation for fixing the functionality of multiple modal windows
+	    $relatedInputField = jQuery($relatedFormElement).parent().parent().find('input:first');
+	} else {
+
+	    $relatedInputField = dssNodeFormModal.$input;
 	}
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
@@ -408,6 +419,8 @@ NodeFormModal.onSubmitHandler = function(event) {
      *
      */
     var $ = NodeFormModal.jQuery;
+
+    $(document).data('currentNodeFormModalSubmit', $(event.target));
 
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -595,12 +608,15 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      * @todo Refactor into the constructor (?)
      *
      */
+
+    /*
     // Set the submit form button to the publish button
     dssNodeFormModal.$submit = $modal.find('#edit-publish');
     $submit = dssNodeFormModal.$submit;
 
     // Set the <form> element
     dssNodeFormModal.$form = dssNodeFormModal.$submit.parents('form');
+    */
 
     /**
      * Forcibly append the hidden form element for the Publish action and the append certain JavaScript <script> elements
@@ -608,6 +624,38 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      *
      */
     $('<input type="hidden" value="Publish" name="op" />').appendTo($form);
+
+    /**
+     * Provide separate "Shareholder" and "Representative" form buttons for the "Add Person" modal form
+     * Resolves EDDC-346
+     * @todo Abstract
+     *
+     */
+    if(dssNodeFormModal.contentTypeName == 'human' && dssNodeFormModal.humanType == '') {
+
+	/*
+<button id="edit-publish" class="btn btn-primary form-submit" type="submit" value="Save Record" name="op">Save Record</button>
+	 */
+
+	// jQuery('[id=edit-actions]:visible').last()
+	$buttonContainer = $('[id=edit-actions]:visible').last();
+
+	$shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save Shareholder</button>').appendTo($buttonContainer);
+	$representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save Representative</button>').appendTo($buttonContainer);
+
+	// Set the submit form button to the publish button
+	dssNodeFormModal.$submit = $buttonContainer.children('[id^="edit-publish-"]');
+    } else {
+
+	// Set the submit form button to the publish button
+	dssNodeFormModal.$submit = $modal.find('#edit-publish');
+    }
+
+    $submit = dssNodeFormModal.$submit;
+
+    // Set the <form> element
+    dssNodeFormModal.$form = dssNodeFormModal.$submit.parents('form');
+
     // Work-around
 
     // Ensure that the object can be dereferenced from the form Submit button itself
@@ -618,7 +666,7 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 		form: $form,
 		//container: $(this)
 		container: $modal,
-		object: dssNodeFormModal
+		object: dssNodeFormModal		
 		});
 
     // Submit handler
@@ -708,12 +756,7 @@ function NodeFormModal(options) {
     // Legacy
     this.$element = $(settings.button);
 
-    /**
-     * The <input> element into which the new Entity is being added
-     * @todo Resolve
-     *
-     */
-    this.$input = $(settings.input || this.$element.parent().parent().find('input.form-text:last'));
+
 
     // Retrieve the method name for the Form
     this.method = this.getMethodForElement();
@@ -733,6 +776,14 @@ function NodeFormModal(options) {
     // Legacy
     this.nodeType = settings.nodeType;
     this.humanType = this.nodeType;
+
+    /**
+     * The <input> element into which the new Entity is being added
+     * @todo Resolve
+     *
+     */
+
+    this.$input = $(settings.input || this.$element.parent().parent().find('input.form-text:last'));
 
     /**
      * Set the title
