@@ -248,6 +248,37 @@ NodeFormModal.prototype.toJSON = function($form) {
 
     return obj;
 }
+    
+    
+    NodeFormModal.prototype.loadingStart = function() {
+
+	/* @todo Refactor */
+	var $ = NodeFormModal.jQuery;
+
+	// Hide the div.ui element containing the dialog
+	this.$container.parent().hide();
+
+	// Add an overlay for the page
+	var $overlay = $('<div class="dialog-loading-overlay">').appendTo('body');
+	var $bars = $('<div id="floatingBarsG"></div>').appendTo($overlay);
+	Array(1,2,3,4,5,6,7,8).map(function (i) {
+		    
+		return $bars.append('<div class="blockG" id="rotateG_0' + i + '"></div>');
+	    });
+
+	return this.$overlay = $overlay;
+    }
+	
+    NodeFormModal.prototype.loadingStop = function() {
+
+	/* @todo Refactor */
+	var $ = NodeFormModal.jQuery;
+
+	// Remove the overlay for the page
+	$('.dialog-loading-overlay').remove();
+	
+	this.$container.parent().show();
+    }
 
 /**
  * Static method for handling successful form POST submissions
@@ -262,13 +293,16 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
      */
     var $ = NodeFormModal.jQuery;
 
-    //$modalContainer = $('.modal-content-container').last();
+    //$modalContainer = $('.modal-content-container').last()
+
     /**
      * Work-around
      * Cannot pass the reference to the global context for handling AJAX response
-     * @todo Refactor
+     * @todo Refactor as a stack (?)
      */
     var dssNodeFormModal = $(document).data('currentNodeFormModal');
+    dssNodeFormModal.loadingStop();
+
     var $modalContainer = dssNodeFormModal.$container;
 
     /*
@@ -416,6 +450,7 @@ NodeFormModal.onSubmitHandler = function(event) {
      */
     var $ = NodeFormModal.jQuery;
 
+    /* @todo Refactor */
     $(document).data('currentNodeFormModalSubmit', $(event.target));
 
     event.preventDefault();
@@ -428,6 +463,10 @@ NodeFormModal.onSubmitHandler = function(event) {
      */
     //var nodeFormModal = $(this).data('dssNodeFormModal');
     var nodeFormModal = $(this).data('nodeFormModal');
+
+    // Hide the modal and render the animation
+    nodeFormModal.object.loadingStart();
+
     var form = nodeFormModal.form[0];
 
     // Tokenize the values from the form for the form submission

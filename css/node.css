@@ -12,6 +12,25 @@
     width: 84%;
 }
 
+.dialog-loading-overlay {
+    
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+}
+
+/*
+.dialog-loading-throbber {
+
+    margin: auto;
+    background-image: url('/sites/all/modules/islandora_dss_solution_pack_elc/theme/images/ajax-loader_640_480.gif');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+*/
+
 .visualize-loading {
 
     width: 300px;

@@ -569,6 +569,7 @@ function dss_elc_form_insert_js() {
 
   if(empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
 
+    drupal_add_css(drupal_get_path('module', 'dss_elc') . '/css/css_load.css');
     drupal_add_library('system', 'ui.dialog');
     drupal_add_library('system', 'ui.autocomplete');
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node_modal.js');
