@@ -56,6 +56,8 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
 
 function template_preprocess_item_node_form(&$variables) {
 
+  drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/item_form.js');
+
   //hide($variables['form']['field_artifact_type']);
   hide($variables['form']['field_artifact_metadata_record']);
   hide($variables['form']['field_item_embodies']);
