@@ -362,12 +362,19 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	//$relatedInputField = $relatedFormElement.parent().parent().find('input.form-text:last');
 
 	/**
-	 * Extending for "Shareholder" and "Representative" fields
+	 * Extending for "Shareholder" and "Representative" fields for the "Add Person" form
+	 * Extending for the "Personal Relationship" form
 	 * @todo Abstract
 	 *
 	 */
 	//if($relatedFormElement.attr('id') == '') {
-	if($submit.attr('id') == 'edit-publish-share') {
+	if($submit.attr('id') == 'edit-publish-person-a') {
+
+	    $relatedInputField = $('#edit-field-pers-rel-subject-und');
+	} else if($submit.attr('id') == 'edit-publish-person-b') {
+
+	    $relatedInputField = $('#edit-field-pers-rel-object-und');
+	} else if($submit.attr('id') == 'edit-publish-share') {
 
 	    $relatedInputField = $('#edit-field-bib-rel-subject-und');
 	} else if($submit.attr('id') == 'edit-publish-repr') {
@@ -680,15 +687,23 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      * @todo Abstract
      *
      */
-    if(dssNodeFormModal.contentTypeName == 'human' && dssNodeFormModal.humanType == '') {
+    if(dssNodeFormModal.contentTypeName == 'human' && dssNodeFormModal.humanType == '' && !/add\-human\-modal\-\d+/.exec( dssNodeFormModal.$element.attr('id'))) {
 
 	// Retrieve the <div> containining the <button> elements at the bottom of the form
 	$buttonContainer = $('[id=edit-actions]:visible').last();
 
-	// Append <button> elements for each type of Human Node and hide the default submit button
-	/* @todo Refactor */
-	$shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save Shareholder</button>').appendTo($buttonContainer);
-	$representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save Representative</button>').appendTo($buttonContainer);
+	// For providing the distinct buttons for the "Personal Relationship" Form
+	if(dssNodeFormModal.$input.is('#edit-field-pers-rel-object-und')) {
+
+	    $subjectSubmit = $('<button id="edit-publish-person-a" class="btn btn-primary form-submit" type="submit" value="Save Person A" name="op">Save Person A</button>').appendTo($buttonContainer);
+	    $objectSubmit = $('<button id="edit-publish-person-b" class="btn btn-primary form-submit" type="submit" value="Save Person B" name="op">Save Person B</button>').appendTo($buttonContainer);
+	} else {
+
+	    // Append <button> elements for each type of Human Node and hide the default submit button
+	    /* @todo Refactor */
+	    $shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save Shareholder</button>').appendTo($buttonContainer);
+	    $representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save Representative</button>').appendTo($buttonContainer);
+	}
 	$modal.find('#edit-publish').hide();
 
 	// Set the submit form button to the publish button
