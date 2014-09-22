@@ -496,14 +496,21 @@ NodeFormModal.onSubmitHandler = function(event) {
 	if(formData[i].name == 'op') {
 
 	    formData[i].value = 'Save & View Record';
+	} else if(formData[i].name == 'field_person_type[und]') {
+
+	    if($(event.target).attr('value') == 'Save Shareholder') {
+
+		formData[i].value = 'Shareholder';
+	    } else if($(event.target).attr('value') == 'Save Representative') {
+		
+		formData[i].value = 'Representative';
+	    }
 	}
     }
 
     // Transmit the POST request
     $.post($($form).attr('action'), formData, NodeFormModal.onFormAjaxSuccessHandler);
 };
-
-
 
 /**
  * Static method for handling AJAX responses
