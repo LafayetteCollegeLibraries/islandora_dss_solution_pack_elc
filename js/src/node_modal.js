@@ -475,17 +475,18 @@ NodeFormModal.onSubmitHandler = function(event) {
     var form = nodeFormModal.form[0];
 
     // Tokenize the values from the form for the form submission
-    // @author stathisw@lafayette.edu (?)
     var inputStr = '';
-	jQuery('li a .token-object',jQuery($form)).each(function(i,e){
-		if(inputStr == ''){
-    		inputStr = jQuery(e).text();            
-		}   
-		else{            
-    		inputStr = inputStr + ',' + jQuery(e).text();        
-    	}
+    $('li a .token-object', $(form)).each(function(i, e) {
+	    
+	    if(inputStr == '') {
+
+    		inputStr = $(e).text();
+	    } else {
+
+    		inputStr = inputStr + ',' + $(e).text();
+	    }
 	});
-	jQuery('#edit-field-artifact-was-authored-by-und').val(inputStr);
+    $('#edit-field-artifact-was-authored-by-und').val(inputStr);
     
     var formData = $(form).serializeArray();
 
@@ -509,7 +510,7 @@ NodeFormModal.onSubmitHandler = function(event) {
     }
 
     // Transmit the POST request
-    $.post($($form).attr('action'), formData, NodeFormModal.onFormAjaxSuccessHandler);
+    $.post($(form).attr('action'), formData, NodeFormModal.onFormAjaxSuccessHandler);
 };
 
 /**
@@ -642,7 +643,8 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 */
 	if($modal.find('#edit-field-person-type-und').siblings('.token-list').children().length < 1) {
 
-	    $("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
+	    //$("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType
+	    $("<li><a href='#' class='token'><span>" + dssNodeFormModal.humanType.slice(0,1).toUpperCase() + dssNodeFormModal.humanType.slice(1) + "</span><span class='token-x'>×</span></a></li>").appendTo($modal.find('#edit-field-person-type-und').siblings('.token-list'));
 	}
     }
 
