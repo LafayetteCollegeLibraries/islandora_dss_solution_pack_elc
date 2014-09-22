@@ -394,6 +394,11 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * @todo Refactor with Backbone.js and RESTful service endpoints
 	 */
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
+
+	if($relatedInputField.attr('id') == "edit-field-bib-rel-object-und") {
+
+	    nodeId = (parseInt(nodeId) - 1).toString();
+	}
 	entityRefStr += ' (' + nodeId + ')';
 
 	/**
