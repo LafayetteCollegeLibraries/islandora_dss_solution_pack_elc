@@ -10,7 +10,12 @@
 
         attach: function (context, settings) {
 
+	    /**
+	     * Disabled in order to resolve EDDC-311
+	     *
+	     */
             // Usability feature to the Shareholder and Representative form fields
+	    /*
             $('#edit-field-loan-shareholder-und').change(function (event) {
 
                 if (!$(this).data('loanForm')) {
@@ -36,6 +41,7 @@
                 $(this).data('loanForm')['prevPatron'] = $(this).val();
 
             });
+	    */
 
             /**
              * Date field handling functionality

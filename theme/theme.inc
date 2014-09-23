@@ -29,7 +29,7 @@ function template_preprocess_organization_node_form(&$variables) {
 
   //hide($variables['form']['additional_settings']);
   dss_elc_preprocess_node_form($variables);
-  }
+}
 
 /**
  * Theming for the Personal Relationship form
@@ -172,7 +172,7 @@ function template_preprocess_human_node_form(&$variables) {
 
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
 
-  dpm($variables['form']);
+  //dpm($variables['form']);
 }
 
 /**
