@@ -37,14 +37,29 @@ function dss_elc_menu_alter(&$items) {
   $items['islandora/object/%islandora_object']['access callback'] = 'dss_elc_object_access_callback';
 }
 
+function dss_elc_manifestations_ajax() {
+
+  $manifestations = array();
+  foreach(func_get_args() as $item_nid) {
+
+    $item = node_load($item_nid);
+
+    if(!empty($item->field_item_embodies[$item->language]) and array_key_exists('target_id', $item->field_item_embodies[$item->language][0])) {
+
+      $manifestations[] = node_load($item->field_item_embodies[$item->language][0]['target_id']);
+    }
+  }
+
+  drupal_json_output($manifestations);
+}
+
 /**
  * Implements hook_menu()
  *
  */
 function dss_elc_menu() {
 
-  $items = array(
-		 'node/get' => array(
+  $items = array('node/get' => array(
 				     'page callback' => 'dss_elc_get_node_ajax',
 				     'access callback' => TRUE,
 				     ),
@@ -64,6 +79,9 @@ function dss_elc_menu() {
 				     'page callback' => 'dss_elc_qty_rels_ajax',
 				     'access callback' => TRUE
 				     ),
+		 'elc/manifestations' => array('page callback' => 'dss_elc_manifestations_ajax',
+					       'access callback' => TRUE
+					       )
 		 );
 
   return $items;

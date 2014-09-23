@@ -250,7 +250,7 @@ NodeFormModal.prototype.toJSON = function($form) {
 }
     
     
-    NodeFormModal.prototype.loadingStart = function() {
+NodeFormModal.prototype.loadingStart = function() {
 
 	/* @todo Refactor */
 	var $ = NodeFormModal.jQuery;
@@ -269,7 +269,7 @@ NodeFormModal.prototype.toJSON = function($form) {
 	return this.$overlay = $overlay;
     }
 	
-    NodeFormModal.prototype.loadingStop = function() {
+NodeFormModal.prototype.loadingStop = function() {
 
 	/* @todo Refactor */
 	var $ = NodeFormModal.jQuery;
@@ -279,6 +279,66 @@ NodeFormModal.prototype.toJSON = function($form) {
 	
 	this.$container.parent().show();
     }
+
+/**
+ * Static methods for the NodeFormModal Class
+ *
+ */
+NodeFormModal.getManifestations = function(nodeId, onSuccessHandler) {
+
+    /**
+     * Integration with jQuery
+     * @todo Refactor
+     *
+     */
+    var $ = NodeFormModal.jQuery;
+
+    // Refactor using promises
+    return $.get('/elc/manifestations/' + nodeId, onSuccessHandler);
+};
+
+/**
+ * Static method for retrieving Node ID's service endpoints
+ *
+ */
+NodeFormModal.onNodeIdSuccessHandler = function() {
+
+    /**
+     * Integration with jQuery
+     * @todo Refactor
+     *
+     */
+    var $ = NodeFormModal.jQuery;
+
+    /**
+     * Work-around
+     * Handling for personal relationship nodes
+     * @todo Refactor
+     *
+     */
+    // Anomalous handling for the addition of multiple personal relationships
+    if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
+		    
+	$relatedInputField.val(entityRefStr);
+	//$relatedInputField.change();
+    } else {
+		    
+	/**
+	 * Integration for tokenization
+	 * @todo Refactor
+	 */
+	$("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+	$relatedInputField.val('');
+    }
+
+    // Trigger any handlers bound to the form field using the jQuery "change" event
+    $relatedInputField.change();
+
+    //workaround to close the outer most dialog widget -- this is not ideal 
+    //implementation, but currently it is impossible to submit one dialog without first
+    //finishing the one above it, so This will work.
+    $('.ui-icon-closethick:visible').last().click();
+};
 
 /**
  * Static method for handling successful form POST submissions
@@ -388,54 +448,39 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 
 	    $relatedInputField = dssNodeFormModal.$input;
 	}
+
 	// This assumes that the title is the first field
 	//entityRefStr = $(data).find('div.field-item.even').first().text() + ' (' + nodeId + ')';
 	entityRefStr = $(data).find('em.placeholder:last').text();
 
 	// Construct the name from page for the newly-created Person
-	
-		
+
 	/**
 	 * Work-around
 	 * Find the ID of the newly-saved Node by parsing the HTML
-	 * @todo Refactor with Backbone.js and RESTful service endpoints
 	 */
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
 
+	/*
 	if($relatedInputField.attr('id') == "edit-field-bib-rel-object-und") {
 
 	    nodeId = (parseInt(nodeId) - 1).toString();
 	}
-	entityRefStr += ' (' + nodeId + ')';
+	*/
 
-	/**
-	 * Work-around
-	 * Handling for personal relationship nodes
-	 * @todo Refactor
-	 *
-	 */
-	// Anomalous handling for the addition of multiple personal relationships
-	if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
-		    
-	    $relatedInputField.val(entityRefStr);
-	    //$relatedInputField.change();
+	if($relatedInputField.attr('id') == "edit-field-bib-rel-object-und") {
+
+	    NodeFormModal.getManifestations(nodeId, function(manifestations) {
+
+		    var manifestation = manifestations.shift();
+		    entityRefStr += ' (' + manifestation.nid + ')';
+		    NodeFormModal.onNodeIdSuccessHandler();
+		});
 	} else {
-		    
-	    /**
-	     * Integration for tokenization
-	     * @todo Refactor
-	     */
-	    $("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
-	    $relatedInputField.val('');
+
+	    entityRefStr += ' (' + nodeId + ')';
+	    NodeFormModal.onNodeIdSuccessHandler();
 	}
-
-	// Trigger any handlers bound to the form field using the jQuery "change" event
-	$relatedInputField.change();
-
-	//workaround to close the outer most dialog widget -- this is not ideal 
-	//implementation, but currently it is impossible to submit one dialog without first
-	//finishing the one above it, so This will work.
-	$('.ui-icon-closethick:visible').last().click();
     }
 };
 
