@@ -561,7 +561,11 @@
 	    // @todo Refactor
 	    //event.stopImmediatePropagation();
 	    event.preventDefault();
-	    var inputElement = this.input;
+		
+		/*
+		 * @author goodnowt This line is disabled temporarily for release to disable the enter key creating tokens from the autocomplete (until that functionality is fixed)
+		 * 
+		 * var inputElement = this.input; */
 
 	    var $listElem = $(this.input).parents('.controls').find('.form-autocomplete');
 	    //var ajaxComplete = $(document).data('islandoraDssElc.autocomplete.ajaxComplete');
