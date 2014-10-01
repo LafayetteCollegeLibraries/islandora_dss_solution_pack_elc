@@ -124,6 +124,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 
     var $ = this.$;
     var document = this.document;
+
+    // For handling AJAX requests submitted using the Drupal autocomplete widget
     $(document).ajaxSend(function(event, jqxhr, settings) {
 
 	    if(settings.url == '/system/ajax') {
@@ -153,7 +155,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		$(document).data('islandoraDssElcHumanForm', islandoraDssElcHumanForm);
 	    }
 	});
-    
+
+    // For handling AJAX requests received in response to a request transmitted using the Drupal autocomplete widget
     $(document).ajaxComplete(function(event, xhr, settings) {
 
 	    //console.log(settings);
@@ -298,49 +301,92 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 	    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
 	    
 	    if($(this).val().length > 0) {
-
-			    var humanName = $('#edit-field-person-name-und-0-value').val();
+		
+		var humanName = $('#edit-field-person-name-und-0-value').val();
 				    
-			    if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
-				
-				humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
-			    }
+		if($('#edit-field-human-middle-initials-und-0-value').val().length > 0) {
+		    
+		    humanName += ' ' + $('#edit-field-human-middle-initials-und-0-value').val();
+		}
+		
+		if($('#edit-field-human-surname-und-0-value').val().length > 0) {
+		    
+		    humanName += ' ' + $('#edit-field-human-surname-und-0-value').val();
+		}
 			    
-			    if($('#edit-field-human-surname-und-0-value').val().length > 0) {
-				
-				humanName += ' ' + $('#edit-field-human-surname-und-0-value').val();
-			    }
-			    
-			    var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
-			    var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
+		var $roleFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-role-und');
+		var $objectFieldElem = $(this).parents('.controls').find('#edit-field-pers-rel-object-und');
 
-			    /**
-			     * Resolving terms to string literals
-			     * @todo Refactor
-			     *
-			     */
-			    var role = $roleFieldElem.children('[value="' + $roleFieldElem.val() + '"]').text().toLowerCase();
-			    var objectName = $objectFieldElem.val().replace(/\(\d+\)/, '');
-			    var m = /"(.+?)"/.exec(objectName);
-			    if(m) {
+		/**
+		 * Resolving terms to string literals
+		 * @todo Refactor
+		 *
+		 */
+		// Attempt to retrieve the Node ID
+		var $form = $(this).parents('form');
 
-				objectName = m[1];
-			    }
-			    $relationFieldElem.val((humanName + ' is a ' + role + ' in relation to ' + objectName).trim());
+		var subjectMatch = /(\d+)\/edit/.exec($form.attr('action'));
+		var subject = 'NULL';
+		if(subjectMatch) {
+		    
+		    subject = subjectMatch[1];
+		}
+
+		var role = $roleFieldElem.children('[value="' + $roleFieldElem.val() + '"]').text().toLowerCase();
+		if(role == '- select a value -') {
+
+		    role = 'NULL';
+		}
+
+		//! @todo Refactor
+		var objectMatch = /\((\d+)\)/.exec($objectFieldElem.val());
+		var object = 'NULL';
+		if(objectMatch) {
+
+		    object = objectMatch[1];
+		}
+
+		var objectName = $objectFieldElem.val().replace(/\(\d+\)/, '');
+		var m = /"(.+?)"/.exec(objectName);
+		if(m) {
+
+		    objectName = m[1];
+		}
+
+		//$relationFieldElem.val((humanName + ' is a ' + role + ' in relation to ' + objectName).trim());
+		
 				    
-			    // Trigger the autocompletion
-			    //$relationFieldElem.keyup();
-			    $.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
-					    
-				    var lastEntity = Object.keys(data).pop();
-				    $relationFieldElem.val(lastEntity);
-				});
-			} else {
+		// Trigger the autocompletion
+		//$relationFieldElem.keyup();
+		//$.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
+
+		/**
+		 * Retrieve a Personal Relationship Node
+		 * (If this does not currently exist within the site, create a new Node without explicitly setting an author)
+		 *
+		 */
+		$.get('/elc/pers-rels/' + encodeURI(subject) + '/' + encodeURI(role) + '/' + encodeURI(object), function(data) {
+			
+			if(typeof(data) == 'undefined') {
 			    
-			    $relationFieldElem.val('');
+			    throw new Error('Failed to create the personal relationship in response to ' + subject + '/' + role + '/' + object);
 			}
+			
+			/*
+			var lastEntity = Object.keys(data).pop();
+			$relationFieldElem.val(lastEntity);
+			*/
+
+			var persRel = data.pop();
+			var persRelText = '"' + persRel.title + ' (' + persRel.nid + ')"';
+			$relationFieldElem.val(persRelText);
 		    });
-		//}
+	    } else {
+			    
+		$relationFieldElem.val('');
+	    }
+	});
+    //}
     //});
 };
 

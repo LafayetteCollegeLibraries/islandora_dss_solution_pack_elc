@@ -549,16 +549,16 @@ NodeFormModal.onSubmitHandler = function(event) {
 	if(formData[i].name == 'op') {
 
 	    formData[i].value = 'Save & View Record';
-	} else if(formData[i].name == 'field_person_type[und]') {
+	} else if(formData[i].name == 'field_person_type[und]' && document.getElementById("loan-node-form") !== null) {
 
-	    if($(event.target).attr('value') == 'Save Shareholder') {
+	    if($(event.target).attr('value') == 'Save as Shareholder') {
 
 		formData[i].value = 'Shareholder';
-	    } else if($(event.target).attr('value') == 'Save Representative') {
+	    } else if($(event.target).attr('value') == 'Save as Representative') {
 		
 		formData[i].value = 'Representative';
 	    }
-	}
+	} 
     }
 
     // Transmit the POST request
@@ -740,14 +740,14 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 	// For providing the distinct buttons for the "Personal Relationship" Form
 	if(dssNodeFormModal.$input.is('#edit-field-pers-rel-object-und')) {
 
-	    $subjectSubmit = $('<button id="edit-publish-person-a" class="btn btn-primary form-submit" type="submit" value="Save Person A" name="op">Save Person A</button>').appendTo($buttonContainer);
-	    $objectSubmit = $('<button id="edit-publish-person-b" class="btn btn-primary form-submit" type="submit" value="Save Person B" name="op">Save Person B</button>').appendTo($buttonContainer);
+	    $subjectSubmit = $('<button id="edit-publish-person-a" class="btn btn-primary form-submit" type="submit" value="Save Person A" name="op">Save as Person A</button>').appendTo($buttonContainer);
+	    $objectSubmit = $('<button id="edit-publish-person-b" class="btn btn-primary form-submit" type="submit" value="Save Person B" name="op">Save as Person B</button>').appendTo($buttonContainer);
 	} else {
 
 	    // Append <button> elements for each type of Human Node and hide the default submit button
 	    /* @todo Refactor */
-	    $shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save Shareholder</button>').appendTo($buttonContainer);
-	    $representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save Representative</button>').appendTo($buttonContainer);
+	    $shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save as Shareholder</button>').appendTo($buttonContainer);
+	    $representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save as Representative</button>').appendTo($buttonContainer);
 	}
 	$modal.find('#edit-publish').hide();
 

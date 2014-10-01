@@ -37,6 +37,10 @@ function dss_elc_menu_alter(&$items) {
   $items['islandora/object/%islandora_object']['access callback'] = 'dss_elc_object_access_callback';
 }
 
+/**
+ * Retrieve all Manifestation Nodes which are linked to items of a given Item (by the Node ID)
+ *
+ */
 function dss_elc_manifestations_ajax() {
 
   $manifestations = array();
@@ -51,6 +55,82 @@ function dss_elc_manifestations_ajax() {
   }
 
   drupal_json_output($manifestations);
+}
+
+/**
+ * Retrieve all Personal Relationship Nodes which are linked to items of a given Item (by the Node ID)
+ * @todo Refactor as a service view endpoint (for authentication)
+ *
+ */
+function dss_elc_pers_rels_ajax($subject_nid, $role, $object_nid) {
+
+  $role_tid = 0;
+
+  /*
+  if($role == 'NULL') {
+
+    $role_term = new stdClass();
+    $role_term->tid = NULL;
+  } else {
+
+    $role_term = dss_elc_get_taxonomy_term($role, ROLES_TAXON);
+  }
+  */
+  if($role == 'NULL') {
+
+    $role = 'relator';
+  }
+
+  $role_term = dss_elc_get_taxonomy_term($role, ROLES_TAXON);
+
+  $pers_rels = array();
+
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->fieldCondition('field_pers_rel_subject', 'target_id', intval($subject_nid))
+    ->fieldCondition('field_pers_rel_object', 'target_id', intval($object_nid))
+    ->fieldCondition('field_pers_rel_role', 'tid', intval($role_term->tid));
+
+  $result = $query->execute();
+
+  // @todo Remove
+  if(false) {
+
+  } else {
+
+    if(isset($result['node'])) {
+
+      $news_items_nids = array_keys($result['node']);
+      $pers_rels = entity_load('node', $news_items_nids);
+    } else {
+
+      // Instantiate the personal_relationship Node
+      $pers_rel = entity_create('node', array('type' => 'personal_relationship',
+						     'uid' => 1,
+						     'status' => 1,
+						     'comment' => 1,
+						     'promote' => 0));
+
+      $pers_rel_md = entity_metadata_wrapper('node', $pers_rel);
+
+      if($subject_nid != 'NULL') {
+
+	$pers_rel_md->field_pers_rel_subject->set($subject_nid);
+      }
+
+      $pers_rel_md->field_pers_rel_role->set($role_term->tid);
+      $pers_rel_md->field_pers_rel_object->set($object_nid);
+      //$pers_rel_md->title = 'subject is a role in relation to object';
+
+      // Instantiate the Personal Relationship
+      $pers_rel_md->save(true);
+      entity_save('node', $pers_rel);
+
+      $pers_rels = array($pers_rel);
+    }
+  }
+  
+  drupal_json_output($pers_rels);
 }
 
 /**
@@ -79,9 +159,17 @@ function dss_elc_menu() {
 				     'page callback' => 'dss_elc_qty_rels_ajax',
 				     'access callback' => TRUE
 				     ),
+
+		 // For the retrieval of all Manifestation Nodes linked to any given item
 		 'elc/manifestations' => array('page callback' => 'dss_elc_manifestations_ajax',
 					       'access callback' => TRUE
-					       )
+					       ),
+
+		 // For the retrieval of all Personal Relationship Nodes linked to any given Person
+		 'elc/pers-rels' => array('page callback' => 'dss_elc_pers_rels_ajax',
+					  'access callback' => TRUE
+					  )
+
 		 );
 
   return $items;
@@ -94,9 +182,7 @@ function dss_elc_menu() {
  */
 function dss_elc_permission() {
 
-  return array(
-	       'access arguments page' => array(
-						'title' => t('Query the Person node interface'),
+  return array('access arguments page' => array('title' => t('Query the Person node interface'),
 						'description' => t('Query the Person node interface'),
 						),
 	       );
@@ -171,6 +257,17 @@ function dss_elc_theme($existing, $type, $theme, $path) {
 					     ),
 	       */
 	       );
+}
+
+/**
+ * Implements hook_node_submit()
+ *
+ */
+function dss_elc_node_submit($node, $form, &$form_state) {
+
+  dpm($node);
+  dpm($form);
+  dpm($form_state);
 }
 
 /**
@@ -265,13 +362,18 @@ function dss_elc_node_insert($node) {
     }
     */
     break;
+
+  case 'human':
+
+    dss_elc_person_node_insert($node);
+    break;
     
   case 'item':
   case 'periodical':
   case 'book':
 
     dss_elc_item_node_insert($node);
-  break;
+    break;
 
   default:
     break;
@@ -329,8 +431,7 @@ function dss_elc_field_attach_view_alter(&$output, $context) {
       $field = field_info_field($field_name);
 
       // Set output for field.
-      $output[$field_name] = array(
-				   '#theme' => 'field',
+      $output[$field_name] = array('#theme' => 'field',
 				   '#weight' => $display['weight'],
 				   '#title' => $instance['label'],
 

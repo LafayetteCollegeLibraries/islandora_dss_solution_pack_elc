@@ -3,6 +3,32 @@
 define('PERSON_TYPES_TAXON', 'person_types');
 
 /**
+ * Operations before the Person Node is saved
+ *
+ */
+function dss_elc_person_node_insert($node) {
+
+  if(property_exists($node, 'field_human_pers_rels')) {
+    
+    foreach($node->field_human_pers_rels[ $node->language ] as $index => $value) {
+
+      $pers_rel = node_load($value['target_id']);
+
+      //$pers_rel->field_pers_rel_subject[ $pers_rel->language ] = ;
+      $pers_rel_md = entity_metadata_wrapper('node', $pers_rel);
+      $pers_rel_md->field_pers_rel_subject->set(intval($node->nid));
+      $pers_rel_md->save(true);
+      entity_save('node', $pers_rel);
+
+      // If this doesn't resolve to a Node, create it
+      
+
+    }
+  }
+}
+
+
+/**
  * Refactor into the data access
  */
 function dss_elc_get_persons($field, $value, $contentType='person', $personType=NULL) {
