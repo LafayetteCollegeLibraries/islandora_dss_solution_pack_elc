@@ -395,6 +395,28 @@ function dss_elc_get_bib_rels_ajax($subjectNid) {
 }
 
 /**
+ * Implements hook_js_alter()
+ * Ensures that certain elements of JavaScript functionality are removed (in order to resolve conflicts)
+ *
+ */
+function dss_elc_js_alter(&$js) {
+
+  $current_path = current_path();
+  $node = menu_get_object();
+
+  if($current_path == 'node/add/human' or $node->type == 'human') {
+
+    // Remove all JavaScript functionality related to the IMCE Module
+    // This resolves DSS-387
+
+    unset($js['sites/all/modules/imce/js/imce.js']);
+    unset($js['sites/all/modules/imce/js/imce_set_app.js']);
+    unset($js['sites/all/modules/imce_wysiwyg/js/imce_wysiwyg.js']);
+  }
+}
+
+
+/**
  * Implements hook_field_attach_view_alter().
  *
  * Show titles of empty fields.

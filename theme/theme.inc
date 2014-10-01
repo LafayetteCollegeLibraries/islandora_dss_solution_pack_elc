@@ -86,11 +86,8 @@ function dss_elc_field_human_pers_rels_add_more_submit($form, &$form_state) {
   $form_state['field_human_pers_rels'] = $new_field;
 }
 
+
 function template_preprocess_human_node_form(&$variables) {
-
-  // $variables['form']['#action'] = '/node/add/human'
-
-  // div#page div#content div#console div.error
 
   drupal_add_library('system', 'ui.dialog');
   dss_elc_preprocess_node_form($variables);
@@ -108,8 +105,6 @@ function template_preprocess_human_node_form(&$variables) {
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
 
     drupal_add_js(array('dssElc' => array('isAjaxRequest' => true)), 'setting');
-
-    //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/theme/js/ajaxNode.js');
 
     if(array_key_exists('isModalQuery', $_GET) and $_GET['isModalQuery']) {
 
@@ -145,34 +140,7 @@ function template_preprocess_human_node_form(&$variables) {
    */
   $variables['form']['field_pers_rel_role']['#attributes']['style'] = 'display:none';
   $variables['form']['field_pers_rel_object']['#attributes']['style'] = 'display:none';
-
-  //hide($variables['form']['field_pers_rel_role']);
-  //hide($variables['form']['field_pers_rel_object']);
-  
-  /*
-  $variables['field_is_pers_related_to'] = array();
-  $variables['field_relates_to'] = array();
-  $variables['location'] = array();
-
-  // Restrict the ability to add relationships for the "add" action
-  if($variables['form']['#action'] != '/node/add/human') {
-
-    $variables['field_is_pers_related_to'][] = $variables['form']['field_is_pers_related_to'];
-    $variables['field_relates_to'][] = $variables['form']['field_relates_to'];
-    $variables['location'][] = $variables['form']['field_person_location'];
-  }
-  
-  hide($variables['form']['field_is_pers_related_to']);
-  hide($variables['form']['field_relates_to']);
-  hide($variables['form']['field_person_location']);
-  */
-
-  //hide($variables['form']['additional_settings']);
-  //$variables['form']['actions']['publish']['#value'] = 'Save';
-
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
-
-  //dpm($variables['form']);
 }
 
 /**
