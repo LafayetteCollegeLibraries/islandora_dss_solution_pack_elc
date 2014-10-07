@@ -85,7 +85,6 @@ DssElcPersRelsField.prototype.buttonOnClickHandler = function(e) {
 		    //			$("table[id|='field-human-pers-rels-values'").val(function(){return value - 1;});
 
 		    // Also, update the total number of fields on the form by "popping" the last of the field elements
-
 		    var dssElcPersRelsFieldTotal = $(document).data('dssElcPersRelsFieldTotal');
 		    dssElcPersRelsFieldTotal--;
 		    $(document).data('dssElcPersRelsFieldTotal', dssElcPersRelsFieldTotal);
@@ -332,55 +331,50 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		    subject = subjectMatch[1];
 		}
 
+		/**
+		 * Error handling implemented in order to avoid cases in which NULL roles are selected
+		 *
+		 */
 		var role = $roleFieldElem.children('[value="' + $roleFieldElem.val() + '"]').text().toLowerCase();
 		if(role == '- select a value -') {
 
-		    role = 'NULL';
-		}
+		    $('#main-content').after('<div class="alert alert-block alert-error"><a class="close" href="#" data-dismiss="alert">×</a><h4 class="element-invisible">Error message</h4>A role is required.</div>');
+		    $objectFieldElem.val('');
+		    $roleFieldElem.parents('.control-group').addClass('error');
+		} else {
 
-		//! @todo Refactor
-		var objectMatch = /\((\d+)\)/.exec($objectFieldElem.val());
-		var object = 'NULL';
-		if(objectMatch) {
+		    //! @todo Refactor
+		    var objectMatch = /\((\d+)\)/.exec($objectFieldElem.val());
+		    var object = 'NULL';
+		    if(objectMatch) {
 
-		    object = objectMatch[1];
-		}
+			object = objectMatch[1];
+		    }
 
-		var objectName = $objectFieldElem.val().replace(/\(\d+\)/, '');
-		var m = /"(.+?)"/.exec(objectName);
-		if(m) {
+		    var objectName = $objectFieldElem.val().replace(/\(\d+\)/, '');
+		    var m = /"(.+?)"/.exec(objectName);
+		    if(m) {
 
-		    objectName = m[1];
-		}
+			objectName = m[1];
+		    }
 
-		//$relationFieldElem.val((humanName + ' is a ' + role + ' in relation to ' + objectName).trim());
-		
-				    
-		// Trigger the autocompletion
-		//$relationFieldElem.keyup();
-		//$.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
-
-		/**
-		 * Retrieve a Personal Relationship Node
-		 * (If this does not currently exist within the site, create a new Node without explicitly setting an author)
-		 *
-		 */
-		$.get('/elc/pers-rels/' + encodeURI(subject) + '/' + encodeURI(role) + '/' + encodeURI(object), function(data) {
+		    /**
+		     * Retrieve a Personal Relationship Node
+		     * (If this does not currently exist within the site, create a new Node without explicitly setting an author)
+		     *
+		     */
+		    $.get('/elc/pers-rels/' + encodeURI(subject) + '/' + encodeURI(role) + '/' + encodeURI(object), function(data) {
 			
-			if(typeof(data) == 'undefined') {
+			    if(typeof(data) == 'undefined') {
 			    
-			    throw new Error('Failed to create the personal relationship in response to ' + subject + '/' + role + '/' + object);
-			}
-			
-			/*
-			var lastEntity = Object.keys(data).pop();
-			$relationFieldElem.val(lastEntity);
-			*/
+				throw new Error('Failed to create the personal relationship in response to ' + subject + '/' + role + '/' + object);
+			    }
 
-			var persRel = data.pop();
-			var persRelText = '"' + persRel.title + ' (' + persRel.nid + ')"';
-			$relationFieldElem.val(persRelText);
-		    });
+			    var persRel = data.pop();
+			    var persRelText = '"' + persRel.title + ' (' + persRel.nid + ')"';
+			    $relationFieldElem.val(persRelText);
+			});
+		}
 	    } else {
 			    
 		$relationFieldElem.val('');
