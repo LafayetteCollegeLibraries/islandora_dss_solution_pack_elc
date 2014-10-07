@@ -268,6 +268,16 @@ function dss_elc_node_submit($node, $form, &$form_state) {
   dpm($node);
   dpm($form);
   dpm($form_state);
+
+  switch($node->type) {
+
+  case 'loan':
+
+    // Work-around
+    // @todo Refactor
+    $end_date = $form['field_loan_duration'][ $form['field_loan_duration']['#language'] ][0]['value2']['#value']['date'] . 'T00:00:00';
+    $node->field_loan_duration[$node->language][0]['value2'] = $end_date;
+  }
 }
 
 /**
@@ -404,7 +414,9 @@ function dss_elc_js_alter(&$js) {
   $current_path = current_path();
   $node = menu_get_object();
 
-  if($current_path == 'node/add/human' or $node->type == 'human') {
+  $is_human_node = !is_null($node) and property_exists($node, 'type') and $node->type == 'human';
+
+  if($current_path == 'node/add/human' or $is_human_node) {
 
     // Remove all JavaScript functionality related to the IMCE Module
     // This resolves DSS-387
@@ -951,7 +963,7 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   $form['body'][$form['body']['#language']][0]['#title'] = 'Notes for Review';
 
   hide($form['field_was_ordered']);
-  
+
   //Populate fields if save and add another was pressed
   if(isset($_SESSION['type'])&&$_SESSION['type']=='loan_node_form'){
   	
