@@ -188,8 +188,11 @@ function DssElcViewsFilter(options) {
 		 * @todo Include CSRF token (Drupal services Module)
 		 *
 		 */
+
 		var params = {
+
 		    'dataTables': {
+
 			'settings': dtSettings,
 		    },
 		    'token': 'csrf_validate_me',
@@ -198,10 +201,12 @@ function DssElcViewsFilter(options) {
 		//var params = $.extend({}, request);
 
 		//Checking to make sure that the search values havent been deleted
-		if($('input:first','tr').text()!=''){
+		if($('input:first','tr').text()!='') {
+
 			request.columns[0].search.value = '';
 		}
-		if($('input:last','tr').text()!=''){
+		if($('input:last','tr').text()!='') {
+
 			request.columns[1].search.value = '';
 		}	
 		request.authors = jQuery('input','#search_authors').prop('checked');
@@ -214,17 +219,17 @@ function DssElcViewsFilter(options) {
 			"cache":    false,
 			"success":  function(json) {
 
-                    cacheLastJson = $.extend(true, {}, json);
+			    cacheLastJson = $.extend(true, {}, json);
  
-                    if ( cacheLower != drawStart ) {
-                        json.aaData.splice( 0, drawStart-cacheLower );
-                    }
+			    if ( cacheLower != drawStart ) {
+				json.aaData.splice( 0, drawStart-cacheLower );
+			    }
                     
-                    json.aaData.splice( requestLength, json.aaData.length );
+			    json.aaData.splice( requestLength, json.aaData.length );
 	                    
-	                    drawCallback( json );
-						cleanUp();
-                    },
+			    drawCallback( json );
+			    cleanUp();
+			},
 			"error":  function(jqXHR, textStatus, errorThrown) {
 
 			    console.error(errorThrown);
@@ -386,32 +391,39 @@ function DssElcViewsFilter(options) {
              	break;
              };
 
-	    /**
-	     * Instantiate the DataTable Object
-	     */
-	    table = $('.views-table').DataTable({
-		    
-		    "order": order,
-		  "processing": true,
-          "serverSide": true,
-          "ajax": $.fn.dataTable.pipeline( {
-            url: this_url,
-            pages: 5 // number of pages to cache
-        } )
-           
-		});
+	// Store the current sort
+	// For some reason, this could not be retrieve this from the DataTables instance
 
-		jQuery('th.views-field').filter(function(i,e) {
+	$(document).data('dssElc.dataTables.currentSortCol', order[0][0]);
+	$(document).data('dssElc.dataTables.currentSortDir', order[0][0]);
+	$(document).data('dssElc.dataTables.currentSort', order);
+
+	/**
+	 * Instantiate the DataTable Object
+	 */
+	var table = $('.views-table').DataTable({
+		    
+		"order": order,
+		"processing": true,
+		"serverSide": true,
+		"ajax": $.fn.dataTable.pipeline({
+			
+			url: this_url,
+			pages: 5 // number of pages to cache
+		    })
+	    });
+
+	jQuery('th.views-field').filter(function(i,e) {
 		
-			return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
+		return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
 		
-		}).on('click',function(event){
-		
-			$.fn.dataTable.pipeline( {
-	            url: this_url,
-	            pages: 5, // number of pages to cache
-	        } );
-		
+	    }).on('click',function(event){
+
+		    $.fn.dataTable.pipeline({
+			    
+			    url: this_url,
+				pages: 5, // number of pages to cache
+				});
 		});
 	
 	/**
@@ -423,19 +435,85 @@ function DssElcViewsFilter(options) {
 		
 	    }).each(function() {
 		    
-		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup', function() {
-			    
-			    table.column( $(this).parent().index()+':visible' )
-				.search( this.value ) 
-				.draw();
-			    
-			}).on('click', function(event) {
+		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />')
+
+			.on('search.dt', function(e, settings) {
+
+				console.log(e);
+			    })
+			.on('keyup', function(e) {
+
+				console.log(e);
+
+				var searchFilter = $(this).val();
+				$(document).data('dssElc.dataTables.emptySearch', $(this).val() == '');
+				$(document).data('dssElc.dataTables.searchFilter', searchFilter);
 				
-				/**
-				 * Ensures that focusing upon the filtration <input> element doesn't trigger the invoke sorting methods for the resident column
-				 */
-				event.stopImmediatePropagation();
-			    }).appendTo(this);
+				table.column( $(this).parent().index()+':visible' )
+				    .on('order.dt', function(e, settings) {
+
+					    console.log(searchFilter);
+					    console.log(e);
+					    console.log(settings);
+					    console.log( $(this) );
+
+					    //if(typeof(searchFilter) != 'undefined' && searchFilter == '') {
+					    var emptySearch = $(document).data('dssElc.dataTables.emptySearch');
+
+					    if( typeof(emptySearch) != 'undefined' && emptySearch ) {
+						
+					        $(document).data('dssElc.dataTables.emptySearch', false);
+
+						/*
+						searchFilter = $('th.views-field:nth-child(' + settings.aLastSort[0].col + ') input').val();
+						table.order([ settings.aLastSort[0].col + 1, settings.aLastSort[0].dir ]).draw();
+						*/
+
+						//currentSortIndex = $(document).data('dssElc.dataTables.currentSortIndex');
+
+						//table.order([ currentSortIndex, settings.aLastSort[0].dir ]).draw();
+						table.order( [ $(document).data('dssElc.dataTables.currentSortCol'),
+							       $(document).data('dssElc.dataTables.currentSortDir') ] ).draw();
+
+						//table.order([ [ settings.aLastSort[0].col + 1, settings.aLastSort[0].dir ]  ]).draw();
+
+						//searchFilter = $('th.views-field:nth-child(' + settings.aLastSort[0].col + 2 + ') input').val();
+					    }
+
+					    $(document).data('dssElc.dataTables.currentSortCol', settings.aLastSort[0].col);
+					    $(document).data('dssElc.dataTables.currentSortDir', settings.aLastSort[0].dir);
+					    $(document).data('dssElc.dataTables.currentSort', settings.aaSorting);
+
+					    /*
+					    //var filter = '';
+					    var sortIndex = $(document).data('dssElc.dataTables.sortIndex');
+					    if(typeof(sortIndex) == 'undefined') {
+
+						sortIndex = table.order()[0][0] + 1;
+						$(document).data('dssElc.dataTables.sortIndex',
+								 sortIndex);
+					    }
+					    var filter = $('th.views-field:nth-child(' + sortIndex + ') input').val();
+
+					    //if(typeof(filter) != 'undefined' && filter == '') {
+
+					    */
+					})
+				    .on('search.dt', function(e, settings) {
+					    
+					    console.log(e);
+					    console.log(settings);
+					})
+				    .search( this.value )
+				    .draw();
+				
+			    }).on('click', function(event) {
+				    
+				    /**
+				     * Ensures that focusing upon the filtration <input> element doesn't trigger the invoke sorting methods for the resident column
+				     */
+				    event.stopImmediatePropagation();
+				}).appendTo(this);
 		});
 	/*
 	 * 
