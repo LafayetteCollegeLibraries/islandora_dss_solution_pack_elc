@@ -758,6 +758,10 @@ function dss_elc_field_loan_duration_after_build(&$element) {
       hide($value['show_todate']);
 
       $value['value']['#title'] = 'Check-out';
+      //! @author griffinj@lafayette.edu Work-around for production
+      //! Resolves EDDC-369
+      $value['value']['#title_display'] = TRUE;
+
       //$value['value']['date']['#description'] = 'YYYY-MM-DD';
       unset($value['value']['date']['#description']);
 
