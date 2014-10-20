@@ -50,9 +50,18 @@ function dss_elc_item_node_presave($node) {
   // Append the volume number to the node title field
   if(isset($node->field_item_volume) && isset($node->field_item_volume[$node->language][0])) {
     
+    /**
+     * @todo Implement for Item title generation
+     *
+     */
     $volumeTerm = taxonomy_term_load($node->field_item_volume[$node->language][0]['tid']);
+    //$format = $book_md->field_item_format;
     
-    $node->title = $itemTitle . ' (Vol. ' . $volumeTerm->name . ')';
+    //$node->title = $itemTitle . ' (Vol. ' . $volumeTerm->name . ')';
+    //$book_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
+    //$node->title = $itemTitle . ' [Vol. ' . $volumeTerm->name . '] (' . $book['format'] . ' ' . $book['number'] . ')';
+
+    $node->title = $itemTitle . ' [Vol. ' . $volumeTerm->name . ']';
   }
 
   // If this does not have a Manifestation explicitly defined...

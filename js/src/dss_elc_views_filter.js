@@ -68,7 +68,7 @@ function DssElcViewsFilter(options) {
 
     $.fn.dataTable.pipeline = function(opts) {
     
-    var this_url;
+	var this_url;
 
 	//deciding which url to make the ajax request to
 	switch (document.title){
@@ -413,48 +413,48 @@ function DssElcViewsFilter(options) {
 	        } );
 		
 		});
-
-	    /**
-	     * Append the input fields
-	     */
-	    $('th.views-field').filter(function(i,e) {
-
-		    return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
+	
+	/**
+	 * Append the input fields
+	 */
+	$('th.views-field').filter(function(i,e) {
+		
+		return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
+		
+	    }).each(function() {
 		    
-		}).each(function() { 
-	    
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />').on( 'keyup', function() {
 			    
-			table.column( $(this).parent().index()+':visible' )
-			    .search( this.value ) 
-			    .draw();
+			    table.column( $(this).parent().index()+':visible' )
+				.search( this.value ) 
+				.draw();
 			    
 			}).on('click', function(event) {
-
+				
 				/**
 				 * Ensures that focusing upon the filtration <input> element doesn't trigger the invoke sorting methods for the resident column
 				 */
 				event.stopImmediatePropagation();
 			    }).appendTo(this);
-		    });
-		    /*
-		     * 
-		     * @author stathisw implementing a checkbox for deciding whether or not to search authors
-		     *
-		     * @author goodnowt edited for placement checkbox in mark-up
-		     * 
-		     */
-		    if(window.location.pathname == '/people'){	   
-				jQuery('#DataTables_Table_0_filter').before('<div id="search_authors" class="DataTables_Control" align=middle />');
-				jQuery('#search_authors').append('<input type="checkbox" name="search_authors" />');
-				jQuery('#search_authors').append('<p align=middle/>');
-				jQuery('p','#search_authors').append('Include Authors').width(100);
-				jQuery('input','#search_authors').on('click',function(event){
-				
-					table.clearPipeline().draw();
-					
-				});
-			}
-		}
+		});
+	/*
+	 * 
+	 * @author stathisw implementing a checkbox for deciding whether or not to search authors
+	 *
+	 * @author goodnowt edited for placement checkbox in mark-up
+	 * 
+	 */
+	if(window.location.pathname == '/people'){	   
+	    jQuery('#DataTables_Table_0_filter').before('<div id="search_authors" class="DataTables_Control" align=middle />');
+	    jQuery('#search_authors').append('<input type="checkbox" name="search_authors" />');
+	    jQuery('#search_authors').append('<p align=middle/>');
+	    jQuery('p','#search_authors').append('Include Authors').width(100);
+	    jQuery('input','#search_authors').on('click',function(event){
+		    
+		    table.clearPipeline().draw();
+		    
+		});
+	}
+	}
     };
 }(jQuery, Drupal));

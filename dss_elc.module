@@ -318,7 +318,7 @@ function dss_elc_node_presave($node) {
     foreach(array('field_person_name', 'field_human_middle_initials', 'field_human_surname') as $field) {
 
       //if(array_key_exists($node->language, $node->{$field}) and array_key_exists(0, ($node->{$field}[$node->language]))) {
-      if(array_key_exists($node->language, $node->{$field}) and !empty($node->{$field}[$node->language])) {
+      if(!is_null($node->{$field}) and array_key_exists($node->language, $node->{$field}) and !empty($node->{$field}[$node->language])) {
 
 	$fields[] = $node->{$field}[$node->language];
       }

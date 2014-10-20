@@ -9,6 +9,7 @@
 ?>
 
 <div class="item-record">
+	
 <?php if($form): ?>
 
 <div class="add-form-legend">
@@ -34,6 +35,10 @@
 
 <div class="book-column single-value-field">
    <?php print drupal_render_children($form['field_item_number_taxon']); ?>
+</div>
+
+<div class="book-column single-value-field">
+   <?php print drupal_render_children($form['field_initial_publication_date']); ?>
 </div>
 </div>
 

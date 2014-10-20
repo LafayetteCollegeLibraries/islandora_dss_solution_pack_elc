@@ -26,6 +26,11 @@ function DssElcPersRelsField(document, options) {
     this.fields = $('[id^="edit-field-human-pers-rels-und-"].form-text').length;
 
     $('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
+	    
+	    // Prepend the list for tokenization
+	    if($('#pers-rel-tokens-' + i+1).length == 0) {
+
+	    $(e).siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-object-und').before('<ul id="pers-rel-tokens-' + i+1 + '" class="token-list"></ul>');
 
 	    // testHumanName is a Representative in relation to Peter (137661)
 	    if(e.value) {
@@ -39,6 +44,7 @@ function DssElcPersRelsField(document, options) {
 		    $(e).siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-role-und').val(m[1]);
 		    $(e).siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-object-und').val(m[2]);
 		}
+	    }
 	    }
 	});
 };
@@ -158,8 +164,9 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
     // For handling AJAX requests received in response to a request transmitted using the Drupal autocomplete widget
     $(document).ajaxComplete(function(event, xhr, settings) {
 
-	    //console.log(settings);
 	    if(settings && /system\/ajax/.exec(settings.url)) {
+
+		console.log(event);
 		
 		// Work-around for autocomplete
 		/**
@@ -232,26 +239,70 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		 * Population of the form fields from the individual 
 		 *
 		 */
-		$('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
+
+		if(settings.extraData && settings.extraData._triggering_element_name == 'field_human_pers_rels_add_more') {
+
+		    // Only iterate for the last within a series
+		    // This can only be performed by checking the timestamps between the individual requests
+		    if(settings.timeStamp - ($(document).data('islandoraDssElcHumanForm.lastRequestTimestamp') || settings.timeStamp) < 1000) {
+
+		    // Iterate through each hidden form field (each containing the actual Personal Relationship Entity reference)
+		    $('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i,e) {
 			
-			var fieldText = $(e).val();
+			    // If the field contains a reference to some P. Relationship Entity...
+			    if( $(e).val().length > 0 ) {
+
+				//console.log($(e));
+				console.log(event);
+				console.log(settings);
+			
+			    var fieldText = $(e).val();
+
+			    console.log(fieldText);
+			    
+			    $('[id^="edit-field-pers-rel-role-und"].form-select');
+			    /**
+			     * Hard-coded regex for the personal-relationship Node title
+			     * Ideally, the structure of these P. Relationships should be specified using a Drupal config. form value
+			     * @todo Refactor
+			     *
+			     */
+			    var m = /is a (.+?) in relation to (.+)/.exec(fieldText);
+			    if(m) {
 				
-			/**
-			 * Hard-coded regex for the personal-relationship Node title
-			 * @todo Refactor
-			 *
-			 */
-			var m = /is a (.+?) in relation to (.+)/.exec(fieldText);
-			if(m) {
-			    
-			    var $roleFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-role-und');
-			    var $objectFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-object-und');
-			    
-			    $roleFieldElem.val(m[1]);
-			    $objectFieldElem.val(m[2]);
+				var $roleFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-role-und');
+				var $objectFieldElem = $(e).parents('.controls').find('#edit-field-pers-rel-object-und');
+				
+				console.log(m[1]);
+				console.log(m[2]);
+				
+				/**
+				 * @todo Refactor
+				 *
+				 */
+				// Prepend the list for tokenization
+				//$(e).siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-object-und').before('<ul id="pers-rel-tokens-' + i+1 + '" class="token-list"></ul>');
+				
+				$roleFieldElem.val(m[1]);
+				$objectFieldElem.val(m[2]);
+				
+				/**
+				 * Add the tokenized values for the newly-added relationships
+				 * @todo Refactor
+				 *
+				 */
+				var objectNameMatch = /(.+?)\"/.exec($objectFieldElem.val());
+				var objectName = objectNameMatch[1];
+				$("<li><a href='#' class='token'><span class='token-object'>" + objectName + "</span><span class='token-x'>×</span></a></li>").appendTo( $objectFieldElem.siblings('.token-list') );
+				$objectFieldElem.hide();
+			    }
 			}
 		    });
+		    }
 
+		    
+		}
+		
 		/**
 		 * Remove extraneous relationship fields
 		 * Conflict within the form state within the PHP and the browser (i. e. server vs. client)
@@ -373,6 +424,11 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    var persRel = data.pop();
 			    var persRelText = '"' + persRel.title + ' (' + persRel.nid + ')"';
 			    $relationFieldElem.val(persRelText);
+
+			    var objectNameMatch = /"(.+?)"/.exec($objectFieldElem.val());
+			    var objectName = objectNameMatch[1];
+			    $("<li><a href='#' class='token'><span class='token-object'>" + objectName + "</span><span class='token-x'>×</span></a></li>").appendTo( $objectFieldElem.siblings('.token-list') );
+			    $objectFieldElem.hide();
 			});
 		}
 	    } else {

@@ -221,7 +221,31 @@ function drush_dss_elc_get_records($db, $table_name, $limit, $bookId=NULL) {
   return $db->query($sql);
 }
 
+/**
+ *
+ * @author griffinj@lafayette.edu
+ *
+ */
+function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
 
+  if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
+
+    //! Uncertain as to why this does not properly transfer the value
+    $book_node_title = substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')...';
+
+    //$book_md->title->set(substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
+    //$book_md->title->set($book_node_title);
+  } else {
+
+    //! Uncertain as to why this does not properly transfer the value
+    $book_node_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
+
+    //$book_md->title->set($book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
+    //$book_md->title->set($book_node_title);
+  }
+
+  return $book_node_title;
+}
 
 define('ITEM_VOLUMES_TAXON', 'item_volumes');
 
@@ -298,7 +322,7 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
 	$values = array(
 			'type' => 'book',
 			'uid' => 1,
-			'status' => $book['flagStatus'] == '1' ? 1 : 0,
+			'status' => $book['flagStatus'] == '1' ? 0 : 1,
 			'comment' => 1,
 			'promote' => 0,
 			);
@@ -307,7 +331,7 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
 	$values = array(
 			'type' => 'periodical',
 			'uid' => 1,
-			'status' => $book['flagStatus'] == '1' ? 1 : 0,
+			'status' => $book['flagStatus'] == '1' ? 0 : 1,
 			'comment' => 1,
 			'promote' => 0,
 			);
@@ -327,15 +351,40 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
       $book_title = html_entity_decode($book_title);
 
       // Set the "title" value of the Book Node
+      /*
       if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
 
 	$book_md->title->set(substr($book_title, 0, 128) . ' (Vol. ' . (string)$book_volume . ')...');
       } else {
 	
-	$book_md->title->set($book_title . ' (Vol. ' . (string)$book_volume . ')');
+        $book_md->title->set($book_title . ' (Vol. ' . (string)$book_volume . ')');
+      }
+      */
+
+      /**
+       * Ensure that the title is properly formatted in order to render the format, catalogue numbers, and identifier
+       *
+       */
+      if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
+
+	//! Uncertain as to why this does not properly transfer the value
+	$book_node_title = substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')...';
+
+	//$book_md->title->set(substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
+	//$book_md->title->set($book_node_title);
+      } else {
+
+	//! Uncertain as to why this does not properly transfer the value
+	$book_node_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
+
+	//$book_md->title->set($book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
+	//$book_md->title->set($book_node_title);
       }
 
-      $book_md->field_artifact_title->set($book_title);
+      drush_log(dt("Normalizing the title into $book_node_title"), 'ok');
+
+      $book_md->title->set($book_node_title);
+      $book_md->field_artifact_title->set($book_node_title);
 
       // Set the author for the item
       $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
@@ -431,7 +480,7 @@ PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too
 
       default:
 	
-	$book_md->field_item_format->set(intval($book['number']));
+	$book_md->field_item_format->set(intval($book['format']));
       }
 
       $book_md->field_item_number->set($book['number'] == 'NULL' ? 0 : intval($book['number']));
@@ -458,12 +507,21 @@ PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too
 
 function drush_dss_elc_migrate_books($mysql_user,
 				     $mysql_pass,
-				     $mysql_database='elc_production',
+				     $mysql_database='elc',
+				     $mysql_server='localhost',
 				     $limit=0,
-				     $bookId=NULL,
-				     $mysql_server='localhost') {
+				     $bookId=NULL) {
 
-  return dss_elc_migrate_books(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass), $limit, $bookId);
+  dss_elc_migrate_books(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass), $limit, $bookId);
+
+  drush_dss_elc_relate_subjects($mysql_user,
+				$mysql_pass,
+				$mysql_database,
+				$mysql_server);
+
+  drush_dss_elc_normalize_books_utf8();
+
+  return;
 }
 
 function drush_dss_elc_relate_pers_rel_objects() {
@@ -500,44 +558,58 @@ function drush_dss_elc_relate_pers_rel_objects() {
 
 function drush_dss_elc_relate_subjects($mysql_user,
 				       $mysql_pass,
-				       $mysql_database='elc_production') {
+				       $mysql_database='elc',
+				       $mysql_server='localhost') {
   
   $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
   $query = "SELECT title,subject FROM books;";
 
-  foreach($db->query($query) as $original_item) {
+  //foreach($db->query($query) as $original_item) {
+  foreach(drush_dss_elc_get_records($db, 'books', $limit, $bookId) as $original_item) {
 
     $drupalQuery = new EntityFieldQuery();
 
     $original_item_title = mb_convert_encoding($original_item['title'], "UTF-8", 'ASCII');
 
-    $items = $drupalQuery->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', array('book', 'periodical', 'item'))
-      ->propertyCondition('title', $original_item_title)
-      ->execute();
+    //! Generate the title from various values
+    print $original_item_title;
 
-    foreach(entity_load('node', array_keys($items['node'])) as $item) {
+    // Instantiate a new book or periodical node for each book volume
+    foreach(range(1, (int)$original_item['totalVolumes']) as $book_volume) {
 
-      if($original_item['subject'] and $original_item['subject'] != '') {
+      $original_item_title = dss_elc_normalize_book_title($original_item, $original_item_title, $book_volume);
 
-	$item_md = entity_metadata_wrapper('node', $item);
-	$terms = taxonomy_get_term_by_name($original_item['subject'], 'item_subjects');
+      $items = $drupalQuery->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', array('book', 'periodical', 'item'))
+	->propertyCondition('title', $original_item_title)
+	->execute();
 
-	if(!empty($terms)) {
-
-	  $subject_term = array_shift($terms);
-
-	  // Set the type of the item
-	  $item_md->field_item_subject->set(array(intval($subject_term->tid)));
-
-	  drush_log(dt('Linking ' . $item->title . ' to the subject heading ' . $subject_term->name), 'ok');
-	  $item_md->save(true);
-	  entity_save('node', $item);
-	  drush_log(dt('Successfully linked ' . $item->title . ' to the subject heading ' . $subject_term->name), 'success');
+      if(!is_null($items['node'])) {
+      
+      foreach(entity_load('node', array_keys($items['node'])) as $item) {
+	
+	if($original_item['subject'] and $original_item['subject'] != '') {
+	  
+	  $item_md = entity_metadata_wrapper('node', $item);
+	  $terms = taxonomy_get_term_by_name($original_item['subject'], 'item_subjects');
+	  
+	  if(!empty($terms)) {
+	    
+	    $subject_term = array_shift($terms);
+	    
+	    // Set the type of the item
+	    $item_md->field_item_subject->set(array(intval($subject_term->tid)));
+	    
+	    drush_log(dt('Linking ' . $item->title . ' to the subject heading ' . $subject_term->name), 'ok');
+	    $item_md->save(true);
+	    entity_save('node', $item);
+	    drush_log(dt('Successfully linked ' . $item->title . ' to the subject heading ' . $subject_term->name), 'success');
+	  }
 	}
       }
     }
   }
+}
 }
 
 function drush_dss_elc_relate_bib_rel_objects($mysql_user,
@@ -773,6 +845,10 @@ function dss_elc_migrate_get_person_table_name($person_type) {
   }
 }
 
+/**
+ * Function for migrating Shareholder or Representative Entities as Human Nodes
+ *
+ */
 function dss_elc_migrate_person_type($db, $limit, $person_type) {
 
   $table_name = dss_elc_migrate_get_person_table_name($person_type);
@@ -798,10 +874,9 @@ function dss_elc_migrate_person_type($db, $limit, $person_type) {
     // If the person doesn't exist, create a new person
     if(!isset($persons['node'])) {
     
-      $person_entity = entity_create('node', array(
-						   'type' => 'human',
+      $person_entity = entity_create('node', array('type' => 'human',
 						   'uid' => 1,
-						   'status' => $person['flagStatus'] == '1' ? 1 : 0,
+						   'status' => $person['flagStatus'] == '1' ? 0 : 1,
 						   'comment' => 1,
 						   'promote' => 0,
 						   ));
@@ -835,18 +910,30 @@ function dss_elc_migrate_person_type($db, $limit, $person_type) {
   return $db;
 }
 
+/**
+ * Hook implementation for migrating Shareholder and Representative Entities from the legacy application
+ * @param mysql_user
+ * @param mysql_pass
+ * @param mysql_database
+ * @param mysql_server
+ * @param limit
+ *
+ */
 function drush_dss_elc_migrate_humans($mysql_user,
 				      $mysql_pass,
-				      $mysql_database='elc_production',
-				      $limit=0,
-				      $mysql_server='localhost') {
+				      $mysql_database = 'elc',
+				      $mysql_server = 'localhost',
+				      $limit = 0) {
 
-  return dss_elc_migrate_person_type(dss_elc_migrate_person_type(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8",
-										     $mysql_user,
-										     $mysql_pass,
-										     array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8")),
-									     $limit, SHAREHOLDER),
-					   $limit, REPRESENTATIVE);
+  $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8",
+		$mysql_user,
+		$mysql_pass,
+		array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+
+  $results = dss_elc_migrate_person_type($db, $limit, SHAREHOLDER);
+  $results = $results and dss_elc_migrate_person_type($db, $limit, REPRESENTATIVE);
+  
+  return $results;
 
   // yum: sudo yum -y install php-mysql
   // Connect to the MySQL server
@@ -1110,15 +1197,18 @@ function dss_elc_get_book_title($db, $book_record_id) {
   return $book_title;
 }
 
-
 define('LOAN_FILENAMES_TAXON', 'loan_filenames');
+
+/**
+ * Hook implementation for migrating Loan Entities from the legacy application
+ *
+ *
+ */
 function drush_dss_elc_migrate_loans($mysql_user,
 				     $mysql_pass,
-				     $mysql_database='elc_production',
-				     $limit=0,
-				     $mysql_server='localhost') {
-
-
+				     $mysql_database='elc',
+				     $mysql_server='localhost',
+				     $limit=0) {
 
   $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8",
 		$mysql_user,
@@ -1133,7 +1223,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
     $loan_entity = entity_create('node', array(
 					       'type' => 'loan',
 					       'uid' => 1,
-					       'status' => $person['flagStatus'] == '1' ? 1 : 0,
+					       'status' => $loan['flagStatus'] == '1' ? 0 : 1,
 					       'comment' => 1,
 					       'promote' => 0));
 
@@ -1297,15 +1387,12 @@ function drush_dss_elc_migrate_loans($mysql_user,
 	  unset($volume_fields[$i]);
 	}
 
-	//var_dump($volume_fields);
       } else {
 
 	$volume_fields = array('issues' => array(''),
 			       'volumes' => array_pop(array_map($map, array($loan['borrowedVolumes']))),
 			       'months' => array(''),
 			       'years' => array(''));
-
-	//var_dump($volume_fields);
       }
 
       try {
@@ -1441,13 +1528,13 @@ function drush_dss_elc_migrate_loans($mysql_user,
       }
 
       //dss_elc_add_comment_to_node($loan_entity, $loan['flagMessage'], $loan['modified']);
+      $loan_md->body->set(array('value' => $loan['flagMessage']));
 
       /*
     // Normalization
     if($loan['borrowedVolumes']) {
 
       if(preg_match('/;/', $loan['borrowedVolumes']) ) {
-
       } elseif(preg_match('/\-/', $loan['borrowedVolumes'])) {
 	
 	$s = preg_split('/\-/', $loan['borrowedVolumes']);
