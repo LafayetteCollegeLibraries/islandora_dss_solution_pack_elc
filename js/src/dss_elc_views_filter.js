@@ -386,11 +386,22 @@ function DssElcViewsFilter(options) {
              	break;
              	
              case 'Browse Loans | The Easton Library Company Project':
-             	this_url = '/datatable_loan/views/loans';
+		this_url = '/datatable_loan/views/loans';
 	        order = [[ 2, "asc" ]];
              	break;
              };
 
+	/**
+	 * @author griffinj@lafayette.edu
+	 *
+	 */
+	var nidMatch = /loans\/(\d+)/.exec(document.url);
+	if(nidMatch) {
+
+	    this_url = '/datatable_loan/views/loans/' + m[1];
+	    order = [[ 2, "asc" ]];
+	}
+	
 	// Store the current sort
 	// For some reason, this could not be retrieve this from the DataTables instance
 

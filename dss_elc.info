@@ -12,7 +12,7 @@ dependencies[] = auto_entitylabel
 dependencies[] = token
 dependencies[] = multi_node_add
 dependencies[] = views
-files[] = tests/node.test
+files[] = tests/dss_elc.test
 
 stylesheets[all][] = css/islandora_dss_elc_autocomplete.css
 stylesheets[all][] = css/dss_elc_views.css

@@ -1,0 +1,30 @@
+<?php
+
+  /**
+   * Unit Testing for the dss_elc Module functionality
+   * @author griffinj@lafayette.edu
+   *
+   */
+
+class DssElcTestsDataAccess extends DrupalUnitTestCase {
+
+  public static function getInfo() {
+    
+    // Note: getInfo() strings should not be translated.
+    return array('name' => 'Simpletest Example unit tests',
+		 'description' => 'Test that simpletest_example_empty_mysql_date works properly.',
+		 'group' => 'Examples',
+		 );
+  }
+
+  function testGetItems() {
+    
+    dss_elc_get_items('Notes on the State of Virginia', '1');
+  }
+
+  function testGetManifestation() {
+    
+    //dss_elc_get_manifestation('');
+  }
+
+  }

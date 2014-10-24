@@ -228,6 +228,7 @@ function drush_dss_elc_get_records($db, $table_name, $limit, $bookId=NULL) {
  */
 function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
 
+  /*
   if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
 
     //! Uncertain as to why this does not properly transfer the value
@@ -243,6 +244,27 @@ function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
     //$book_md->title->set($book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
     //$book_md->title->set($book_node_title);
   }
+  */
+
+  /**
+   * Ensure that the title is properly formatted in order to render the format, catalogue numbers, and identifier
+   *
+   */
+  if($book_volume == 0) {
+
+    $title_suffix = ' (' . $book['format'] . ' ' . $book['number'] . ')';
+  } else {
+
+    $title_suffix = ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
+  }
+
+  if(strlen($book_title) > (254 - strlen($title_suffix))) {
+
+    $book_node_title = substr($book_title, 0, 128) . '...' . $title_suffix;
+  } else {
+
+    $book_node_title = $book_title . $title_suffix;
+  }  
 
   return $book_node_title;
 }
@@ -270,14 +292,12 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
     $frbr_entities = array();
     $book_title = mb_convert_encoding($book['title'], "UTF-8", 'ASCII');
 
-    /*
     drush_log(dt("Migrating the manifestation " . $book_title), 'ok');
 
     // Instantiate a new manifestion for each book or periodical
-    $manifestation_entity = entity_create('node', array(
-							'type' => 'manifestation',
+    $manifestation_entity = entity_create('node', array('type' => 'manifestation',
 							'uid' => 1,
-							'status' => $book['flagStatus'] == '1' ? 1 : 0,
+							'status' => $book['flagStatus'] == '1' ? 0 : 1,
 							'comment' => 1,
 							'promote' => 0,
 							));
@@ -285,42 +305,60 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
     /**
        Field length cannot be set by the administrative user
        Please see the issue https://drupal.org/node/1921302
-    * /
+    */
 
     $manifestation_md = entity_metadata_wrapper('node', $manifestation_entity);
     $manifestation_md->field_artifact_title->set($book_title);
 
     $manifestation_md->field_manifest_total_vol->set(intval($book['totalVolumes']));
     
-    if(strlen($book_title) > 238) {
+    if(strlen($book_title) > 255) {
       
-      $manifestation_md->title->set(substr($book_title, 0, 231) . ' (Manifestation)...');
+      $manifestation_md->title->set(substr($book_title, 0, 255));
     } else {
       
-      $manifestation_md->title->set($book_title . ' (Manifestation)');
+      $manifestation_md->title->set($book_title);
     }
 
     // Retrieve the author Entity
+    //$author_entity = dss_elc_get_person();
+    //$manifestation_md->field_artifact_was_authored_by->set(intval($author_entity->nid));
+    // Set the author for the item
+    $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
 
-    $author_entity = dss_elc_get_person();
-    $manifestation_md->field_artifact_was_authored_by->set(intval($author_entity->nid));
+    $author_nids = array();
+    // Note that the author name may be delimited by a semi-colon
+    foreach(preg_split('/;/', $author_name) as $delim_author_name) {
+
+      $author_entity = dss_elc_get_human($delim_author_name, 'Author');
+      $author_nids[] = intval($author_entity->nid);
+    }
+    $manifestation_md->field_artifact_was_authored_by->set($author_nids);
 
     // Serialize the manifestation Node
     $manifestation_md->save(true);
     entity_save('node', $manifestation_entity);
-    */
 
     $frbr_entities[] = $manifestation_entity;
 
+    $book_volumes = array();
+    if(is_null($book['totalVolumes'])) {
+      
+      $book_volumes = array(0);
+    } else {
+
+      $book_volumes = range(1, (int) $book['totalVolumes']);
+    }
+
     // Instantiate a new book or periodical node for each book volume
-    foreach(range(1, (int)$book['totalVolumes']) as $book_volume) {
+    //foreach(range(1, (int) $book['totalVolumes']) as $book_volume) {
+    foreach($book_volumes as $book_volume) {
 
       drush_log(dt("Migrating volume $book_volume of the item $book_title"), 'ok');
 
       if($book['type'] == 0) {
 	
-	$values = array(
-			'type' => 'book',
+	$values = array('type' => 'book',
 			'uid' => 1,
 			'status' => $book['flagStatus'] == '1' ? 0 : 1,
 			'comment' => 1,
@@ -328,8 +366,7 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
 			);
       } else {
 	
-	$values = array(
-			'type' => 'periodical',
+	$values = array('type' => 'periodical',
 			'uid' => 1,
 			'status' => $book['flagStatus'] == '1' ? 0 : 1,
 			'comment' => 1,
@@ -350,42 +387,14 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
       // Titles must have HTML character entities removed
       $book_title = html_entity_decode($book_title);
 
-      // Set the "title" value of the Book Node
-      /*
-      if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
-
-	$book_md->title->set(substr($book_title, 0, 128) . ' (Vol. ' . (string)$book_volume . ')...');
-      } else {
-	
-        $book_md->title->set($book_title . ' (Vol. ' . (string)$book_volume . ')');
-      }
-      */
-
-      /**
-       * Ensure that the title is properly formatted in order to render the format, catalogue numbers, and identifier
-       *
-       */
-      if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
-
-	//! Uncertain as to why this does not properly transfer the value
-	$book_node_title = substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')...';
-
-	//$book_md->title->set(substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
-	//$book_md->title->set($book_node_title);
-      } else {
-
-	//! Uncertain as to why this does not properly transfer the value
-	$book_node_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
-
-	//$book_md->title->set($book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
-	//$book_md->title->set($book_node_title);
-      }
+      $book_node_title = dss_elc_normalize_book_title($book, $book_title, $book_volume);
 
       drush_log(dt("Normalizing the title into $book_node_title"), 'ok');
 
       $book_md->title->set($book_node_title);
       $book_md->field_artifact_title->set($book_node_title);
 
+      /*
       // Set the author for the item
       $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
 
@@ -398,60 +407,14 @@ function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
 
 	$book_md->field_artifact_was_authored_by[] = intval($author_entity->nid);
       }
-
-      $volumeTerm = dss_elc_get_taxonomy_term((string)$book_volume, ITEM_VOLUMES_TAXON);
-
-      /*
-       * Issue
-       * This field has been corrupted, and attempting to store term ID's within it raises the following error:
-
-       WD node: PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(255): INSERT INTO node (type, language, title, uid, status, created, changed, comment, promote, sticky) VALUES (:db_insert_placeholder_0, :db_insert_placeholder_1, :db_insert_placeholder_2, :db_insert_placeholder_3, :db_insert_placeholder_4, :db_insert_placeholder_5, :db_insert_placeholder_6, :db_insert_placeholder_7, :db_insert_placeholder_8, :db_insert_placeholder_9); Array
-(
-)
- in drupal_write_record() (line 7136 of /usr/share/drupal/islandora-7.x-1.1/includes/common.inc).
-WD php: PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(255): INSERT INTO node (type, language, title, uid, status, created, changed, comment, promote, sticky) VALUES (:db_insert_placeholder_0, :db_insert_placeholder_1, :db_insert_placeholder_2, :db_insert_placeholder_3, :db_insert_placeholder_4, :db_insert_placeholder_5, :db_insert_placeholder_6, :db_insert_placeholder_7, :db_insert_placeholder_8, :db_insert_placeholder_9); Array
-(
-)
- in drupal_write_record() (line 7136 of /usr/share/drupal/islandora-7.x-1.1/includes/common.inc).
-Cannot modify header information - headers already sent by (output started at /usr/share/drupal/islandora-7.x-1.1/sites/all/modules/islandora_dss_solution_pack_elc/dss_elc.drush.inc:251)       [warning]
-bootstrap.inc:1212
-PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(255): INSERT INTO node (type, language, title, uid, status, created, changed, comment, promote, sticky) VALUES (:db_insert_placeholder_0, :db_insert_placeholder_1, :db_insert_placeholder_2, :db_insert_placeholder_3, :db_insert_placeholder_4, :db_insert_placeholder_5, :db_insert_placeholder_6, :db_insert_placeholder_7, :db_insert_placeholder_8, :db_insert_placeholder_9); Array
-(
-)
- in drupal_write_record() (line 7136 of /usr/share/drupal/islandora-7.x-1.1/includes/common.inc).
       */
-      
-      //$book_md->field_item_volume->set(intval($volumeTerm->tid));
-      $book_md->field_item_volume_migrate->set(intval($volumeTerm->tid));
+      $book_md->field_artifact_was_authored_by = $author_nids;
 
-      // Issue
+      if($book_volume > 0) {
 
-      // Volumes are not always captured as integers; Relate the volume to a term within the taxonomy "item_volumes"
-      //$book_md->field_item_volume->set(array(3));
-      //$book_md->field_item_volume->set(array(intval($volumeTerm->tid)));
-
-      /*
-      // Check for the taxonomical term containing the subject heading
-      $terms = taxonomy_get_term_by_name($book['subject'], $vocabulary = 'item_subjects');
-      
-      // If the term has not been linked to this vocabulary yet, instantiate the term
-      if(empty($terms)) {
-	
-	$vocab = taxonomy_vocabulary_machine_name_load('item_subjects');
-	
-	$term = new stdClass();
-	$term->name = $book['subject'];
-	$term->vid = $vocab->vid;
-	
-	taxonomy_term_save($term);
-      } else {
-	
-	// If the term has been linked, deserialize the term
-	$term = array_pop($terms);
+	$volumeTerm = dss_elc_get_taxonomy_term( (string) $book_volume, ITEM_VOLUMES_TAXON);
+	$book_md->field_item_volume_migrate->set(intval($volumeTerm->tid));
       }
-
-      $book_md->field_item_subject->set($term);
-      */
 
       if(isset($book['subject'])) {
 
@@ -572,7 +535,6 @@ function drush_dss_elc_relate_subjects($mysql_user,
     $original_item_title = mb_convert_encoding($original_item['title'], "UTF-8", 'ASCII');
 
     //! Generate the title from various values
-    print $original_item_title;
 
     // Instantiate a new book or periodical node for each book volume
     foreach(range(1, (int)$original_item['totalVolumes']) as $book_volume) {
@@ -586,30 +548,30 @@ function drush_dss_elc_relate_subjects($mysql_user,
 
       if(!is_null($items['node'])) {
       
-      foreach(entity_load('node', array_keys($items['node'])) as $item) {
+	foreach(entity_load('node', array_keys($items['node'])) as $item) {
 	
-	if($original_item['subject'] and $original_item['subject'] != '') {
+	  if($original_item['subject'] and $original_item['subject'] != '') {
+	    
+	    $item_md = entity_metadata_wrapper('node', $item);
+	    $terms = taxonomy_get_term_by_name($original_item['subject'], 'item_subjects');
 	  
-	  $item_md = entity_metadata_wrapper('node', $item);
-	  $terms = taxonomy_get_term_by_name($original_item['subject'], 'item_subjects');
-	  
-	  if(!empty($terms)) {
+	    if(!empty($terms)) {
+	      
+	      $subject_term = array_shift($terms);
+	      
+	      // Set the type of the item
+	      $item_md->field_item_subject->set(array(intval($subject_term->tid)));
 	    
-	    $subject_term = array_shift($terms);
-	    
-	    // Set the type of the item
-	    $item_md->field_item_subject->set(array(intval($subject_term->tid)));
-	    
-	    drush_log(dt('Linking ' . $item->title . ' to the subject heading ' . $subject_term->name), 'ok');
-	    $item_md->save(true);
-	    entity_save('node', $item);
-	    drush_log(dt('Successfully linked ' . $item->title . ' to the subject heading ' . $subject_term->name), 'success');
+	      drush_log(dt('Linking ' . $item->title . ' to the subject heading ' . $subject_term->name), 'ok');
+	      $item_md->save(true);
+	      entity_save('node', $item);
+	      drush_log(dt('Successfully linked ' . $item->title . ' to the subject heading ' . $subject_term->name), 'success');
+	    }
 	  }
 	}
       }
     }
   }
-}
 }
 
 function drush_dss_elc_relate_bib_rel_objects($mysql_user,
@@ -1112,52 +1074,26 @@ function dss_elc_add_comment_to_node($node_entity, $comment_body, $comment_mtime
 function dss_elc_get_items($book_title, $volume) {
 
   $items = array();
-  /*
-  $map = function($nid) {
-    
-    return entity_load('node', $nid);
-  };
-  */
-
   $volume_term = dss_elc_get_taxonomy_term($volume, 'item_volumes');
 
-  //echo "DUMP: " . $book_title . "\n";
-  //echo "DUMP: " . $volume_term->tid . "\n";
+  //foreach(array('item', 'book', 'periodical') as $content_type) {
 
-  foreach(array('item', 'book', 'periodical') as $content_type) {
-
-    $drupalQuery = new EntityFieldQuery();
-    $results = $drupalQuery->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', $content_type)
-      ->fieldCondition('field_artifact_title', 'value', $book_title)
-      ->fieldCondition('field_item_volume', 'tid', intval($volume_term->tid))
-      ->execute();
+  $drupalQuery = new EntityFieldQuery();
+  $results = $drupalQuery->entityCondition('entity_type', 'node')
+    //->entityCondition('bundle', $content_type)
+    ->entityCondition('bundle', array('item', 'book', 'periodical'), 'IN')
+    //->entityCondition('bundle', 'book')
+    //->propertyCondition('title', '%' . $book_title . '%', 'LIKE')
+    ->fieldCondition('field_artifact_title', 'value', $book_title)
+    //->fieldCondition('field_artifact_title', 'value', $book_title . "%", "LIKE")
+    ->fieldCondition('field_item_volume', 'tid', intval($volume_term->tid))
+    ->execute();
   
-    if(isset($results['node'])) {
+  if(isset($results['node'])) {
 
-      //var_dump(array_keys($results['node']));
-      $items = entity_load('node', array_keys($results['node']));
-      //$items = array_merge($items, array_map($map, array_keys($results['node'])));
-    }
+    $items = entity_load('node', array_keys($results['node']));
   }
-
-  /*
-  foreach(array('item', 'book', 'periodical') as $content_type) {
-
-    $drupalQuery = new EntityFieldQuery();
-    $results = $drupalQuery->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', $content_type)
-      ->fieldCondition('field_artifact_title', 'value', $book_title)
-      ->fieldCondition('field_item_volume', 'tid', intval($volume_term->tid))
-      ->execute();
-
-    if(isset($results['node'])) {
-
-      $items = array_merge($items, array_map($map, array_keys($results)));
-    }
-  }
-  */
-
+  //}
 
   return $items;
 }
@@ -1172,6 +1108,7 @@ function dss_elc_get_manifestation($book_title) {
   $results = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'manifestation')
     ->fieldCondition('field_artifact_title', 'value', $book_title)
+    //->fieldCondition('field_artifact_title', 'value', $book_title . "%", "LIKE")
     ->execute();
 
   if(isset($results['node'])) {
@@ -1180,6 +1117,29 @@ function dss_elc_get_manifestation($book_title) {
   }
 
   return NULL;
+}
+
+/**
+ * Retrieve a Book record by its title
+ *
+ */
+function dss_elc_get_book($db, $title) {
+  
+  $books = array();
+
+  //$query = $db->prepare('SELECT * FROM books WHERE title=? LIMIT 1');
+  //foreach($query->execute($title) as $book) {
+  foreach($db->query("SELECT * FROM books WHERE title='" . preg_replace("/'/", "\'", $title) . "' LIMIT 1") as $book) {
+
+    $books[] = $book;
+  }
+
+  if(empty($books)) {
+    
+    throw new Exception("Book record with the title $title could not be resolved.");
+  }
+
+  return array_shift($books);
 }
 
 function dss_elc_get_book_title($db, $book_record_id) {
@@ -1220,8 +1180,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
     $shareholder = dss_elc_get_person_record($db, $loan['shareholder_id'], SHAREHOLDER);
 
     // Instantiate the Loan Node
-    $loan_entity = entity_create('node', array(
-					       'type' => 'loan',
+    $loan_entity = entity_create('node', array('type' => 'loan',
 					       'uid' => 1,
 					       'status' => $loan['flagStatus'] == '1' ? 0 : 1,
 					       'comment' => 1,
@@ -1321,7 +1280,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
     // Normalization
     if($loan['borrowedVolumes']) {
 
-      echo 'Normalizing the "borrowedVolumes" field ' . $loan['borrowedVolumes'] . "...\n";
+      drush_log(dt('Normalizing the "borrowedVolumes" field ' . $loan['borrowedVolumes'] . "...\n"), 'ok');
 
       $map = function($borrowed_volumes_field) {
 
@@ -1407,31 +1366,27 @@ function drush_dss_elc_migrate_loans($mysql_user,
       // If possible, relate all volumes to the loan
       $items = array();
 
-      echo $book_title . "\n";
-
       foreach($volume_fields['volumes'] as $volume) {
 
-	$items = array_merge($items, dss_elc_get_items($book_title, $volume));
+	$book = dss_elc_get_book($db, $book_title);
+	$node_book_title = dss_elc_normalize_book_title($book, $book['title'], $volume);
+
+	$items = array_merge($items, dss_elc_get_items($node_book_title, $volume));
       }
 
       // If there are no items related by the volumes specified, simply relate the manifestation (as we cannot relate the items)
       // Extending the data model beyond the depth of "volume" would be trivial and unnecessary; cataloging is outside of the scope of the project
       if(empty($items)) {
 	
-	$loan_md->field_bib_rel_object->set(array(intval(dss_elc_get_manifestation($book_title)->nid)));
+	$manifestation = dss_elc_get_manifestation($node_book_title);
+	$loan_md->field_bib_rel_object->set(array(intval($manifestation->nid)));
 	drush_log(dt("Mapped the \"book_id\" foreign key $book_title to a Manifestation Node"), 'ok');
       } else {
-	
-	/*
-	$map = function($item) {
-
-	  return intval($item->nid);
-	};
-	*/
 
 	//$loan_md->field_bib_rel_object->set(array_map($map, $items));
 	//drush_log(dt("Mapped the \"book_id\" foreign key $book_title to a set of Item Nodes"), 'ok');
 	foreach($items as $item) {
+
 	  drush_log(dt("Mapped the \"book_id\" foreign key $book_title to " . $item->title), 'ok');
 	  
 	  $loan_md->field_bib_rel_object[] = intval($item->nid);
@@ -1454,7 +1409,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	    if(!empty($volume_fields['issues'])) {
 
-	      drush_log(dt('Mapped the normalized "borrowedVolumes" issues field value ' . $volume_fields['issues']), 'ok');
+	      drush_log(dt('Mapped the normalized "borrowedVolumes" issues field value ' . implode(', ', $volume_fields['issues'])), 'ok');
 	    }
 	    break;
 	  case 'volumes':
@@ -1467,7 +1422,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	    if(!empty($volume_fields['volumes'])) {
 
-	      drush_log(dt('Mapped the normalized "borrowedVolumes" volumes field value ' . $volume_fields['volumes']), 'ok');
+	      drush_log(dt('Mapped the normalized "borrowedVolumes" volumes field value ' . implode(', ', $volume_fields['volumes'])), 'ok');
 	    }
 	    break;
 	  case 'months':
@@ -1480,7 +1435,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	    if(!empty($volume_fields['months'])) {
 
-	      drush_log(dt('Mapped the normalized "borrowedVolumes" months field value ' . $volume_fields['months']), 'ok');
+	      drush_log(dt('Mapped the normalized "borrowedVolumes" months field value ' . implode(', ', $volume_fields['months'])), 'ok');
 	    }
 	    break;
 	  case 'years':
@@ -1493,7 +1448,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	    if(!empty($volume_fields['years'])) {
 
-	      drush_log(dt('Mapped the normalized "borrowedVolumes" years field value ' . $volume_fields['years']), 'ok');
+	      drush_log(dt('Mapped the normalized "borrowedVolumes" years field value ' . implode(', ', $volume_fields['years'])), 'ok');
 	    }
 	    break;
 	  }
@@ -1730,16 +1685,17 @@ function drush_dss_elc_delete_loans() {
   if(drush_confirm(dt('Do you wish to continue?'))) {
 
     $drupalQuery = new EntityFieldQuery();
-    
+
     $loans = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'loan')
       ->execute();
     
     if(isset($loans['node'])) {
-
+      
       entity_delete_multiple('node', array_keys($loans['node']));
     }
 
+    /*
     $drupalQuery = new EntityFieldQuery();
     
     $repr_rels = $drupalQuery->entityCondition('entity_type', 'node')
@@ -1751,6 +1707,7 @@ function drush_dss_elc_delete_loans() {
 
       entity_delete_multiple('node', array_keys($repr_rels['node']));
     }
+    */
   }
 }
 
@@ -1801,7 +1758,7 @@ function drush_dss_elc_purge_root($root_pid = 'islandora:root', $url = 'http://l
   }
 }
 
-function drush_dss_elc_metrics_cache_loans() {
+function drush_dss_elc_metrics_cache_loans_deprecated() {
 
   /*
   $mongo_id = 'quantitative';
