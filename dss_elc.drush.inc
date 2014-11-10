@@ -174,7 +174,130 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-cl'));
 
+  $items['dss-elc-collection-generate-paths'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => 'drush elc-metrics-cache-loans',
+			      ),
+	  'aliases' => array(''));
+
+  
+
   return $items;
+}
+
+function drush_dss_elc_collection_generate_paths($pid) {
+
+  // Get the connection
+  $connection = islandora_get_tuque_connection(user_load(1), $url);
+  
+  module_load_include('inc', 'islandora', 'includes/utilities');
+
+  //! @todo Refactor using the Object-Oriented API
+
+  $f = function($options) {
+
+    $pid = $options['pid'];
+    $connection = $options['connection'];
+		   
+
+    $query = 'SELECT $object $title $content
+     FROM <#ri>
+     WHERE {
+            $object $collection_predicate <info:fedora/' . $pid . '> ;
+                   <fedora-model:label> $title ;
+                   <fedora-model:hasModel> $content ;
+                   <fedora-model:state> <fedora-model:Active> .
+            FILTER(sameTerm($collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm($collection_predicate, <fedora-rels-ext:isMemberOf>))
+            FILTER (!sameTerm($content, <info:fedora/fedora-system:FedoraObject-3.0>))';
+    
+    /*
+    $enforced = variable_get('islandora_namespace_restriction_enforced', FALSE);
+    if ($enforced) {
+      $namespace_array = explode(' ', variable_get('islandora_pids_allowed', 'default: demo: changeme: ilives: islandora-book: books: newspapers: '));
+      $namespace_array = array_map('islandora_get_namespace', $namespace_array);
+      $namespace_array = array_filter($namespace_array, 'trim');
+      $namespace_sparql = implode('|', $namespace_array);
+      $query .= 'FILTER(regex(str(?object), "info:fedora/(' . $namespace_sparql . '):"))';
+    }
+    */
+    $query .= '} ORDER BY $title';
+    $query_array = array(
+			 'query' => $query,
+			 'type' => 'sparql',
+			 //'pid' => $obj_pid,
+			 // Seems as though this is ignored completely.
+			 'page_size' => $page_size,
+			 'page_number' => $page_number,
+			 );
+
+    return array_map(function($result) {
+
+	return islandora_object_load($result['object']['value']);
+      }, $connection->repository->ri->query($query_array['query'], $query_array['type']));
+  };
+
+  //foreach($connection->repository->ri->query($query_array['query'], $query_array['type']) as $result) {
+
+  $options = array('pid' => $pid,
+		   'connection' => $connection);
+
+  foreach($f($options) as $coll) {
+      
+    //$object = islandora_object_load($result['object']['value']);
+
+    //print_r($object);
+    $options = array('pid' => $coll->id,
+		     'connection' => $connection);
+
+    foreach($f($options) as $object) {
+
+      // Construct the path from the label
+      //ELCv1_C_000
+      //ELCv1_C_001
+
+      preg_match('/(.+?)\.tif$/', $object->label, $m);
+	
+      $alias = 'collections/eastonlibrary/' . $m[1];
+      $source = 'islandora/object/' . $object->id;
+
+      drush_log('Attempting to generate the alias ' . $alias . ' for the path ' . $source . '...', 'ok');
+
+      $path = array('source' => $source,
+		    'alias' => $alias);
+
+      path_save($path);
+
+      drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
+    }
+
+    preg_match('/Ledger (\d)$/', $coll->label, $m);
+
+    $alias = 'collections/eastonlibrary/ELCv' . $m[1];
+    $source = 'islandora/object/' . $coll->id;
+
+    drush_log('Attempting to generate the alias ' . $alias . ' for the path ' . $source . '...', 'ok');
+
+    $path = array('source' => $source,
+		  'alias' => $alias);
+
+    path_save($path);
+    
+    drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
+  }
+
+  $alias = 'collections/eastonlibrary';
+  $source = 'islandora/object/' . $pid;
+
+  drush_log('Attempting to generate the alias ' . $alias . ' for the path ' . $source . '...', 'ok');
+
+  $path = array('source' => $source,
+		'alias' => $alias);
+
+  path_save($path);
+    
+  drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
 }
 
 /*
