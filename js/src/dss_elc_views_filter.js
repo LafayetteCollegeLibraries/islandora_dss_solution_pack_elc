@@ -73,18 +73,19 @@ function DssElcViewsFilter(options) {
 	//deciding which url to make the ajax request to
 	switch (document.title){
             
-             case 'Browse Items | The Easton Library Company Project': 
-             	this_url = '/datatable_item/views/items';
-             	break;
+	case 'Browse Items | The Easton Library Company Project': 
+	    this_url = '/datatable_item/views/items';
+	    break;
              	
-             case 'Browse People | The Easton Library Company Project':
-             	this_url = '/datatable_person/views/people';
-             	break;
+	case 'Browse People | The Easton Library Company Project':
+	    this_url = '/datatable_person/views/people';
+	    break;
              	
-             case 'Browse Loans | The Easton Library Company Project':
-             	this_url = '/datatable_loan/views/loans';
-             	break;
-             };
+	case 'Browse Loans | The Easton Library Company Project':
+	default:
+	    this_url = '/datatable_loan/views/loans';
+	    break;
+	};
     
 	// Configuration options
 	var conf = $.extend( {
@@ -254,8 +255,10 @@ function DssElcViewsFilter(options) {
      */
 	function formatLinks(){
 	
-		if(window.location.pathname == '/items' || window.location.pathname == '/loans'){
-		
+		if(window.location.pathname == '/items' ||
+		   window.location.pathname == '/loans' ||
+		   /node/.exec(window.location.pathname)) {
+		    
 			$('td:eq(6)','tr').each(function(i,e){
 				var temp = $(e).text();
 				$(e).text('');
@@ -303,7 +306,10 @@ function DssElcViewsFilter(options) {
 				
 			});
 		}
-		else if(window.location.pathname == '/items' || '/loans'){
+		else if(window.location.pathname == '/items' ||
+			window.location.pathname == '/loans' ||
+			/node/.exec(window.location.pathname)) {
+
 			jQuery('td:eq(5)','tr').each(function(i,e){
 			
 				var temp = parseInt($(e).text());
@@ -311,7 +317,8 @@ function DssElcViewsFilter(options) {
 				$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
 				
 			});
-			if(window.location.pathname =='/loans'){
+			if(window.location.pathname =='/loans' ||
+			   /node/.exec(window.location.pathname)) {
 			
 				jQuery('td:eq(2)','tr').each(function(i,e){
 					
@@ -359,11 +366,11 @@ function DssElcViewsFilter(options) {
 		});
 	});
 
+    var this_url;
+
     Drupal.behaviors.dssElcViewsFilter = {
 
 	attach: function(context, settings) {
-
-	var this_url;
 
 	/**
 	 * @author griffinj@lafayette.edu
@@ -386,6 +393,7 @@ function DssElcViewsFilter(options) {
              	break;
              	
              case 'Browse Loans | The Easton Library Company Project':
+	     default:
 		this_url = '/datatable_loan/views/loans';
 	        order = [[ 2, "asc" ]];
              	break;
@@ -395,10 +403,10 @@ function DssElcViewsFilter(options) {
 	 * @author griffinj@lafayette.edu
 	 *
 	 */
-	var nidMatch = /loans\/(\d+)/.exec(document.url);
+	var nidMatch = /node\/(\d+)/.exec( window.location.pathname );
 	if(nidMatch) {
 
-	    this_url = '/datatable_loan/views/loans/' + m[1];
+	    this_url = '/datatable_loan/views/loans/?nid=' + nidMatch[1];
 	    order = [[ 2, "asc" ]];
 	}
 	
