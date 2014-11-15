@@ -61,11 +61,6 @@
 <div class="human-column">
     <?php print drupal_render_children($form['field_person_type']); ?>
 </div>
-</div>
-
-
-<div class="human-row">
-
 <div class="human-column human-notes-column">
     <?php print drupal_render_children($form['body']); ?>
 </div>
