@@ -549,7 +549,6 @@ function DssElcViewsFilter(options) {
 	    jQuery('input','#search_authors').on('click',function(event){
 		    
 		    table.clearPipeline().draw();
-		    
 		});
 	}
 	}
