@@ -218,27 +218,31 @@ function drush_dss_elc_manifestation_migrate_title() {
 
       $query->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', array('item', 'book', 'periodical'), 'IN')
-	->fieldCondition('field_item_embodies', 'target_id', $node->nid);
+	->fieldCondition('field_item_embodies', 'target_id', $node->nid)
+	->range(0,1);
 
       $result = $query->execute();
 
-      $items = array_map(function($nid) {
+      if(!empty($result['node'])) {
 
-	  return node_load($nid);
-	}, array_keys($result['node']) );
-
-      $item = array_shift($items);
+	$items = array_map(function($nid) {
+	    
+	    return node_load($nid);
+	  }, array_keys($result['node']) );
+	
+	$item = array_shift($items);
       
-      drush_log('Updating ' . $node->nid . ' (' . $node->title . ') with ' . $item->title . '...', 'ok');
+	drush_log('Updating ' . $node->nid . ' (' . $node->title . ') with ' . $item->title . '...', 'ok');
 
-      $node_md->field_artifact_title->set($item->title);
+	$node_md->field_artifact_title->set($item->title);
 
-      drush_log('Saving ' . $node->nid . ' (' . $node_md->field_artifact_title->value() . ')' . '...', 'ok');
+	drush_log('Saving ' . $node->nid . ' (' . $node_md->field_artifact_title->value() . ')' . '...', 'ok');
 
-      $node_md->save(true);
-      entity_save('node', $node);
+	$node_md->save(true);
+	entity_save('node', $node);
 
-      drush_log('Successfully updated ' . $node->nid . ' (' . $node->title . ')', 'success');
+	drush_log('Successfully updated ' . $node->nid . ' (' . $node->title . ')', 'success');
+      }
     }
   }
 }
