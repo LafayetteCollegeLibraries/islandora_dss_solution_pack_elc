@@ -216,21 +216,36 @@ function drush_dss_elc_manifestation_migrate_title() {
 
       $node_md = entity_metadata_wrapper('node', $node);
 
+      /*
       $query->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', array('item', 'book', 'periodical'), 'IN')
 	->fieldCondition('field_item_embodies', 'target_id', $node->nid)
 	->range(0,1);
 
       $result = $query->execute();
+      */
 
-      if(!empty($result['node'])) {
+      list($query, $results) = dss_elc_metrics_solr_query(array('item', 'book', 'periodical'), array('entity_id:' . $node->nid), 1);
 
+      $docs = $results->response->docs;
+
+      //if(!empty($result['node'])) {
+      if( !empty($docs) ) {
+
+	/*
 	$items = array_map(function($nid) {
 	    
 	    return node_load($nid);
 	  }, array_keys($result['node']) );
-	
+
 	$item = array_shift($items);
+	*/
+
+	$item_doc = $docs[0];
+
+	$item = (object) array('title' => $item_doc->label);
+
+	print_r($item);
       
 	drush_log('Updating ' . $node->nid . ' (' . $node->title . ') with ' . $item->title . '...', 'ok');
 
