@@ -273,10 +273,6 @@ function dss_elc_theme($existing, $type, $theme, $path) {
  */
 function dss_elc_node_submit($node, $form, &$form_state) {
 
-  dpm($node);
-  dpm($form);
-  dpm($form_state);
-
   switch($node->type) {
 
   case 'loan':

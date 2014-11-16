@@ -182,9 +182,65 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array(''));
 
-  
+  $items['dss-elc-manifestation-migrate-title'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => '',
+			      ),
+	  'aliases' => array(''));
 
   return $items;
+}
+
+function drush_dss_elc_manifestation_migrate_title() {
+
+  $query = new EntityFieldQuery();
+  
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'manifestation');
+  //->range(0,1);
+
+  $result = $query->execute();
+
+  if(!empty($result['node'])) {
+
+    $nids = array_keys($result['node']);
+
+    $nodes = array_map(function($nid) {
+
+	return node_load($nid);
+      }, $nids);
+
+    foreach($nodes as $node) {
+
+      $node_md = entity_metadata_wrapper('node', $node);
+
+      $query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', array('item', 'book', 'periodical'), 'IN')
+	->fieldCondition('field_item_embodies', 'target_id', $node->nid);
+
+      $result = $query->execute();
+
+      $items = array_map(function($nid) {
+
+	  return node_load($nid);
+	}, array_keys($result['node']) );
+
+      $item = array_shift($items);
+      
+      drush_log('Updating ' . $node->nid . ' (' . $node->title . ') with ' . $item->title . '...', 'ok');
+
+      $node_md->field_artifact_title->set($item->title);
+
+      drush_log('Saving ' . $node->nid . ' (' . $node_md->field_artifact_title->value() . ')' . '...', 'ok');
+
+      $node_md->save(true);
+      entity_save('node', $node);
+
+      drush_log('Successfully updated ' . $node->nid . ' (' . $node->title . ')', 'success');
+    }
+  }
 }
 
 function drush_dss_elc_collection_generate_paths($pid) {
