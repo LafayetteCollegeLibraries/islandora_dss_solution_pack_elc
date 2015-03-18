@@ -51,8 +51,6 @@ function dss_elc_get_bib_rels($subjectNid) {
  */
 function dss_elc_loan_node_presave($node) {
 
-  dpm($node);
-
   // If the subject of the loan relationship (i. e. the Representative) field is empty...
   if(empty($node->field_bib_rel_subject[$node->language])) {
     

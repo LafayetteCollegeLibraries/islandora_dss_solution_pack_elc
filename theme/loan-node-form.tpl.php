@@ -54,7 +54,6 @@
     <div class="loan-row">
       <div class="duration-column loan-column">
 
-   <?php dpm($form); ?>
 	<?php print drupal_render_children($form['field_loan_duration']); ?>
       </div>
     </div>

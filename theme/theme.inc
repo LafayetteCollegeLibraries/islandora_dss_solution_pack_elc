@@ -217,19 +217,57 @@ function template_preprocess_loan_node_form(&$variables) {
 }
 
 /**
- * Implement template_preprocess_views_view().
- *
+ * Implements hook_process_theme().
  */
-function dss_elc_preprocess_views_view(&$vars) {
+function dss_elc_process_islandora_book_pages_grid(array &$variables) {
 
   /**
-   * Work-around for avoiding JS caching issues for dss_elc_preprocess_views_view() implementation
-   * See html.tpl.php for bootstrap_dss_elc theme
-   * @todo Resolve EDDC-160
+   * Terrible work-around for bug on elc.prod.lafayette.edu
+   * (Disabling securelogin does not prevent all traffic from being forced over the HTTPS; Likely a config. setting stuck in the site caches)
+   * @todo Properly resolve and remove this
    *
    */
-  //drupal_add_js(libraries_get_path('DataTables') . '/media/js/jquery.dataTables.js');
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_views_filter.js');
+  foreach($variables['pages'] as $pid => &$values) {
 
-  //dpm($vars);
+    $object_url = "//digital.lafayette.edu/islandora/object/$pid";
+    $img = theme_image(array('path' => url("$object_url/datastream/TN/view"), 'attributes' => array()));
+
+    $object_url = "islandora/object/$pid";
+    $values['image'] = l($img, $object_url, array('html' => TRUE, 'attributes' => array('title' => $values['label'])));
+  }
+}
+
+/**
+ * Implements hook_process_theme().
+ *
+ */
+function dss_elc_process_islandora_book_book(array &$variables) {
+
+  module_load_include('inc', 'islandora_book', 'theme/theme');
+  islandora_book_preprocess_islandora_book_pages($variables);
+
+  /*
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+  $object = $variables['object'];
+  $params = array(
+    'object' => $object,
+    'pages' => islandora_paged_content_get_pages($object),
+    'page_progression' => islandora_paged_content_get_page_progression($object),
+  );
+  module_load_include('inc', 'islandora', 'includes/solution_packs');
+  $viewer = islandora_get_viewer($params, 'islandora_book_viewers');
+  if ($viewer) {
+    $variables['viewer'] = $viewer;
+  }
+
+  try {
+
+    $dc = $object['DC']->content;
+    $dc_object = DublinCore::importFromXMLString($dc);
+  } catch (Exception $e) {
+
+    drupal_set_message(t('Error retrieving object %s %t', array('%s' => $object->id, '%t' => $e->getMessage())), 'error', FALSE);
+  }
+  $variables['dc_array'] = isset($dc_object) ? $dc_object->asArray() : array();
+  */
 }

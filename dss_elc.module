@@ -10,6 +10,7 @@ module_load_include('inc', 'dss_elc', 'includes/person');
 module_load_include('inc', 'dss_elc', 'includes/item');
 module_load_include('inc', 'dss_elc', 'includes/bib_rels');
 module_load_include('inc', 'dss_elc', 'includes/pers_rels');
+module_load_include('inc', 'dss_elc', 'theme/theme');
 
 /**
  * Checks whether the user can access the given object.
@@ -32,9 +33,16 @@ function dss_elc_object_access_callback($perm, $object = NULL) {
   return TRUE;
 }
 
+function dss_elc_theme_registry_alter(&$theme_registry) {
+  
+  $theme_registry['islandora_book_book']['template'] = drupal_get_path('module', 'dss_elc') . '/theme/islandora-book';
+}
+
 function dss_elc_menu_alter(&$items) {
 
   $items['islandora/object/%islandora_object']['access callback'] = 'dss_elc_object_access_callback';
+
+  $items['islandora/object/%islandora_object/pages']['access callback'] = FALSE;
 }
 
 /**
@@ -264,10 +272,6 @@ function dss_elc_theme($existing, $type, $theme, $path) {
  *
  */
 function dss_elc_node_submit($node, $form, &$form_state) {
-
-  dpm($node);
-  dpm($form);
-  dpm($form_state);
 
   switch($node->type) {
 
@@ -730,17 +734,6 @@ function dss_elc_form_insert_js() {
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/node.js');
   }
 }
-
-function dss_elc_theme_registry_alter(&$theme_registry) {
-
-  /*
-  $theme_registry['block']['template'] = 'human';
-  $theme_registry['block']['path'] = drupal_get_path('module', 'example_module');
-  $theme_registry['block']['type'] = 'module';
-  $theme_registry['block']['theme path'] = drupal_get_path('module', 'example_module');
-  $theme_registry['block']['theme paths'] = Array();
-  */
-} 
 
 /**
  * Theme the field_loan_duration Field
@@ -1583,3 +1576,4 @@ function edit_node_hold_for_review($form, &$form_state){
 	node_form_submit($form, $form_state);
 	
 }
+
