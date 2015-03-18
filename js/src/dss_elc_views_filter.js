@@ -211,6 +211,22 @@ function DssElcViewsFilter(options) {
 			request.columns[1].search.value = '';
 		}	
 		request.authors = jQuery('input','#search_authors').prop('checked');
+
+		/**
+		 * @author griffinj@lafayette.edu
+		 * Cleaning values for the request.order Array
+		 *
+		 */
+		//request.order = request.order.map(function, 
+		request.order = request.order.map(function(e) {
+
+			if(typeof(e.dir) == 'number') {
+
+			    e.dir = [null,'asc','desc'][e.dir];
+			}
+
+			return e;
+		    });
 		
 		settings.jqXHR = $.ajax( {
 			"type":     conf.method,
@@ -233,9 +249,23 @@ function DssElcViewsFilter(options) {
 			},
 			"error":  function(jqXHR, textStatus, errorThrown) {
 
-			    console.error(errorThrown);
-			    console.error(jqXHR);
-			    console.error(textStatus);
+			    /**
+			     * @author griffinj@lafayette.edu
+			     * Resolves issues for an unavailable Solr instance
+			     *
+			     **/
+			    if(jqXHR.status == 500) {
+
+				console.error('Apache Solr instance raised an error at ' + conf.url);
+				console.error('Request: ');
+				console.error(request);
+				console.error(jqXHR.responseText);
+			    } else {
+
+				console.error(errorThrown);
+				console.error(jqXHR);
+				console.error(textStatus);
+			    }
 			}
 		    });
 	    }
@@ -250,16 +280,20 @@ function DssElcViewsFilter(options) {
 	    }
 	};
     };
+
     /*
      * Reads the node values from each view/edit cell and replaces it with a hyperlink to the correct page
+     * @author stathisw@lafayette.edu
+     *
      */
-	function formatLinks(){
+    function formatLinks () {
 	
-		if(window.location.pathname == '/items' ||
-		   window.location.pathname == '/loans' ||
-		   /node/.exec(window.location.pathname)) {
+	if(window.location.pathname == '/items' ||
+	   
+	   window.location.pathname == '/loans' ||
+	   /node/.exec(window.location.pathname)) {
 		    
-			$('td:eq(6)','tr').each(function(i,e){
+	    $('td:eq(6)','tr').each(function(i,e){
 				var temp = $(e).text();
 				$(e).text('');
 				$('<a href="'+'/node/'+temp+'">'+'View'+'</a>').appendTo($(e));
@@ -432,6 +466,24 @@ function DssElcViewsFilter(options) {
 		    })
 	    });
 
+	/**
+	 *
+	 */
+
+
+	table.on( 'search.dt', function(e, settings) {
+
+		/**
+		 * This does *not* resolve EDDC-339
+		 *
+		 */
+	    });
+
+	/**
+	 * @author stathisw@lafayette.edu
+	 * Integrates the Pipeline functionality with the DataTables plug-in
+	 *
+	 */
 	jQuery('th.views-field').filter(function(i,e) {
 		
 		return !/View/.test(this.textContent) && !/Edit/.test(this.textContent);
@@ -441,8 +493,8 @@ function DssElcViewsFilter(options) {
 		    $.fn.dataTable.pipeline({
 			    
 			    url: this_url,
-				pages: 5, // number of pages to cache
-				});
+			    pages: 5, // number of pages to cache
+			});
 		});
 	
 	/**
@@ -456,30 +508,52 @@ function DssElcViewsFilter(options) {
 		    
 		    $('<input class="" type="text" placeholder="Search '+ $(this).text().trim() +'" />')
 
-			.on('search.dt', function(e, settings) {
-
-				console.log(e);
-			    })
 			.on('keyup', function(e) {
 
+				/**
+				 * DEPRECATED
+				 * @todo Remove
+				 * @author griffinj@lafayette.edu
+				 * Implements handling for the depression of the "enter" key
+				 * Resolves EDDC-339
+				 *
+				 */
+				var searchFilter = $(this).val();
+
+				console.log('keyup event triggered');
 				console.log(e);
 
-				var searchFilter = $(this).val();
+				/*
+				if(e.keyCode == 13 && searchFilter == '') {
+
+				    e.stopImmediatePropagation();
+				    return;
+				}
+				*/
+				$(document).data('dssElc.dataTables.columnKeyup', e);
+
 				$(document).data('dssElc.dataTables.emptySearch', $(this).val() == '');
 				$(document).data('dssElc.dataTables.searchFilter', searchFilter);
 				
 				table.column( $(this).parent().index()+':visible' )
+
 				    .on('order.dt', function(e, settings) {
 
-					    console.log(searchFilter);
-					    console.log(e);
-					    console.log(settings);
-					    console.log( $(this) );
+					    /**
+					     * Introduces a race condition for browsers; as a consequence, this does not conclusively resolve the issue
+					     * This does *not* resolve EDDC-339
+					     * @author griffinj@lafayette.edu
+					     * Implements handling for the depression of the "enter" key
+					     *
+					     */
+					    
 
 					    //if(typeof(searchFilter) != 'undefined' && searchFilter == '') {
 					    var emptySearch = $(document).data('dssElc.dataTables.emptySearch');
 
 					    if( typeof(emptySearch) != 'undefined' && emptySearch ) {
+
+						console.log('trace: emptySearch global');
 						
 					        $(document).data('dssElc.dataTables.emptySearch', false);
 
@@ -517,11 +591,6 @@ function DssElcViewsFilter(options) {
 					    //if(typeof(filter) != 'undefined' && filter == '') {
 
 					    */
-					})
-				    .on('search.dt', function(e, settings) {
-					    
-					    console.log(e);
-					    console.log(settings);
 					})
 				    .search( this.value )
 				    .draw();
