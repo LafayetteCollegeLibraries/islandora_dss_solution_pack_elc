@@ -466,18 +466,15 @@ function DssElcViewsFilter(options) {
 		    })
 	    });
 
-	/**
-	 *
-	 */
-
-
+	/*
 	table.on( 'search.dt', function(e, settings) {
 
 		/**
 		 * This does *not* resolve EDDC-339
 		 *
-		 */
+		 * /
 	    });
+	*/
 
 	/**
 	 * @author stathisw@lafayette.edu
@@ -523,6 +520,11 @@ function DssElcViewsFilter(options) {
 				console.log('keyup event triggered');
 				console.log(e);
 
+				/**
+				 * This is handled instread within DataTables core
+				 *
+				 */
+
 				/*
 				if(e.keyCode == 13 && searchFilter == '') {
 
@@ -530,12 +532,13 @@ function DssElcViewsFilter(options) {
 				    return;
 				}
 				*/
+
 				$(document).data('dssElc.dataTables.columnKeyup', e);
 
 				$(document).data('dssElc.dataTables.emptySearch', $(this).val() == '');
 				$(document).data('dssElc.dataTables.searchFilter', searchFilter);
 				
-				table.column( $(this).parent().index()+':visible' )
+				var $table = table.column( $(this).parent().index()+':visible' )
 
 				    .on('order.dt', function(e, settings) {
 
@@ -591,9 +594,19 @@ function DssElcViewsFilter(options) {
 					    //if(typeof(filter) != 'undefined' && filter == '') {
 
 					    */
-					})
-				    .search( this.value )
-				    .draw();
+					});
+
+				//.search( this.value )
+				//.draw();
+				
+				/**
+				 * EDDC-339
+				 *
+				 */
+				if( this.value.trim() != '' || ( e.keyCode == 8 || e.keyCode == 46 )) {
+				    
+				    $table.search( this.value ).draw();
+				}
 				
 			    }).on('click', function(event) {
 				    

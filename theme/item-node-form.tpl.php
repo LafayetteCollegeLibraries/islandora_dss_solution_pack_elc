@@ -59,7 +59,7 @@
 
 <div class="loan-row">
 
-<div>
+<div class="book-column single-value-field">
     <?php print drupal_render_children($form['field_artifact_type']); ?>
 </div>
 <div class="book-column single-value-field body-field">

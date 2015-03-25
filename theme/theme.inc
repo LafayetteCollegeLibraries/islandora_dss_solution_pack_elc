@@ -4,6 +4,12 @@
  * Operations common to all form preprocessing hooks
  *
  */
+
+function dss_elc_preprocess_node(&$vars) {
+  
+  
+  }
+
 function dss_elc_preprocess_node_form(&$variables) {
 
   hide($variables['form']['additional_settings']);
