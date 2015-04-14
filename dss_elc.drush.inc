@@ -150,6 +150,24 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-pl'));
 
+  $items['dss-elc-clean-terms'] =
+    array(
+	  'description' => dt('Clean all ELC "terms"'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-terms',
+			      ),
+	  'aliases' => array());
+
+  $items['dss-elc-clean-loans'] =
+    array(
+	  'description' => dt('Clean all ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-loans',
+			      ),
+	  'aliases' => array());
+
   $items['dss-elc-delete-loans'] =
     array(
 	  'description' => dt('Delete all Loan Nodes'),
@@ -178,7 +196,7 @@ function dss_elc_drush_command() {
     array(
 	  'description' => dt(''),
 	  'examples' => array(
-			      'Standard example' => 'drush elc-metrics-cache-loans',
+			      'Standard example' => 'drush elc-collection-generate-paths',
 			      ),
 	  'aliases' => array(''));
 
@@ -262,7 +280,7 @@ function drush_dss_elc_manifestation_migrate_title() {
   }
 }
 
-function drush_dss_elc_collection_generate_paths($pid) {
+function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
 
   // Get the connection
   $connection = islandora_get_tuque_connection(user_load(1), $url);
@@ -319,19 +337,15 @@ function drush_dss_elc_collection_generate_paths($pid) {
 		   'connection' => $connection);
 
   foreach($f($options) as $coll) {
-      
+
     //$object = islandora_object_load($result['object']['value']);
 
-    //print_r($object);
     $options = array('pid' => $coll->id,
 		     'connection' => $connection);
 
     foreach($f($options) as $object) {
 
       // Construct the path from the label
-      //ELCv1_C_000
-      //ELCv1_C_001
-
       preg_match('/(.+?)\.tif$/', $object->label, $m);
 	
       $alias = 'collections/eastonlibrary/' . $m[1];
@@ -342,12 +356,15 @@ function drush_dss_elc_collection_generate_paths($pid) {
       $path = array('source' => $source,
 		    'alias' => $alias);
 
+      path_delete( array('source' => $source));
       path_save($path);
 
       drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
     }
 
-    preg_match('/Ledger (\d)$/', $coll->label, $m);
+    drush_log($coll->label, 'ok');
+
+    preg_match('/Ledger (\d)/', $coll->label, $m);
 
     $alias = 'collections/eastonlibrary/ELCv' . $m[1];
     $source = 'islandora/object/' . $coll->id;
@@ -357,6 +374,7 @@ function drush_dss_elc_collection_generate_paths($pid) {
     $path = array('source' => $source,
 		  'alias' => $alias);
 
+    path_delete( array('source' => $source));
     path_save($path);
     
     drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
@@ -370,6 +388,7 @@ function drush_dss_elc_collection_generate_paths($pid) {
   $path = array('source' => $source,
 		'alias' => $alias);
 
+  path_delete( array('source' => $source));
   path_save($path);
     
   drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
@@ -1872,6 +1891,67 @@ function drush_dss_elc_publish_loans() {
 
       drush_log('Publishing ' . $loan->title . '...', 'ok');
       $loan->status = 1;
+      entity_save('node', $loan);
+    }
+  }
+}
+
+function drush_dss_elc_clean_terms($vocab_name = 'loan_filenames') {
+
+  $vocab = taxonomy_vocabulary_machine_name_load($vocab_name);
+  $query = new EntityFieldQuery();
+
+  $result = $query->entityCondition('entity_type', 'taxonomy_term')
+    ->propertyCondition('vid', $vocab->vid)
+    ->propertyOrderBy('weight')
+    ->execute();
+
+  if (!empty($result['taxonomy_term'])) {
+
+    // To load all terms.
+    $terms = taxonomy_term_load_multiple(array_keys($result['taxonomy_term']));
+
+    foreach($terms as $term) {
+
+      if( preg_match('/ELCv\d_[A-Z]\d?_[1-9][0-9][a-z]?$/', $term->name) ) {
+
+	drush_log('Cleaning ' . $term->name . '...', 'ok');
+
+	$term->name = preg_replace('/ELCv(\d_[A-Z]\d?)_/', 'ELCv$1_0', $term->name);
+	drush_log('Saving the cleaned term ' . $term->name . '...', 'ok');
+
+	taxonomy_term_save($term);
+	drush_log('Saved the cleaned term ' . $term->name, 'success');
+      }
+    }
+  }
+}
+
+function drush_dss_elc_clean_loans() {
+
+  $drupalQuery = new EntityFieldQuery();
+  
+  $result = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    ->range(0, 1000)
+    ->execute();
+
+  if(isset($result['node'])) {
+    
+    foreach(entity_load('node', array_keys($result['node'])) as $loan) {
+
+      $tid = $loan->field_loan_filename['und'][0]['tid'];
+      $term = taxonomy_term_load($tid);
+
+      //if( preg_match('/ELCv\d_[A-Z]_[1-9]/', 'ELCv1_C_1') ) {
+      if( preg_match('/ELCv\d_[A-Z]_[1-9]/', $term->name) ) {
+
+	drush_log('Cleaning ' . $loan->title . '...', 'ok');
+	print_r($term->name);
+	print 'trace';
+	exit(1);
+      }
+
       entity_save('node', $loan);
     }
   }
