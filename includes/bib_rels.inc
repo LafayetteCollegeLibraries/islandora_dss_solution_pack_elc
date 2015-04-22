@@ -51,6 +51,8 @@ function dss_elc_get_bib_rels($subjectNid) {
  */
 function dss_elc_loan_node_presave($node) {
 
+  dpm($node);
+
   // If the subject of the loan relationship (i. e. the Representative) field is empty...
   if(empty($node->field_bib_rel_subject[$node->language])) {
     
@@ -76,14 +78,41 @@ function dss_elc_loan_node_presave($node) {
 
   $subject_title = substr($subjectNode->title, 0, 100);
   $object_title = substr($objectNode->title, 0, 100);
+  $field_loan_duration_value = $node->field_loan_duration[$node->language][0]['value'];
 
   if($matches) {
 
     $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  $matches[1];
   } else {
 
-    $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  date('Y/m/d', $node->field_loan_duration[$node->language][0]['value']);
+    $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  date('Y/m/d', $field_loan_duration_value);
   }
 
   $node->title = $node_title;
+
+  // Properly format the datestamps for the field_loan_duration field
+  // Resolves EDDC-486
+
+  dpm($field_loan_duration_value);
+
+  $field_loan_duration_value = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value);
+  $field_loan_duration_value = '00' . $field_loan_duration_value->format('U');
+  $node->field_loan_duration[$node->language][0]['value'] = $field_loan_duration_value;
+
+  $field_loan_duration_value2 = $node->field_loan_duration[$node->language][0]['value2'];
+
+  dpm( $field_loan_duration_value2 );
+
+  if($field_loan_duration_value2 == '0000-00-00T00:00:00') {
+
+    $field_loan_duration_value2 = '';
+  } else {
+
+    $field_loan_duration_value2 = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value2);
+
+    $field_loan_duration_value2 = '00' . $field_loan_duration_value2->format('U');
+    //$node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
+  }
+
+  $node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
 }

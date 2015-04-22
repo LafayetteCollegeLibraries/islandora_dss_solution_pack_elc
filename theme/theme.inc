@@ -29,7 +29,7 @@ function template_preprocess_location_node_form(&$variables) {
 
   //hide($variables['form']['additional_settings']);
   dss_elc_preprocess_node_form($variables);
-  }
+}
 
 function template_preprocess_organization_node_form(&$variables) {
 
@@ -74,7 +74,7 @@ function template_preprocess_item_node_form(&$variables) {
   
   //hide($variables['form']['additional_settings']);
   dss_elc_preprocess_node_form($variables);
-  }
+}
 
 /**
  * Form submission handler for the add_more submission within field_human_pers_rels
