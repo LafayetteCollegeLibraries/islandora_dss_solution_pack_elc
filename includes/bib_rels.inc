@@ -93,26 +93,42 @@ function dss_elc_loan_node_presave($node) {
   // Properly format the datestamps for the field_loan_duration field
   // Resolves EDDC-486
 
-  dpm($field_loan_duration_value);
+  // This function can be invoked recursively
+  // Attempt to reformat the ISO-formatted datestamp into a POSIX datestamp
+  if( !preg_match('/^\d{10}$/', $field_loan_duration_value) ) {
 
-  $field_loan_duration_value = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value);
-  $field_loan_duration_value = '00' . $field_loan_duration_value->format('U');
-  $node->field_loan_duration[$node->language][0]['value'] = $field_loan_duration_value;
+    $field_loan_duration_date = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value);
 
-  $field_loan_duration_value2 = $node->field_loan_duration[$node->language][0]['value2'];
+    // If the parsing of the datestamp as failed, raise an error
+    if( $field_loan_duration_date === FALSE ) {
 
-  dpm( $field_loan_duration_value2 );
+      drupal_set_message(t('Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value) ), 'error');
+    } else {
 
-  if($field_loan_duration_value2 == '0000-00-00T00:00:00') {
+      $field_loan_duration_value = '00' . $field_loan_duration_date->format('U');
 
-    $field_loan_duration_value2 = '';
-  } else {
+      $node->field_loan_duration[$node->language][0]['value'] = $field_loan_duration_value;
 
-    $field_loan_duration_value2 = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value2);
+      $field_loan_duration_value2 = $node->field_loan_duration[$node->language][0]['value2'];
 
-    $field_loan_duration_value2 = '00' . $field_loan_duration_value2->format('U');
-    //$node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
+      // For cases in which the terminal value for the loan duration range was unspecified, set the value to an empty string
+      if($field_loan_duration_value2 == '0000-00-00T00:00:00') {
+	
+	$field_loan_duration_value2 = '';
+      } else {
+
+	$field_loan_duration_date2 = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value2);
+
+	if($field_loan_duration_date2 === FALSE) {
+
+	   drupal_set_message(t('Improperly formatted check-in date: !datestamp', array('!datestamp' => $field_loan_duration_value2) ), 'error');
+	} else {
+
+	  $field_loan_duration_value2 = '00' . $field_loan_duration_date2->format('U');
+	}
+      }
+
+      $node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
+    }
   }
-
-  $node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
 }

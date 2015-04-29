@@ -977,12 +977,19 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
    * @author stathisw@lafayette.edu
    *
    */
+  dpm($_SESSION);
+
   //Populate fields if save and add another was pressed
+  // @todo Populate the fields individually within the session cache (or, pass the entire Node) in order to avoid the additional read operation
+  //
   if(isset($_SESSION['type'])&&$_SESSION['type']=='loan_node_form'){
   	
   	session_cache_set('type',NULL);
   	
   	$node = node_load($_SESSION['nid']);
+
+	dpm($node);
+
   	if(isset($node->field_loan_shareholder['und'])){
 		$shareholder_node = dss_elc_get_node('nid', $node->field_loan_shareholder['und']['0']['target_id'], 'human');
 	}
@@ -991,8 +998,21 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 		$form['field_loan_shareholder']['und']['#value'] = $shareholder_node->title . ' (' . $shareholder_node->nid . ')';
 	}
 	$form['field_bib_rel_subject']['und']['#default_value'] = $representative_node->title . ' (' . $representative_node->nid . ')';
- 		
-	$form['field_loan_duration']['und']['0']['#default_value']['value'] = rtrim($node->field_loan_duration['und']['0']['value'],'T00:00:00');
+
+	// Set the check-out date using the value submitted within the previous form
+	$field_loan_duration_value = $node->field_loan_duration['und']['0']['value'];
+	$field_loan_duration_date = DateTime::createFromFormat('00U', $field_loan_duration_value);
+	$field_loan_duration_value = $field_loan_duration_date->format('Y-m-d');
+	$form['field_loan_duration']['und']['0']['#default_value']['value'] = $field_loan_duration_value;
+	
+	// If submitted, set the check-in date to the previously submitted value
+	$field_loan_duration_value2 = $node->field_loan_duration['und']['0']['value2'];
+	if( !empty($field_loan_duration_value2) ) {
+
+	  $field_loan_duration_date2 = DateTime::createFromFormat('00U', $field_loan_duration_value2);
+	  $field_loan_duration_value2 = $field_loan_duration_date2->format('Y-m-d');
+	  $form['field_loan_duration']['und']['0']['#default_value']['value2'] = $field_loan_duration_value2;
+	}
 
 	session_cache_set('nid',NULL);
   }	
@@ -1489,8 +1509,15 @@ function hold_button_publish_node($form, &$form_state){
 	
 }
 
+/**
+ * @author stathisw@lafayette.edu
+ *
+ */
 //overriding publish button to add functionality for repopulation of fields.
 function publish_add_button_publish_node($form, &$form_state) {
+
+  dpm('trace');
+
   // The original functionality from publish_button.module
   // Set the node status as published. And that's it.
   
@@ -1503,6 +1530,8 @@ function publish_add_button_publish_node($form, &$form_state) {
 
 /* 
  * Edited node_form_submit() or the publish and add another button, only changing redirect function
+ * @author stathisw@lafayette.edu
+ *
  */
 function publish_add_node_form_submit($form, &$form_state) {
   $node = node_form_submit_build_node($form, $form_state);
@@ -1511,6 +1540,9 @@ function publish_add_node_form_submit($form, &$form_state) {
   
   // The new functionality, values transmitted depend on which form is being submitted  
   session_cache_set('nid',$node->nid);
+
+  dpm($_SESSION);
+
   switch($form['#form_id']){
   	//Saving shareholder, representative, and checkout date
   	case 'loan_node_form':
