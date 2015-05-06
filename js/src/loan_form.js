@@ -94,9 +94,11 @@
                         }
                     };
 
-                    $('<div class="date-wrapper-' + id + ' date-wrapper"></div>').appendTo(e).append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function (event) {
+                    $('<div class="date-wrapper-' + id + ' date-wrapper"></div>')
+			.appendTo(e)
+			.append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function (event) {
 
-                        var $input = $(this).parent().siblings('[id$="-date"]');
+			var $input = $(this).parent().siblings('[id$="-date"]');
                         var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
 
                         /**

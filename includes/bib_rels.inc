@@ -99,10 +99,10 @@ function dss_elc_loan_node_presave($node) {
 
     $field_loan_duration_date = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value);
 
-    // If the parsing of the datestamp as failed, raise an error
+    // If the parsing of the datestamp as failed, log an error
     if( $field_loan_duration_date === FALSE ) {
 
-      drupal_set_message(t('Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value) ), 'error');
+      //drupal_set_message(t('Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value) ), 'error');
     } else {
 
       $field_loan_duration_value = '00' . $field_loan_duration_date->format('U');

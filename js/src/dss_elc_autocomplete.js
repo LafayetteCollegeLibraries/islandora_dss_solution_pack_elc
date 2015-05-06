@@ -50,6 +50,11 @@
      * Static Methods
      *
      */ 
+
+    /**
+     * The submission handler for forms with the autocompletion widget fully integrated
+     *
+     */
     DssElcAutocomplete.onSubmitHandler = function(e) {
 
 	$.each($(this).data('islandoraDssElc.autocomplete'), (function(i, autocomplete) {
@@ -117,33 +122,13 @@
 				     * Retrieve the volumes from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value
 				     *
 				     */
-				    $(item).siblings('span.token-volumes').each(function(j, item) {
-					    
-					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
-					    
-					    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
-						    
-						    return $(e).val();
-						}).length;
-					    
-					    $('.node-form').append('<input id="edit-field-loan-volumes-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_volumes_text[und][' + nameIndex + '][value]" style="display:none">');
-					});
+				    // Removed (the volumes field was integrated into a single field)
 
 				    /**
 				     * Retrieve the issues from the tokens and append them to the hidden element #edit-field-loan-volumes-text-und-0-value
 				     *
 				     */
-				    $(item).siblings('span.token-issues').each(function(j, item) {
-					    
-					    inputValue = $(item).text().replace(/^\((.+)\)$/, '$1');
-					    
-					    var nameIndex = $('[name="field_bib_rel_object[und][0][target_id]"]').filter(function(i,e) {
-						    
-						    return $(e).val();
-						}).length;
-					    
-					    $('.node-form').append('<input id="edit-field-loan-issues-text-und-0-value" class="text-full form-text" type="text" maxlength="255" size="60" value="' + inputValue + '" name="field_loan_issues_text[und][' + nameIndex + '][value]" style="display:none">');
-					});
+				    // Removed (the issues field was integrated into a single field)
 				}
 				
 			    });
