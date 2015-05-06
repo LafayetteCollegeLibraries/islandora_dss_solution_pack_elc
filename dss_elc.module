@@ -979,7 +979,7 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
    */
   dpm($_SESSION);
 
-  //Populate fields if save and add another was pressed
+  // Populate fields if save and add another was pressed
   // @todo Populate the fields individually within the session cache (or, pass the entire Node) in order to avoid the additional read operation
   //
   if(isset($_SESSION['type'])&&$_SESSION['type']=='loan_node_form'){
@@ -990,14 +990,49 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 
 	dpm($node);
 
-  	if(isset($node->field_loan_shareholder['und'])){
-		$shareholder_node = dss_elc_get_node('nid', $node->field_loan_shareholder['und']['0']['target_id'], 'human');
+	// Set the Filename from the previously saved Node
+	if(isset($node->field_loan_filename['und'])) {
+
+	  $loan_filename_tid = $node->field_loan_filename['und'][0]['tid'];
+	  $loan_filename_term = taxonomy_term_load($loan_filename_tid);
+
+	  $form['field_loan_filename']['und']['#value'] = $loan_filename_term->name;
 	}
-	$representative_node = dss_elc_get_node('nid', $node->field_bib_rel_subject['und']['0']['target_id'], 'human');
-	if(isset($shareholder_node->title)){
-		$form['field_loan_shareholder']['und']['#value'] = $shareholder_node->title . ' (' . $shareholder_node->nid . ')';
+
+	// Set the Shareholder field from the previously saved Node
+  	if(isset($node->field_loan_shareholder['und'])) {
+
+	  $shareholder_node = dss_elc_get_node('nid', $node->field_loan_shareholder['und']['0']['target_id'], 'human');
+
+	  if(isset($shareholder_node->title)) {
+
+	    $form['field_loan_shareholder']['und']['#value'] = $shareholder_node->title . ' (' . $shareholder_node->nid . ')';
+	  }
 	}
-	$form['field_bib_rel_subject']['und']['#default_value'] = $representative_node->title . ' (' . $representative_node->nid . ')';
+
+	// Set the Representative field from the previously saved Node
+	if(isset($node->field_bib_rel_subject['und'])) {
+
+	  $representative_node = dss_elc_get_node('nid', $node->field_bib_rel_subject['und']['0']['target_id'], 'human');
+
+	  if(isset($representative_node->title)) {
+
+	    $form['field_bib_rel_subject']['und']['#value'] = $representative_node->title . ' (' . $representative_node->nid . ')';
+	  }
+	}
+
+	// Set the Item field from the previously saved Node
+	if(isset($node->field_bib_rel_object['und'])) {
+
+	  $item_node = dss_elc_get_node('nid', $node->field_bib_rel_object['und']['0']['target_id'], 'human');
+
+	  if(isset($item_node->title)) {
+
+	    $form['field_bib_rel_object']['und']['#value'] = $item_node->title . ' (' . $item_node->nid . ')';
+	  }
+	}
+	
+	
 
 	// Set the check-out date using the value submitted within the previous form
 	$field_loan_duration_value = $node->field_loan_duration['und']['0']['value'];
