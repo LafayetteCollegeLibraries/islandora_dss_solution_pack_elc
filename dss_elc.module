@@ -1032,8 +1032,6 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
 	  }
 	}
 	
-	
-
 	// Set the check-out date using the value submitted within the previous form
 	$field_loan_duration_value = $node->field_loan_duration['und']['0']['value'];
 	$field_loan_duration_date = DateTime::createFromFormat('00U', $field_loan_duration_value);

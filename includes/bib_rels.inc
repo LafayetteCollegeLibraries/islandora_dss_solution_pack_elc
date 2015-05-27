@@ -103,9 +103,17 @@ function dss_elc_loan_node_presave($node) {
     if( $field_loan_duration_date === FALSE ) {
 
       //drupal_set_message(t('Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value) ), 'error');
+      watchdog('dss_elc', 'Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value), WATCHDOG_ERROR);
     } else {
 
-      $field_loan_duration_value = '00' . $field_loan_duration_date->format('U');
+      // This must be extended for anomalous cases in which the datestamp is a negative value
+      // Resolves EDDC-506
+      $field_loan_duration_value = $field_loan_duration_date->format('U');
+
+      if(substr($field_loan_duration_value, 0, 1) != '-') {
+
+	$field_loan_duration_value = '00' . $field_loan_duration_value;
+      }
 
       $node->field_loan_duration[$node->language][0]['value'] = $field_loan_duration_value;
 
@@ -121,10 +129,19 @@ function dss_elc_loan_node_presave($node) {
 
 	if($field_loan_duration_date2 === FALSE) {
 
-	   drupal_set_message(t('Improperly formatted check-in date: !datestamp', array('!datestamp' => $field_loan_duration_value2) ), 'error');
+	  //drupal_set_message(t('Improperly formatted check-in date: !datestamp', array('!datestamp' => $field_loan_duration_value2) ), 'error');
+	   watchdog('dss_elc', 'Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value), WATCHDOG_ERROR);
 	} else {
 
-	  $field_loan_duration_value2 = '00' . $field_loan_duration_date2->format('U');
+	  //$field_loan_duration_value2 = '00' . $field_loan_duration_date2->format('U');
+
+	  // Resolves EDDC-506
+	  $field_loan_duration_value2 = $field_loan_duration_date2->format('U');
+
+	  if(substr($field_loan_duration_value2, 0, 1) != '-') {
+
+	    $field_loan_duration_value2 = '00' . $field_loan_duration_value2;
+	  }
 	}
       }
 
