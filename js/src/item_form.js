@@ -19,6 +19,16 @@
 			$('#edit-field-artifact-was-authored-by-und').addClass('prepopped');
 				
 		}
+		
+		/*
+		 * @author goodnowt add proper example text for initial publication date 
+		 * 
+		 */
+		
+		$('#edit-field-initial-publication-date-und-0-value-date').attr({
+			
+			value: 'YYYY'
+		});
 
 
 
