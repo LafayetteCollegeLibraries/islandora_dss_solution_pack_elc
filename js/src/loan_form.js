@@ -313,6 +313,11 @@
 				$('#edit-field-loan-duration-und-0-value2-day').addClass('prepopped');
 			}
 			
+			$('#edit-field-loan-fine-und-0-value').attr({
+				
+				value: 'e.g. 1.005'
+			});
+			
         }
 
     };
