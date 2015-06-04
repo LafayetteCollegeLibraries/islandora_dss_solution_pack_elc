@@ -29,6 +29,28 @@
 			
 			value: 'YYYY'
 		});
+		
+		$('#edit-field-initial-publication-date-und-0-value-date').focus(function() {
+				
+			if ($('#edit-field-initial-publication-date-und-0-value-date').attr('value') == 'YYYY'){
+					
+				$('#edit-field-initial-publication-date-und-0-value-date').attr({
+					
+					value: ''
+				});
+			};
+		});
+			
+		$('#edit-field-initial-publication-date-und-0-value-date').blur(function() {
+				
+			if ($('#edit-field-initial-publication-date-und-0-value-date').attr('value') == ''){
+					
+				$('#edit-field-initial-publication-date-und-0-value-date').attr({
+					
+					value: 'YYYY'
+				});
+			};
+		});
 
 
 
