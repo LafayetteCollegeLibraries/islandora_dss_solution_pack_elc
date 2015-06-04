@@ -348,6 +348,105 @@
 				}
 			});
 			
+			$('#edit-field-loan-fine-und-0-value').blur(function() {
+				
+				if ($('#edit-field-loan-fine-und-0-value').attr('value') == ''){
+					
+					$('#edit-field-loan-fine-und-0-value').attr({
+					
+						value: 'e.g. 1.005'
+					});
+				};
+			});
+			
+			/*
+			 * @author goodnowt functions to clear dates example text on tab
+			 */
+			
+			$('#edit-field-loan-duration-und-0-value2-year').on( 'keyup', function( e ) {
+				
+				if( e.which == 9 ) {
+					
+					if ($('#edit-field-loan-duration-und-0-value2-year').attr('value') == 'YYYY'){
+					
+						$('#edit-field-loan-duration-und-0-value2-year').attr({
+							
+							value: ''
+						});
+					};
+				}
+			});
+			
+			$('#edit-field-loan-duration-und-0-value2-month').on( 'keyup', function( e ) {
+				
+				if( e.which == 9 ) {
+					
+					if ($('#edit-field-loan-duration-und-0-value2-month').attr('value') == 'MM'){
+					
+						$('#edit-field-loan-duration-und-0-value2-month').attr({
+							
+							value: ''
+						});
+					};
+				}
+			});
+			
+			$('#edit-field-loan-duration-und-0-value2-day').on( 'keyup', function( e ) {
+				
+				if( e.which == 9 ) {
+					
+					if ($('#edit-field-loan-duration-und-0-value2-day').attr('value') == 'DD'){
+					
+						$('#edit-field-loan-duration-und-0-value2-day').attr({
+							
+							value: ''
+						});
+					};
+				}
+			});
+			
+			$('#edit-field-loan-duration-und-0-value-year').on( 'keyup', function( e ) {
+				
+				if( e.which == 9 ) {
+					
+					if ($('#edit-field-loan-duration-und-0-value-year').attr('value') == 'YYYY'){
+					
+						$('#edit-field-loan-duration-und-0-value-year').attr({
+							
+							value: ''
+						});
+					};
+				}
+			});
+			
+			$('#edit-field-loan-duration-und-0-value-month').on( 'keyup', function( e ) {
+				
+				if( e.which == 9 ) {
+					
+					if ($('#edit-field-loan-duration-und-0-value-month').attr('value') == 'MM'){
+					
+						$('#edit-field-loan-duration-und-0-value-month').attr({
+							
+							value: ''
+						});
+					};
+				}
+			});
+			
+			$('#edit-field-loan-duration-und-0-value-day').on( 'keyup', function( e ) {
+				
+				if( e.which == 9 ) {
+					
+					if ($('#edit-field-loan-duration-und-0-value-day').attr('value') == 'DD'){
+					
+						$('#edit-field-loan-duration-und-0-value-day').attr({
+							
+							value: ''
+						});
+					};
+				}
+			});
+			
         }
 
     };
