@@ -323,7 +323,7 @@
 				value: 'e.g. 1.005'
 			});
 			
-			$('#edit-field-loan-fine-und-0-value').click(function() {
+			$('#edit-field-loan-fine-und-0-value').focus(function() {
 				
 				if ($('#edit-field-loan-fine-und-0-value').attr('value') == 'e.g. 1.005'){
 					
@@ -332,20 +332,6 @@
 						value: ''
 					});
 				};
-			});
-			
-			$('#edit-field-loan-fine-und-0-value').on( 'keyup', function( e ) {
-				
-				if( e.which == 9 ) {
-					
-					if ($('#edit-field-loan-fine-und-0-value').attr('value') == 'e.g. 1.005'){
-					
-						$('#edit-field-loan-fine-und-0-value').attr({
-					
-							value: ''
-						});
-					};
-				}
 			});
 			
 			$('#edit-field-loan-fine-und-0-value').blur(function() {
