@@ -977,7 +977,6 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
    * @author stathisw@lafayette.edu
    *
    */
-  dpm($_SESSION);
 
   // Populate fields if save and add another was pressed
   // @todo Populate the fields individually within the session cache (or, pass the entire Node) in order to avoid the additional read operation
@@ -988,12 +987,10 @@ function dss_elc_form_loan_node_form_alter(&$form, $form_state, $form_id) {
   	
   	$node = node_load($_SESSION['nid']);
 
-	dpm($node);
-
 	// Set the Filename from the previously saved Node
 	if(isset($node->field_loan_filename['und'])) {
 
-	  $loan_filename_tid = $node->field_loan_filename['und'][0]['tid'];
+	  $loan_filename_tid = $node->field_loan_filename['und']['0']['tid'];
 	  $loan_filename_term = taxonomy_term_load($loan_filename_tid);
 
 	  $form['field_loan_filename']['und']['#value'] = $loan_filename_term->name;
@@ -1514,16 +1511,6 @@ function dss_elc_preprocess_islandora_book_book(array &$variables) {
     //if(preg_match('/openseadragon/', $variables['viewer'])) {
     module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
     $init_pages = islandora_paged_content_get_pages($islandora_object);
-
-    /*
-    // If these are East Asia Image Collection postcards, modify the text for the links...
-    $prev_content = t('Previous');
-    $next_content = t('Next');
-
-    $viewer_page_controls = array();
-      
-    $variables['viewer_page_controls'] = drupal_render($viewer_page_controls);
-    */
   }
 }
 
@@ -1549,8 +1536,6 @@ function hold_button_publish_node($form, &$form_state){
 //overriding publish button to add functionality for repopulation of fields.
 function publish_add_button_publish_node($form, &$form_state) {
 
-  dpm('trace');
-
   // The original functionality from publish_button.module
   // Set the node status as published. And that's it.
   
@@ -1573,8 +1558,6 @@ function publish_add_node_form_submit($form, &$form_state) {
   
   // The new functionality, values transmitted depend on which form is being submitted  
   session_cache_set('nid',$node->nid);
-
-  dpm($_SESSION);
 
   switch($form['#form_id']){
   	//Saving shareholder, representative, and checkout date
