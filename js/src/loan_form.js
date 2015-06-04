@@ -311,12 +311,21 @@
 				$('#edit-field-loan-duration-und-0-value2-year').addClass('prepopped');
 				$('#edit-field-loan-duration-und-0-value2-month').addClass('prepopped');
 				$('#edit-field-loan-duration-und-0-value2-day').addClass('prepopped');
+				$('#edit-field-loan-filename-und').addClass('prepopped');
 			}
 			
 			$('#edit-field-loan-fine-und-0-value').attr({
 				
 				value: 'e.g. 1.005'
 			});
+			
+			/* $('#edit-field-loan-fine-und-0-value').onClick = function(){
+				
+				if ($('#edit-field-loan-fine-und-0-value').attr('value') == 'e.g. 1.005'){
+					
+					alert('hello');
+				};
+			}; */
 			
         }
 
