@@ -418,9 +418,11 @@ function dss_elc_get_taxonomy_term($term_value, $vocab_name) {
 }
 */
 
-
-
-function drush_dss_elc_get_records($db, $table_name, $limit, $bookId=NULL) {
+/**
+ * Retrieves the records from the "books" table within the legacy application
+ *
+ */
+function drush_dss_elc_get_records($db, $table_name, $limit = 0, $bookId = NULL) {
 
   // Select the book record by its primary key "id"
   if(isset($bookId)) {
@@ -443,25 +445,7 @@ function drush_dss_elc_get_records($db, $table_name, $limit, $bookId=NULL) {
  * @author griffinj@lafayette.edu
  *
  */
-function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
-
-  /*
-  if(strlen($book_title) > (254 - strlen(' (Vol. ' . (string)$book_volume . ')'))) {
-
-    //! Uncertain as to why this does not properly transfer the value
-    $book_node_title = substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')...';
-
-    //$book_md->title->set(substr($book_title, 0, 128) . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
-    //$book_md->title->set($book_node_title);
-  } else {
-
-    //! Uncertain as to why this does not properly transfer the value
-    $book_node_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
-
-    //$book_md->title->set($book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')');
-    //$book_md->title->set($book_node_title);
-  }
-  */
+function dss_elc_normalize_book_title($book, $book_title, $book_volume, $book_author) {
 
   /**
    * Ensure that the title is properly formatted in order to render the format, catalogue numbers, and identifier
@@ -475,6 +459,15 @@ function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
     $title_suffix = ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
   }
 
+  // Normalize in response to EDDC-514
+  if( preg_match('/^Works(.+)/', $book_title, $book_title_match) ) {
+
+    $book_author_names = explode($book_author, ',');
+    $book_author_surname = array_pop($book_author_names);
+
+    $book_title = $book_author_surname . "'" . substr($book_author_surname, -1) === 's' ? '' : 's' . " Works" . $book_title_match[1];
+  }
+
   if(strlen($book_title) > (254 - strlen($title_suffix))) {
 
     $book_node_title = substr($book_title, 0, 128) . '...' . $title_suffix;
@@ -486,213 +479,45 @@ function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
   return $book_node_title;
 }
 
-define('ITEM_VOLUMES_TAXON', 'item_volumes');
 
-function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
 
-  // Insert the limit clause
-  if($limit > 0) {
-
-    $sql = "SELECT * FROM :table_name LIMIT $limit";
-  } else {
-
-    $sql = 'SELECT * FROM :table_name';
-  }
-
-  /*
-  // Retrieve all book records and serialize them as Book or Periodical Nodes
-  foreach($db->query($sql)
-	  ->execute(array(':table_name' => 'books')) as $book) {
-  */
-  foreach(drush_dss_elc_get_records($db, 'books', $limit, $bookId) as $book) {
-
-    $frbr_entities = array();
-    $book_title = mb_convert_encoding($book['title'], "UTF-8", 'ASCII');
-
-    drush_log(dt("Migrating the manifestation " . $book_title), 'ok');
-
-    // Instantiate a new manifestion for each book or periodical
-    $manifestation_entity = entity_create('node', array('type' => 'manifestation',
-							'uid' => 1,
-							'status' => $book['flagStatus'] == '1' ? 0 : 1,
-							'comment' => 1,
-							'promote' => 0,
-							));
-
-    /**
-       Field length cannot be set by the administrative user
-       Please see the issue https://drupal.org/node/1921302
-    */
-
-    $manifestation_md = entity_metadata_wrapper('node', $manifestation_entity);
-    $manifestation_md->field_artifact_title->set($book_title);
-
-    $manifestation_md->field_manifest_total_vol->set(intval($book['totalVolumes']));
-    
-    if(strlen($book_title) > 255) {
-      
-      $manifestation_md->title->set(substr($book_title, 0, 255));
-    } else {
-      
-      $manifestation_md->title->set($book_title);
-    }
-
-    // Retrieve the author Entity
-    //$author_entity = dss_elc_get_person();
-    //$manifestation_md->field_artifact_was_authored_by->set(intval($author_entity->nid));
-    // Set the author for the item
-    $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
-
-    $author_nids = array();
-    // Note that the author name may be delimited by a semi-colon
-    foreach(preg_split('/;/', $author_name) as $delim_author_name) {
-
-      $author_entity = dss_elc_get_human($delim_author_name, 'Author');
-      $author_nids[] = intval($author_entity->nid);
-    }
-    $manifestation_md->field_artifact_was_authored_by->set($author_nids);
-
-    // Serialize the manifestation Node
-    $manifestation_md->save(true);
-    entity_save('node', $manifestation_entity);
-
-    $frbr_entities[] = $manifestation_entity;
-
-    $book_volumes = array();
-    if(is_null($book['totalVolumes'])) {
-      
-      $book_volumes = array(0);
-    } else {
-
-      $book_volumes = range(1, (int) $book['totalVolumes']);
-    }
-
-    // Instantiate a new book or periodical node for each book volume
-    //foreach(range(1, (int) $book['totalVolumes']) as $book_volume) {
-    foreach($book_volumes as $book_volume) {
-
-      drush_log(dt("Migrating volume $book_volume of the item $book_title"), 'ok');
-
-      if($book['type'] == 0) {
-	
-	$values = array('type' => 'book',
-			'uid' => 1,
-			'status' => $book['flagStatus'] == '1' ? 0 : 1,
-			'comment' => 1,
-			'promote' => 0,
-			);
-      } else {
-	
-	$values = array('type' => 'periodical',
-			'uid' => 1,
-			'status' => $book['flagStatus'] == '1' ? 0 : 1,
-			'comment' => 1,
-			'promote' => 0,
-			);
-      }
-
-      // Entity is...
-
-      $book_entity = entity_create('node', $values);
-      $book_md = entity_metadata_wrapper('node', $book_entity);
-
-      /**
-	Field length cannot be set by the administrative user
-	Please see the issue https://drupal.org/node/1921302
-      */
-
-      // Titles must have HTML character entities removed
-      $book_title = html_entity_decode($book_title);
-
-      $book_node_title = dss_elc_normalize_book_title($book, $book_title, $book_volume);
-
-      drush_log(dt("Normalizing the title into $book_node_title"), 'ok');
-
-      $book_md->title->set($book_node_title);
-      $book_md->field_artifact_title->set($book_node_title);
-
-      /*
-      // Set the author for the item
-      $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
-
-      $author_nids = array();
-      // Note that the author name may be delimited by a semi-colon
-      foreach(preg_split('/;/', $author_name) as $delim_author_name) {
-
-	$author_entity = dss_elc_get_human($delim_author_name, 'Author');
-	//$author_nids[] = intval($author_entity->nid);
-
-	$book_md->field_artifact_was_authored_by[] = intval($author_entity->nid);
-      }
-      */
-      $book_md->field_artifact_was_authored_by = $author_nids;
-
-      if($book_volume > 0) {
-
-	$volumeTerm = dss_elc_get_taxonomy_term( (string) $book_volume, ITEM_VOLUMES_TAXON);
-	$book_md->field_item_volume_migrate->set(intval($volumeTerm->tid));
-      }
-
-      if(isset($book['subject'])) {
-
-	foreach(preg_split('/;/', $book['subject']) as $subject) {
-
-	  $book_md->field_item_subject[] = dss_elc_get_taxonomy_term($subject, 'item_subjects')->tid;
-	}
-      }
-      
-      // Set the format for the book or periodical
-      switch($book['format']) {
-	
-      case 'Octavo':
-	
-	$book_md->field_item_format->set(0);
-	break;
-      case 'Quarto':
-
-	$book_md->field_item_format->set(1);
-	break;
-	
-      case 'Duodecimo':
-	
-	$book_md->field_item_format->set(2);
-	break;
-
-      default:
-	
-	$book_md->field_item_format->set(intval($book['format']));
-      }
-
-      $book_md->field_item_number->set($book['number'] == 'NULL' ? 0 : intval($book['number']));
-      $book_md->body->set(array('value' => $book['flagMessage']));
-
-      // Relate the book or periodical to the manifestation entity being instantiated
-      $book_md->field_item_embodies->set(intval($manifestation_entity->nid));
-
-      try {
-
-	// Serialize the book Node
-	$book_md->save(true);
-	entity_save('node', $book_entity);
-      } catch(Exception $e) {
-
-	drush_log(dt("Failed to migrate $book_title: {$e->getMessage()}"), 'error');
-      }
-    }
-
-    // Relate an author to the manifestation, as well as to the items within a single relationship
-    //dss_elc_migrate_author($book['author'], $frbr_entities);
-  }
-}
-
+/**
+ * Hook implementation for the Drush "Book" migration task
+ *
+ * @param string $mysql_user
+ *   The user name for the legacy MySQL database server
+ * @param string $mysql_pass
+ *   The password for the legacy MySQL database server
+ * @param string $mysql_database
+ *   The name of the legacy MySQL database
+ * @param string $mysql_server
+ *   The host for the legacy MySQL database server
+ * @param string $csv_file_path
+ *   An optional file path to the CSV-formatted file containing extraneous information
+ * @param string  $normalize_file_path
+ *   An optional file path to the CSV-formatted file containing normalization information
+ * @param int $limit (Deprecated)
+ *   The limit for the number of records migrated
+ * @param string $bookId (Deprecated)
+ *   The ID for a "book" record to be migrated
+ *
+ */
 function drush_dss_elc_migrate_books($mysql_user,
-				     $mysql_pass,
 				     $mysql_database='elc',
 				     $mysql_server='localhost',
+
+				     $csv_file_path = NULL,
+				     $normalize_file_path = NULL,
+
 				     $limit=0,
 				     $bookId=NULL) {
 
-  dss_elc_migrate_books(new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass), $limit, $bookId);
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+
+  module_load_include('inc', 'dss_elc', 'includes/migrate');
+
+  $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
+  dss_elc_migrate_books($db, $csv_file_path, $normalize_file_path);
 
   drush_dss_elc_relate_subjects($mysql_user,
 				$mysql_pass,
@@ -754,9 +579,10 @@ function drush_dss_elc_relate_subjects($mysql_user,
     //! Generate the title from various values
 
     // Instantiate a new book or periodical node for each book volume
-    foreach(range(1, (int)$original_item['totalVolumes']) as $book_volume) {
+    foreach(range(1, (int) $original_item['totalVolumes']) as $book_volume) {
 
-      $original_item_title = dss_elc_normalize_book_title($original_item, $original_item_title, $book_volume);
+      $author_name = mb_convert_encoding($original_item['author'], 'UTF-8', 'ASCII');
+      $original_item_title = dss_elc_normalize_book_title($original_item, $original_item_title, $book_volume, $author_name);
 
       $items = $drupalQuery->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', array('book', 'periodical', 'item'))
@@ -1586,7 +1412,9 @@ function drush_dss_elc_migrate_loans($mysql_user,
       foreach($volume_fields['volumes'] as $volume) {
 
 	$book = dss_elc_get_book($db, $book_title);
-	$node_book_title = dss_elc_normalize_book_title($book, $book['title'], $volume);
+
+	$author_name = mb_convert_encoding($original_item['author'], 'UTF-8', 'ASCII');
+	$node_book_title = dss_elc_normalize_book_title($book, $book['title'], $volume, $author_name);
 
 	$items = array_merge($items, dss_elc_get_items($node_book_title, $volume));
       }
@@ -2034,30 +1862,6 @@ function drush_dss_elc_purge_root($root_pid = 'islandora:root', $url = 'http://l
     islandora_delete_object($root_collection);
     drush_log('Islandora root Object ' . $root_pid . ' was successfully purged', 'success');
   }
-}
-
-function drush_dss_elc_metrics_cache_loans_deprecated() {
-
-  /*
-  $mongo_id = 'quantitative';
-  $collection_name = 'dss_elc_metrics_loans';
-
-  $entity_query = new EntityFieldQuery();
-  $entity_query->entityCondition('entity_type', 'node');
-  $entity_query->entityCondition('bundle', 'loan');
-
-  $entities = $entity_query->execute();
-  $loan_entities = node_load_multiple(array_keys($entities['node']));
-
-  dss_elc_metrics_cache_set($mongo_id, json_encode($loan_entities), $collection_name);
-  */
-
-  // "bundle_u": "book", "field_u": "field_item_subject", "bundle_v": "human", "field_v": "field_human_gender", "metric": "sum"}
-  print_r(_dss_elc_metrics_bivariate('book', 'field_item_subject', 'human', 'field_human_gender', 'sum'));
-  print_r(_dss_elc_metrics_bivariate('book', 'field_artifact_was_authored_by', 'human', 'field_human_gender', 'sum'));
-  print_r(_dss_elc_metrics_bivariate('book', 'field_item_format', 'human', 'field_human_gender', 'sum'));
-  print_r(_dss_elc_metrics_bivariate('book', 'field_loan_duration', 'human', 'field_human_gender', 'sum'));
-  
 }
 
 function drush_dss_elc_metrics_network() {

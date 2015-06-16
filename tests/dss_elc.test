@@ -6,20 +6,176 @@
    *
    */
 
+  //
+  // We cannot use PHPUnit
+
+  //use \Mockery as m;
+  // We cannot use Mockery or Phockito in place of core PHPUnit
+
+class MockFunction {
+
+  public $args;
+
+  public function __construct($args) {
+
+    $this->args = $args;
+  }
+
+  public function with($arg) {
+
+    print_r($this->args);
+
+    return in_array($arg, $this->args);
+  }
+  }
+
+class MockPDO {
+
+  public $last_called;
+
+  public function __construct() {
+
+    $this->last_called = array();
+  }
+
+  // For spying
+  public function called($i = 0) {
+
+    $called = array_key_exists($i, $this->last_called) ? $this->last_called[$i] : array();
+
+    return $called;
+  }
+
+  public function shouldReceive($method_name) {
+
+    $output = FALSE;
+
+    if(array_key_exists($method_name, $this->last_called)) {
+
+      $output = $this->last_called[$method_name];
+    }
+    return $output;
+  }
+
+  // Mock the PDO methods
+  public function query($sql) {
+
+    $arg_list = func_get_args();
+
+    //$called_function = array('with' => $arg_list);
+    //$this->last_called['query'] = (object) $called_function;
+
+    $called_function = new MockFunction($arg_list);
+    $this->last_called['query'] = $called_function;
+
+    return array( array('title' => 'test_title',
+			'flagStatus' => '1',
+			'totalVolumes' => '2',
+			'author' => 'test_author',
+			'subject' => 'test_subject_1;test_subject2',
+			'format' => 'Octavo',
+			'number' => '1234'
+			) );
+  }
+}
+
+class DssElcTestsDataMigrate extends DrupalWebTestCase {
+
+  protected $profile = 'testing';
+
+  public static function getInfo() {
+    
+    // Note: getInfo() strings should not be translated.
+    return array(
+		 'name' => 'ELC data migration unit tests',
+		 'description' => 'Tests for the migration of data from the legacy app.',
+		 'group' => 'Easton Library Company Project',
+		 );
+  }
+
+  public function setUp() {
+    
+    //module_enable(array('elc_data_models'), TRUE);
+    //module_enable(array('entity'), TRUE);
+
+    //parent::setUp(array('node', 'dss_elc_data_models', 'entity'));
+
+    parent::setUp(array('dss_elc_data_models'));
+  }
+
+  function testMigrateBooks() {
+
+    // Mock the PDO Object
+    //$pdo = new MockPDO();
+    //$pdo->returns('query', array() );
+
+    //print_r( node_type_get_types() );
+
+    $db = new MockPDO();
+
+    $records = dss_elc_migrate_books($db);
+
+    $node = node_load(1);
+
+    print 'test';
+    print_r($node);
+      
+    $this->assertTrue(false, 'The books should be migrated into the database');
+  }
+
+  function testGetPersons() {
+
+    
+  }
+
+  function testGetHuman() {
+
+    
+  }
+
+
+
+  }
+
 class DssElcTestsDataAccess extends DrupalUnitTestCase {
 
   public static function getInfo() {
     
     // Note: getInfo() strings should not be translated.
-    return array('name' => 'Simpletest Example unit tests',
-		 'description' => 'Test that simpletest_example_empty_mysql_date works properly.',
-		 'group' => 'Examples',
+    return array(
+		 'name' => 'ELC data access unit tests',
+		 'description' => 'Tests for the retrieval of data from the Drupal site',
+		 'group' => 'Easton Library Company Project',
 		 );
+  }
+
+  function testGetRecords() {
+
+    // Drupal 7 and SimpleTest do not easily integrate mocking
+    //$db = new SimpleMock();
+    //$db->returns('query', array( array('title' => 'test_title')) );
+    // ...and this is not PHPUnit    
+    //$db = m::mock('PDO');
+    //$db->shouldReceive('query')->andReturn(
+
+    $db = new MockPDO();
+    $records = drush_dss_elc_get_records($db, 'books');
+
+    //$this->assertEqual(count($db->called()), 1, 'The books should be read from the database');
+    $this->assertTrue($db->shouldReceive('query')->with('SELECT * FROM books'), 'Records should be retrieved from the books table');
+  }
+
+  function testNormalizeBookTitle() {
+
+  }
+
+  function testGetTaxonomyTerm() {
+
   }
 
   function testGetItems() {
     
-    dss_elc_get_items('Notes on the State of Virginia', '1');
+    //dss_elc_get_items('Notes on the State of Virginia', '1');
   }
 
   function testGetManifestation() {

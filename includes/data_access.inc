@@ -141,7 +141,7 @@ function dss_elc_get_nodes($contentType=NULL, $field=NULL, $value=NULL, $entityF
 }
 
 /**
- * Retrive the value of a single node field
+ * Retrieve the value of a single node field
  *
  */
 define('FIELD_TYPE_DATE', 1);
