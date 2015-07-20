@@ -418,8 +418,10 @@ function dss_elc_get_taxonomy_term($term_value, $vocab_name) {
 }
 */
 
-
-
+/**
+ * Retrieve the records from the MySQL database
+ *
+ */
 function drush_dss_elc_get_records($db, $table_name, $limit, $bookId=NULL) {
 
   // Select the book record by its primary key "id"
@@ -439,8 +441,8 @@ function drush_dss_elc_get_records($db, $table_name, $limit, $bookId=NULL) {
 }
 
 /**
- *
  * @author griffinj@lafayette.edu
+ * Node labels can only be structured using a string of a fixed length
  *
  */
 function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
@@ -488,6 +490,10 @@ function dss_elc_normalize_book_title($book, $book_title, $book_volume) {
 
 define('ITEM_VOLUMES_TAXON', 'item_volumes');
 
+/**
+ * Migration of "book" records into Drupal Nodes
+ *
+ */
 function dss_elc_migrate_books($db, $limit, $bookId=NULL) {
 
   // Insert the limit clause
