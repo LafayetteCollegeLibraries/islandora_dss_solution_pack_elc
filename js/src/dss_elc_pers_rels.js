@@ -12,10 +12,21 @@ Islandora.ELC.Relationship.DATA_KEY = 'dssElcPersRelsField';
 Islandora.ELC.Relationship.FIELDS_TOTAL = 'dssElcPersRelsFieldTotal';
 
 Islandora.ELC.Relationship.Form = Islandora.ELC.Relationship.Form || {};
+Islandora.ELC.Relationship.Form.KEY = 'IslandoraElcRelForm';
+
+Islandora.ELC.Relationship.Form.TOKEN_KEY = 'IslandoraElcRelFormToken';
+
 Islandora.ELC.Relationship.Field = Islandora.ELC.Relationship.Field || {};
 
 Islandora.ELC.Relationship.Field.SUBJECT_SELECTOR = '';
 Islandora.ELC.Relationship.Field.OBJECT_SELECTOR = '';
+
+Islandora.ELC.Relationship.Field.SUBJECT_KEY = 'IslandoraElcRelSubject';
+Islandora.ELC.Relationship.Field.OBJECT_KEY = 'IslandoraElcRelObject';
+Islandora.ELC.Relationship.Field.ROLE_KEY = 'IslandoraElcRelRole';
+
+Islandora.ELC.Relationship.Field.TITLE_KEY = 'IslandoraElcRelTitle';
+Islandora.ELC.Relationship.Field.NID_KEY = 'IslandoraElcRelNid';
 
 /**
  * Static method for tokenization
@@ -81,25 +92,13 @@ Islandora.ELC.TokenizeFieldInit = function(inputElementIndex, inputElement) {
     // Prepend the list for tokenization
     if($('#pers-rel-tokens-' + inputElementIndex + 1).length == 0) {
 
-	var $tokenList = $('<ul id="pers-rel-tokens-' + inputElementIndex + 1 + '" class="token-list"></ul>');
+	var $tokenList = $('<ul id="pers-rel-tokens-' + inputElementIndex + 1 + '" class="pers-rel-tokens token-list"></ul>');
 
 	$inputElement.data('Islandora.ELC.$tokenList', $tokenList);
-	$inputElement.siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-object-und').before($tokenList);
+	//$inputElement.siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-object-und').before($tokenList);
 
-	/*
-	if(inputElement.value) {
-
-	    var m = /is a (.+?) in relation to (.+)/.exec(inputElement.value);
-	    if(!m) {
-
-		console.error("Could not parse the personal_relationship Node Title: " + inputElement.value);
-	    } else {
-
-		$inputElement.siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-role-und').val(m[1]);
-		$inputElement.siblings('.field-human-pers-rels-fields').find('#edit-field-pers-rel-object-und').val(m[2]);
-	    }
-	}
-	*/
+	var $tokenContainer = $('<div role="application">').append($tokenList);
+	$inputElement.siblings('.field-human-pers-rels-fields').children('div').prepend($tokenContainer);
     }
 };
 
@@ -243,9 +242,6 @@ Islandora.ELC.AjaxComplete = function(event, xhr, settings) {
 
     var $ = $ || jQuery;
     
-    console.log(event);
-    console.log(settings);
-
     if(settings && /system\/ajax/.exec(settings.url)) {
 
 	// Work-around for autocomplete
@@ -262,60 +258,6 @@ Islandora.ELC.AjaxComplete = function(event, xhr, settings) {
 	 * @todo Refactor with this.$roleFields and this.$personFields
 	 *
 	 */
-	/*
-	$('#edit-field-pers-rel-role-und-autocomplete, #edit-field-pers-rel-object-und-autocomplete').each(function(i,e) {
-		//this.$roleFields.add(this.$personFields).each(function(i,e) {
-		
-		var uri = this.value;
-		if (!acdb[uri]) {
-		    
-		    acdb[uri] = new Drupal.ACDB(uri);
-		}
-		
-		/**
-		 * Linking the individual input fields with the actual autocompletion widgets
-		 *
-		 * /
-	        $('[id="' + e.id.substr(0, e.id.length - 13) + '"]:visible').each(function(i, input) {
-			//$('[id="' + e.id + '"]:visible').each(function(i, input) {
-			
-			var $input = $(input)
-			    .attr('autocomplete', 'OFF')
-			    .attr('aria-autocomplete', 'list');
-			
-			$($input[0].form).submit(Drupal.autocompleteSubmit);
-			$input.parent()
-			    .attr('role', 'application')
-			    .append($('<span class="element-invisible" aria-live="assertive"></span>')
-				    .attr('id', $input.attr('id') + '-autocomplete-aria-live')
-				    );
-			new Drupal.jsAC($input, acdb[uri]);
-			
-			/**
-			 * Populating the fields with serialized values
-			 * Should be integrated with Drupal hook implementations relating to AJAX response generation
-			 * @todo Decouple and implement in Drupal
-			 *
-			 * /
-			var islandoraDssElcHumanForm = $(document).data('islandoraDssElcHumanForm') || {};
-			
-			/**
-			 * Hard-coding the jQuery selector
-			 * @todo Refactor
-			 * /
-			$(['edit-field-pers-rel-role-und', 'edit-field-pers-rel-object-und'].map(function(e,i) {
-				    
-				    return '[id="' + e + '"]:visible';
-				}).join(', ')).each(function(i, e) {
-					
-					//islandoraDssElcHumanForm[e.id] = islandoraDssElcHumanForm[e.id].concat(e.value);
-					$(e).val(islandoraDssElcHumanForm[e.id][i]);
-				    });
-			
-			$(document).data('islandoraDssElcHumanForm', islandoraDssElcHumanForm);
-		    });
-	    });
-	*/
 	
 	/**
 	 * Population of the form fields from the individual 
@@ -336,31 +278,6 @@ Islandora.ELC.AjaxComplete = function(event, xhr, settings) {
 	    var $newFields = $('[id^="field-human-pers-rels-values"] .controls > .form-text');
 	    relationships.$fields = $newFields;
 
-	    // ...but first, the autocompletion elements must be cloned.
-	    /*
-	    var $oldFields = relationships.$fields;
-
-	    $newFields.each(function(i, newField) {
-
-		    //var $oldField = oldField;
-		    if(i > $oldFields.length - 1) {
-
-			var $oldField = $($oldFields[$oldFields.length - 1]);
-		    } else {
-
-			var $oldField = $($oldFields[i]);
-		    }
-
-		    var $oldFieldObject = $oldField.parent().find('.field-human-pers-rels-fields');
-		    var $newFieldObject = $oldFieldObject.clone(true);
-
-		    $($newFields[i]).parent().append($newFieldObject);
-
-		    Islandora.ELC.TokenizeFieldInit(i, newField);
-		    Islandora.ELC.TokenizeField(newField);
-		});
-	    */
-	    
 	    // Trigger the tokenization for the new button
 	    DssElcPersRelsField.addField($newButton);
 	    
@@ -384,7 +301,6 @@ Islandora.ELC.AjaxComplete = function(event, xhr, settings) {
 	 *
 	 */
 	
-	//$('[id="edit-field-pers-rel-object-und"]').hide();
 	var $fields = $('[id="edit-field-pers-rel-object-und"]');
 	$fields = $fields.slice(0, -1);
 	
@@ -393,11 +309,9 @@ Islandora.ELC.AjaxComplete = function(event, xhr, settings) {
 	
 	// Compare the number of form fields currently on the form (i. e. after these fields have been appended to the DOM by Drupal)...
 	if($fields.length > dssElcPersRelsFieldTotal + 1) {
-	    //if($fields.length > dssElcPersRelsFieldTotal) {
 	    
 	    // Retrieve the slice of elements which exceed the number of field elements captured within the Object state...
 	    $fields.slice(0, (dssElcPersRelsFieldTotal == 1 ? -2 : dssElcPersRelsFieldTotal - 1)).each(function(index, element) {
-		    //$fields.slice(dssElcPersRelsFieldTotal).each(function(index, element) {
 		    
 		    // ...and remove each of these elements.
 		    $(element).parent().parent().parent().parent().parent().remove();
@@ -450,22 +364,13 @@ function DssElcPersRelsField(document, options) {
 	});
 
     // This binds the event handlers for the <form> elements
-    this.bindButtonHandlers();
     this.bindAjaxHandlers();
 
     /**
-     * This appears to have been deprecated
+     * The refined approach deprecates all attempts to leverage the existing Drupal AJAX functionality
      *
      */
-    // Set the fields to the number of DOM <form> child elements
-    //this.fields = $('[id^="edit-field-human-pers-rels-und-"].form-text').length;
-    
-    /*
-    $('[id^="edit-field-human-pers-rels-und-"].form-text').each(function(i, inputElement) {
-
-	    Islandora.ELC.TokenizeFieldInit(i, inputElement);
-	});
-    */
+    this.$button.hide();
 };
 
 /**
@@ -506,7 +411,7 @@ DssElcPersRelsField.addField = function($button) {
 		$element.parent().append($fields);
 
 		// Enable the autocompletion for the subject and object fields
-		Islandora.ELC.Relationship.Field.enableAutocomplete($fields.find('#edit-field-pers-rel-object-und')[0]);
+		//Islandora.ELC.Relationship.Field.enableAutocomplete($fields.find('#edit-field-pers-rel-object-und')[0]);
 
 		// If this is not the terminal field...
 		if(i < relationships.$fields.length - 1) {
@@ -538,121 +443,6 @@ DssElcPersRelsField.addField = function($button) {
 };
 
 /**
- * DEPRECATED
- * Callback for the "click" event triggered on the "+" Button for personal relationships
- * Handles AJAX-responses from Drupal (normally triggered using the "+" Button)
- *
- */
-DssElcPersRelsField.prototype.buttonOnClickHandler = function(event) {
-	
-    var $ = this.$ || jQuery;
-
-    // This cannot be dynamically retrieved, lest the newly-added elements also be included within the iterations
-    //$('[id^="field-human-pers-rels-values"] .controls > .form-text').each(function(i, element) {
-    //var $elements = $('[id^="field-human-pers-rels-values"] .controls > .form-text');
-    //$elements.each(function(i, element) {
-    this.$fields.each(function(i, element) {
-
-	    var $element = $(element);
-	    
-	    if($element.siblings('.field-human-pers-rels-fields').length == 0) {
-		
-		/**
-		 * Appending additional elements to the DOM
-		 * Ideally, this markup would be generated and passed from a hook implementation within Drupal (hook_form_alter() or template_preprocess_hook_form()
-		 * However, this would require far more work in order to properly integrate the handling of more complex AJAX responses for the form itself
-		 * @todo Decouple and implement within the appropriate Drupal hook implementations
-		 *
-		 */
-		//$(e).parent().append('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><input id="edit-field-pers-rel-role-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_role[und]" autocomplete="OFF" aria-autocomplete="list"></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div><button id="add-human-modal" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button></div>');
-
-		/**
-		 * @todo Refactor
-		 *
-		 */
-		var $fields = $('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div></div>');
-		
-		// Append the newly-added form fields
-		$element.parent().append($fields);
-
-		// If this is not the terminal field...
-		if(i < this.$fields.length - 1) {
-
-		    // ...append a removal button which removes this field
-		    var $buttonRemove = $('<div class="clearfix"><button id="edit-field-human-pers-rels-und-remove" class="field-remove-submit btn btn-rmv-rel form-submit" type="submit" value="-" name="field_human_pers_rels_remove">-</button></div>').click(function(event) {
-			
-			    // Restructure using .parents()
-			    $(this).parent().parent().parent().parent().parent().remove();
-
-			    // Also, update the total number of fields on the form by "popping" the last of the field elements
-			    var dssElcPersRelsFieldTotal = $(document).data(Islandora.ELC.Relationship.FIELDS_TOTAL);
-			    dssElcPersRelsFieldTotal--;
-			    $(document).data(Islandora.ELC.Relationship.FIELDS_TOTAL, dssElcPersRelsFieldTotal);
-			});
-
-		    $element.parent().append($buttonRemove);
-		} else {
-
-		    // ...otherwise, for the terminal field, add the "Create New Person" Button
-		    $fields.append('<button id="add-human-modal-' + i + '" class="btn btn-primary form-submit add-node-modal" type="button" value="new_person" name="field_human_pers_rels[und][' + i + '][op]" data-content-type="human" data-node-type="">Create New Person</button>');
-		}
-		
-		Islandora.ELC.TokenizeFieldInit(i, element);
-		Islandora.ELC.TokenizeField(element);
-	    }
-
-	    /*
-
-	    // Adding functionality to remove the extra "create new person" buttons, currently changes it to a '-' sign
-	    var $addHumanButton = $('#add-human-modal-' + i - 1);
-	    
-	    $addHumanButton.html('-');
-	    
-	    // @author Thom Goodnow added function to set class for these removal buttons //
-	    
-	    $addHumanButton.attr('class','btn btn-primary form-submit add-node-modal btn-rmv-rel');
-		
-	    // Changing button so that it removes the current person from the form
-	    $addHumanButton.die();
-	    $addHumanButton.click(function() {
-			
-		    // Restructure using .parents()
-		    $addHumanButton.parent().parent().parent().parent().parent().remove();
-
-		    // Also, update the total number of fields on the form by "popping" the last of the field elements
-		    var dssElcPersRelsFieldTotal = $(document).data(Islandora.ELC.Relationship.FIELDS_TOTAL);
-		    dssElcPersRelsFieldTotal--;
-		    $(document).data(Islandora.ELC.Relationship.FIELDS_TOTAL, dssElcPersRelsFieldTotal);
-		});
-		
-	    */
-
-	});
-
-    //this.$roleFields = $('#edit-field-pers-rel-role-und-autocomplete');
-    this.$personFields = $('#edit-field-pers-rel-object-und-autocomplete');
-
-    /**
-     * Work-around for using a <select> field element
-     *
-     */
-    this.$roleFields = $('#edit-field-pers-rel-role-und');
-    //this.$personFields = $('#edit-field-pers-rel-object-und');
-    //}).call()
-};
-
-/**
- * Bind the handlers for the "Add Another Item" button (default Drupal interface)
- * Is this redundant?
- *
- */
-DssElcPersRelsField.prototype.bindButtonHandlers = function() {
-
-    var $ = this.$;
-    //this.buttonOnClickHandler();
-};
-
-/**
  * Bind the handlers for AJAX request transmission and reception
  *
  */
@@ -673,23 +463,17 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
      *
      */
 
-    /*
-    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
-
-	    console.log(e);
-	});
-
-    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
-
-	    console.log(e);
-	});
-    */
-
     $('#edit-field-pers-rel-object-und').blur(function(e) {
 
 	    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
 	    
 	    if($(this).val().length > 0) {
+
+		/**
+		 * @todo Initiate a loading animation
+		 * For the moment, disable the field
+		 */
+		$(this).prop('disabled', true);
 		
 		var humanName = $('#edit-field-person-name-und-0-value').val();
 				    
@@ -762,9 +546,11 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 			    } else {
 
 				var persRel = data.pop();
-				var persRelText = '"' + persRel.title + ' (' + persRel.nid + ')"';
-				$relationFieldElem.val(persRelText);
 
+				/**
+				 * Disabled, as the Node ID is now being bound to jQuery Elements
+				 *
+				 */
 				// Perform the tokenization logic
 				// @todo Refactor
 
@@ -776,8 +562,29 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 				    objectName = objectNameMatch[1];
 				}
 
-				$("<li><a href='#' class='token'><span class='token-object'>" + objectName + "</span><span class='token-x'>×</span></a></li>").appendTo( $objectFieldElem.siblings('.token-list') );
-				$objectFieldElem.hide();
+				/**
+				 * Add the token to the field
+				 * Ensuring that the token both hides the related field, as well as clears the previously entered input
+				 *
+				 */
+				var $tokenAnchor = $("<a href='#' class='token'><span class='token-object'>" + objectName + "</span></a>");
+
+				// Store the Node ID for the relationship within the token
+				$tokenAnchor.data(Islandora.ELC.Relationship.Form.KEY, $('.node-form'));
+				$tokenAnchor.data(Islandora.ELC.Relationship.Field.TITLE_KEY, persRel.title);
+				$tokenAnchor.data(Islandora.ELC.Relationship.Field.NID_KEY, persRel.nid);
+
+				var $tokenClose = $("<span class='token-x'>×</span>").data(Islandora.ELC.Relationship.Form.TOKEN_KEY, $objectFieldElem).click(function() {
+
+					var $objectFieldElem = $(this).data(Islandora.ELC.Relationship.Form.TOKEN_KEY);
+					$objectFieldElem.prop('disabled', false);
+				    });
+				var $tokenItem = $('<li>').append($tokenAnchor.append($tokenClose));
+				$objectFieldElem.parents('.field-human-pers-rels-fields').find('.pers-rel-tokens').append($tokenItem);
+				
+				$objectFieldElem.prop('disabled', false);
+				$objectFieldElem.val('');
+				$roleFieldElem.val('_none');
 			    }
 			});
 		}
@@ -786,8 +593,6 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 		$relationFieldElem.val('');
 	    }
 	});
-    //}
-    //});
 };
 
 /**
