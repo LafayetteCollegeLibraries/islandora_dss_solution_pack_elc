@@ -46,10 +46,38 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
   drupal_add_library('system', 'ui.dialog');
   dss_elc_preprocess_node_form($variables);
 
-  $autocomplete_fields = array('entityRefs' => array('#edit-field-pers-rel-subject-und', '#edit-field-pers-rel-object-und'),
-			       //'terms' => array("#edit-field-pers-rel-role-und", '#edit-field-pers-rel-type-und')
+  /*
+  $autocomplete_fields = array('entityRefs' => array('#edit-field-pers-rel-subject-und', '#edit-field-pers-rel-object-und')
 			       );
   drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+  */
+  $autocomplete_fields = array(
+			       'personal_relationship' => array(
+								'entity' => array(
+										  array(
+											'selector' => array("#edit-field-pers-rel-subject-und"),
+											'options' => array()
+											),
+										  array(
+											'selector' => array("#edit-field-pers-rel-object-und"),
+											'options' => array()
+											),
+										  ),
+								)
+
+			       );
+  $fields = variable_get('dss_elc_autocomplete_fields', $autocomplete_fields);
+  $pers_rel_fields = $fields['personal_relationship'];
+
+  $field_types = array(
+		       'loans' => 'DssElcAutocompleteLoan',
+		       'entityRefs' => 'DssElcAutocompleteEntityRef',
+		       'terms' => 'DssElcAutocomplete'
+		       );
+
+  drupal_add_js(array('dssElcAutocomplete' => array('fieldTypes' => $field_types,
+						    'fields' => $pers_rel_fields)), 'setting');
+
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
@@ -123,12 +151,51 @@ function template_preprocess_human_node_form(&$variables) {
 
     drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
 
+    /*
     $autocomplete_fields = array(
 				 //'persRels' => array('[id^="field-human-pers-rels-values"]'),
 				 'entityRefs' => array('#edit-field-person-membership-und', '#edit-field-person-location-und'),
 				 'terms' => array("#edit-field-human-occupation-und", '#edit-field-person-type-und')
 				 );
     drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+    */
+    $autocomplete_fields = array(
+				 'human' => array(
+						  'entity' => array(
+								    array(
+									  'selector' => array("#edit-field-person-membership-und"),
+									  'options' => array()
+									  ),
+								    array(
+									  'selector' => array("#edit-field-person-location-und"),
+									  'options' => array()
+									  ),
+								    ),
+						  'term' => array(
+								  array(
+									'selector' => array("#edit-field-human-occupation-und"),
+									'options' => array()
+									),
+								  array(
+									'selector' => array("#edit-field-person-type-und"),
+									'options' => array()
+									),
+								  ),
+						  )
+
+				 );
+    $fields = variable_get('dss_elc_autocomplete_fields', $autocomplete_fields);
+    $human_fields = $fields['human'];
+
+    $field_types = array(
+			 'loans' => 'DssElcAutocompleteLoan',
+			 'entityRefs' => 'DssElcAutocompleteEntityRef',
+			 'terms' => 'DssElcAutocomplete'
+			 );
+
+    drupal_add_js(array('dssElcAutocomplete' => array('fieldType' => $field_types,
+						      'fields' => $human_fields)), 'setting');
+
     drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
     drupal_add_js(array('dssElcPersRelsField' => array('button' => 'button[name="field_human_pers_rels_add_more"]')), 'setting');
@@ -158,11 +225,51 @@ function template_preprocess_loan_node_form(&$variables) {
 
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/loan_form.js');
 
-  $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
-			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
-			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
+  $autocomplete_fields = array(
+			       'loan' => array(
+					       'loan' => array(
+								array(
+								      'selector' => array('[id^="edit-field-bib-rel-object-und"].form-text:first'),
+								      'options' => array()
+								      ),
+							       ),
+					       'entity' => array(
+								 array(
+								       'selector' => array("#edit-field-loan-shareholder-und"),
+								       'options' => array()
+								       ),
+								 array(
+								       'selector' => array("#edit-field-bib-rel-subject-und"),
+								       'options' => array()
+									   ),
+								 ),
+					       'term' => array(
+							       array(
+								     'selector' => array("#edit-field-loan-filename-und"),
+								     'options' => array('filterAutocomplete' => TRUE)
+								     ),
+							       array(
+								     'selector' => array("#edit-field-loan-notes-und"),
+								     'options' => array()
+								     ),
+							       array(
+								     'selector' => array("#edit-field-bib-rel-type-und"),
+								     'options' => array()
+								     )
+							       )
+					       )
 			       );
-  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+  $fields = variable_get('dss_elc_autocomplete_fields', $autocomplete_fields);
+  $loan_fields = $fields['loan'];
+
+  $field_types = array(
+		       'loans' => 'DssElcAutocompleteLoan',
+		       'entityRefs' => 'DssElcAutocompleteEntityRef',
+		       'terms' => 'DssElcAutocomplete'
+		       );
+
+  drupal_add_js(array('dssElcAutocomplete' => array('fieldTypes' => $field_types,
+						    'fields' => $loan_fields)), 'setting');
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   if(strpos($variables['form']['#action'], 'multi_node_add') == 0) {
@@ -183,43 +290,9 @@ function template_preprocess_loan_node_form(&$variables) {
 
   hide($variables['form']['field_loan_ledger']);
   hide($variables['form']['field_loan_issues_loaned']);
-  //$variables['form']['field_loan_issues_loaned'] = array();
-
-  //$variables['subject'][] = $variables['form']['field_bib_rel_subject'];
-  //hide($variables['form']['field_bib_rel_subject']);
-
-  //$variables['object'][] = $variables['form']['field_bib_rel_object'];
-  //hide($variables['form']['field_bib_rel_object']);
-
-
-
-  //hide($variables['form']['additional_settings']);
-  //$variables['form']['actions']['publish']['#value'] = 'Save';
-
-  /*
-  $variables['sidebar'] = array();   // Put taxonomy fields in sidebar.
-
-  $variables['sidebar'][] = $variables['form']['field_tags'];
-  hide($variables['form']['field_tags']);
-
-  // Extract the form buttons, and put them in independent variable.
-  $variables['buttons'] = $variables['form']['actions'];
-  hide($variables['form']['actions']);
-  */
 
   hide($variables['form']['field_loan_other_notes'][$variables['form']['field_loan_other_notes']['#language']][0]['format']);
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
-
-  /**
-   * 
-  $variables['form']['actions']['publish_and_save'] = array(
-					       '#type' => 'submit',
-					       '#value' => t('Save & Add Another'),
-					       '#weight' => '40',
-					       '#submit' => array('publish_add_button_publish_node'),
-					       );
-  $variables['form']['actions']['publish']['#value'] = t('Save & View Record');											
-  */
 }
 
 /**

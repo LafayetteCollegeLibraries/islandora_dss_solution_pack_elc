@@ -1182,12 +1182,50 @@ function dss_elc_form_personal_relationship_node_form_alter(&$form, $form_state)
 function dss_elc_form_item_node_form_alter(&$form, $form_state) {
 
   dss_elc_form_insert_js();
-  //drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/item_form.js');
+  
 
-  $autocomplete_fields = array('entityRefs' => array("#edit-field-artifact-was-authored-by-und"),
-			       'terms' => array("#edit-field-item-number-taxon-und", "#edit-field-item-subject-und", '#edit-field-artifact-type-und')
+  /**
+   * Provides integration with the JavaScript autocompletion widget
+   *
+   */
+
+  $autocomplete_fields = array(
+			       'item' => array(
+					       'entity' => array(
+								 array(
+								       'selector' => array("#edit-field-artifact-was-authored-by-und"),
+								       'options' => array()
+								       ),
+								 ),
+					       'term' => array(
+							       array(
+								     'selector' => array("#edit-field-item-number-taxon-und"),
+								     'options' => array()
+								     ),
+							       array(
+								     'selector' => array("#edit-field-item-subject-und"),
+								     'options' => array()
+								     ),
+							       array(
+								     'selector' => array("#edit-field-artifact-type-und"),
+								     'options' => array()
+								     ),
+							       ),
+					       )
+
 			       );
-  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
+  $fields = variable_get('dss_elc_autocomplete_fields', $autocomplete_fields);
+  $item_fields = $fields['item'];
+  
+  $field_types = array(
+			 'loans' => 'DssElcAutocompleteLoan',
+			 'entityRefs' => 'DssElcAutocompleteEntityRef',
+			 'terms' => 'DssElcAutocomplete'
+			 );
+
+    drupal_add_js(array('dssElcAutocomplete' => array('fieldType' => $field_types,
+						      'fields' => $item_fields)), 'setting');  
+
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/dss_elc_autocomplete.js');
 
   hide($form['field_item_total_volumes']);

@@ -13,27 +13,30 @@
 	    /*
 	     * Bootstrap throws the following exception:
 	     * TypeError: Drupal.theme.prototype[func] is undefined
-	     http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js?mp9pul Line 294
-	    */
-	   
-	   
+	     * http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js?mp9pul Line 294
+	     *
+	     */
+
+	    /**
+	     * @author stathisw@lafayette.edu
+	     *
+	     */
 	    //Disable form submission on 'enter'
 	    $('form:first').attr('onsubmit', 'return false');
 	    
 	    //Enable form submission when a button is clicked
 	    jQuery('button','#edit-actions').click(function(e){
 	    	
-	    		$('form:first').attr('onsubmit', 'return true');
-	    
-	    });
+		    $('form:first').attr('onsubmit', 'return true');
+		});
 	    //Enable when selected and enter pressed
-		jQuery('button','#edit-actions').keypress(function(e){
-	    	
-	    	if(e.which == 13){
+	    jQuery('button','#edit-actions').keypress(function(e){
+		    
+		    if(e.which == 13){
 	    		$('form:first').attr('onsubmit', 'return true');
-	    	}
-	    	
-	    });
+		    }
+		});
+
 	    // If this is not an Ajax request...
 	    /**
 	     * Set the Modal handlers for the addition of Human nodes
@@ -41,14 +44,15 @@
 	    // Specify whether or not this is an AJAX request
 	    $('.add-node-modal, .edit-node-modal').each(function(i, element) {
 			
-		   //try-catch is a workaround for an uncaught error. This is the solution
-		   //for EDDC-295. In the future, find out why settings.dssElc.isAjaxRequest is null
-		   try{
-		    $(element).nodeFormModal(settings.dssElc.isAjaxRequest);
-		   }
-		   catch(exception){
-		    //$(element).nodeFormModal(false);
-		   }
+		    //try-catch is a workaround for an uncaught error. This is the solution
+		    //for EDDC-295. In the future, find out why settings.dssElc.isAjaxRequest is null
+		    try{
+
+			$(element).nodeFormModal(settings.dssElc.isAjaxRequest);
+		    } catch(exception){
+
+			//$(element).nodeFormModal(false);
+		    }
 		});
 	    
 	    addSubjectContainer = $('div.node-add-subject');
@@ -143,9 +147,9 @@
 					}
 				    }
 				    
-					//pattern = /node\-(add)\-subject/;
-					//pattern = /node\/add\/human/;
-					//console.log(addSubjectContainer.parent().html());
+				    //pattern = /node\-(add)\-subject/;
+				    //pattern = /node\/add\/human/;
+				    //console.log(addSubjectContainer.parent().html());
 				    
 				    $editSubjectContainer = $(('<div class="node-add-subject">' + addSubjectContainer.html() + '</div>')
 							      .replace('node/add/human', 'node/' + person.nid + '/edit')

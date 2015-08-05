@@ -14,34 +14,6 @@
 	     * Disabled in order to resolve EDDC-311
 	     *
 	     */
-            // Usability feature to the Shareholder and Representative form fields
-	    /*
-            $('#edit-field-loan-shareholder-und').change(function (event) {
-
-                if (!$(this).data('loanForm')) {
-
-                    $(this).data('loanForm', {
-
-                        prevPatron: ''
-
-                    });
-
-                } else {
-
-                    prevPatron = $(this).data('loanForm')['prevPatron'];
-
-                }
-
-                if (!$('#edit-field-bib-rel-subject-und').val() || prevPatron == $('#edit-field-bib-rel-subject-und').val()) {
-
-                    $('#edit-field-bib-rel-subject-und').val($(this).val());
-
-                }
-
-                $(this).data('loanForm')['prevPatron'] = $(this).val();
-
-            });
-	    */
 
             /**
              * Date field handling functionality
