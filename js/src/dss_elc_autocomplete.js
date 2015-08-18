@@ -210,6 +210,8 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		    }
 		})
 	    );
+
+	console.log( $(this).serializeArray() );
     };
 
     /**

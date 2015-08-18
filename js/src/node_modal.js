@@ -832,6 +832,36 @@ NodeFormModal.onClickHandler = function(event) {
 };
 
 /**
+ *
+ */
+NodeFormModal.FIELD_MAP = {
+
+    human: {
+	
+	entityRefs: [ {selector: ['#edit-field-person-membership-und'], options: [] }, {selector: ['#edit-field-person-location-und'], options: [] } ],
+	terms: [ {selector: ['#edit-field-human-occupation-und'], options: [] }, {selector: ['#edit-field-person-type-und'], options: [] } ]
+    },
+    item: {
+
+	entityRefs: [ {selector: ['#edit-field-artifact-was-authored-by-und'], options: [] } ],
+	terms: [ {selector: ['#edit-field-item-number-taxon-und'], options: [] }, {selector: ['#edit-field-item-subject-und'], options: [] } ]
+    }
+};
+
+/**
+ * Method for retrieving the fields in relation to a content type
+ *
+ */
+NodeFormModal.fields = function(contentType) {
+
+    var fields = {};
+
+    fields = NodeFormModal.FIELD_MAP[contentType];
+
+    return fields;
+};
+
+/**
  * Constructor for the NodeForModal class
  * @constructor
  * @todo Refactor by extending the Backbone.js Model
@@ -863,8 +893,6 @@ function NodeFormModal(options) {
 
     // Legacy
     this.$element = $(settings.button);
-
-
 
     // Retrieve the method name for the Form
     this.method = this.getMethodForElement();
@@ -909,42 +937,6 @@ function NodeFormModal(options) {
 	this.dialogTitle = 'Add ' + this.contentTypeName[0].toUpperCase() + this.contentTypeName.slice(1);
     }
 
-    // Setting the dialog settings for JavaScript invocations
-    var fields = [];
-    /*
-    $autocomplete_fields = array(
-				 //'persRels' => array('[id^="field-human-pers-rels-values"]'),
-				 'entityRefs' => array('#edit-field-person-membership-und', '#edit-field-person-location-und'),
-				 'terms' => array("#edit-field-human-occupation-und", '#edit-field-person-type-und')
-				 );
-     */
-    /*
-  $autocomplete_fields = array('loans' => array('[id^="edit-field-bib-rel-object-und"].form-text'),
-			       'entityRefs' => array("#edit-field-loan-shareholder-und", "#edit-field-bib-rel-subject-und"),
-			       'terms' => array("#edit-field-loan-filename-und", "#edit-field-loan-notes-und", "#edit-field-bib-rel-type-und")
-			       );
-    */
-    switch(this.contentTypeName) {
-
-    case 'human':
-
-	fields = {
-
-	    entityRefs: ['#edit-field-person-membership-und', '#edit-field-person-location-und'],
-	    terms: ["#edit-field-human-occupation-und", '#edit-field-person-type-und']
-	};
-	break;
-
-    case 'item':
-
-	fields = {
-
-	    entityRefs: ['#edit-field-person-membership-und', '#edit-field-person-location-und'],
-	    terms: ["#edit-field-human-occupation-und", '#edit-field-person-type-und']
-	};
-	break;
-    }
-
     this.modalSettings = {};
     this.modalSettings.dssElcAutocomplete = {};
 
@@ -952,27 +944,8 @@ function NodeFormModal(options) {
      * Work-around for nested forms
      * @todo Refactor
      */
-    switch(this.contentTypeName) {
-
-    case 'human':
-
-	this.modalSettings.dssElcAutocomplete.fields = {
-	    entityRefs: ['#edit-field-person-membership-und', '#edit-field-person-location-und'],
-	    terms: ["#edit-field-human-occupation-und", '#edit-field-person-type-und']
-	};
-	break;
-    case 'item':
-
-	this.modalSettings.dssElcAutocomplete.fields = {
-
-	    entityRefs: ["#edit-field-artifact-was-authored-by-und"],
-	    terms: ["#edit-field-item-number-taxon-und", "#edit-field-item-subject-und"]
-	};
-	break;
-    default:
-
-	this.modalSettings.dssElcAutocomplete.fields = {};
-    }
+    // Setting the dialog settings for JavaScript invocations
+    this.modalSettings.dssElcAutocomplete.fields = NodeFormModal.fields(this.contentTypeName);
 
     // Set the handler for the jQuery "click" event
     $(this.button).click(NodeFormModal.onClickHandler);

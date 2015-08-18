@@ -46,14 +46,7 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
   drupal_add_library('system', 'ui.dialog');
   dss_elc_preprocess_node_form($variables);
 
-  /*
-  $autocomplete_fields = array('entityRefs' => array('#edit-field-pers-rel-subject-und', '#edit-field-pers-rel-object-und')
-			       );
-  drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-  */
-  $autocomplete_fields = array(
-			       'personal_relationship' => array(
-								'entity' => array(
+  $autocomplete_fields = array('personal_relationship' => array('entity' => array(
 										  array(
 											'selector' => array("#edit-field-pers-rel-subject-und"),
 											'options' => array()
@@ -147,21 +140,12 @@ function template_preprocess_human_node_form(&$variables) {
       $variables['form']['field_person_membership'] = array();
       $variables['form']['field_human_occupation'] = array();
     }
+
   } else {
 
     drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
 
-    /*
-    $autocomplete_fields = array(
-				 //'persRels' => array('[id^="field-human-pers-rels-values"]'),
-				 'entityRefs' => array('#edit-field-person-membership-und', '#edit-field-person-location-und'),
-				 'terms' => array("#edit-field-human-occupation-und", '#edit-field-person-type-und')
-				 );
-    drupal_add_js(array('dssElcAutocomplete' => array('fields' => $autocomplete_fields)), 'setting');
-    */
-    $autocomplete_fields = array(
-				 'human' => array(
-						  'entity' => array(
+    $autocomplete_fields = array('human' => array('entity' => array(
 								    array(
 									  'selector' => array("#edit-field-person-membership-und"),
 									  'options' => array()
@@ -173,7 +157,7 @@ function template_preprocess_human_node_form(&$variables) {
 								    ),
 						  'term' => array(
 								  array(
-									'selector' => array("#edit-field-human-occupation-und"),
+									'selector' => array("#edit-field-human-occupation-und1"),
 									'options' => array()
 									),
 								  array(
