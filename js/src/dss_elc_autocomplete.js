@@ -9,6 +9,8 @@ var Islandora = window.Islandora || {};
 Islandora.ELC = Islandora.ELC || {};
 Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 
+Islandora.ELC.Autocomplete.TIMEOUT = 4000;
+
 (function($, Drupal) {
 
     /**
@@ -79,8 +81,6 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
     Tokens.prototype.push = function(value) {
 
 	if(!this.include(value)) {
-
-	    console.log('trace');
 
 	    var token = new Token(value);
 	    var $element = this.autocomplete.input;
@@ -360,9 +360,6 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
      */
     DssElcAutocomplete.prototype.keydown = function(event) {
 
-	//event.stopPropagation();
-	//event.stopImmediatePropagation();
-
 	if((event.which == 188 || event.which == 13) && $(this.input).val().length > 1) {
 
 	    event.preventDefault();
@@ -430,7 +427,7 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 			     * @todo Investigate as to why islandoraDssElc.autocomplete.pollInterval is still accessible but not islandoraDssElc.autocomplete.poll
 			     *
 			     */
-			    if(!context || (timeElapsed > 1000)) {
+			    if(!context || (timeElapsed > Islandora.ELC.Autocomplete.TIMEOUT)) {
 				
 				window.clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
 				$(document).data('islandoraDssElc.autocomplete.poll', null);
@@ -536,8 +533,24 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 
 		this.tokens.push(items[i]);
 	    }
-	    
+
 	    $fieldElem.val('');
+
+	    // A race condition exists here (perhaps due to AJAX response handling integration with the Drupal autocomplete widget?)
+	    $(document).data('Islandora.ELC.Autocomplete.timeout.$fieldElem', $fieldElem);
+
+	    // Set a timer to clear the field value
+	    var timeoutID = window.setTimeout(function() {
+
+		    var $fieldElem = $(document).data('Islandora.ELC.Autocomplete.timeout.$fieldElem');
+		    $fieldElem.val('');
+
+		    var timeoutID = $(document).data('Islandora.ELC.Autocomplete.timeout.id');
+
+		    window.clearTimeout(timeoutID);
+		}, 125);
+
+	    $(document).data('Islandora.ELC.Autocomplete.timeout.id', timeoutID);
 	}
     };
 
@@ -595,6 +608,9 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 	 *
 	 */
 	$(document).ajaxComplete(function(event, xhr, settings) {
+
+		console.log('ajax');
+		console.log(+new Date);
 
 		if(settings && /system\/ajax/.exec(settings.url)) {
 		    
@@ -736,21 +752,23 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
      */
     DssElcAutocompleteEntityRef.prototype.keydown = function(event) {
 
+	/*
+	 * @author goodnowt This line is disabled temporarily for release to disable the enter key creating tokens from the autocomplete (until that functionality is fixed)
+	 *
+	 * @author griffinj Uncertain as to why or how this disabled the "enter" key; the event.which value should be restricted for this case
+	 *
+	 */
+	var inputElement = this.input;
+
 	if((event.which == 188 || event.which == 13) && $(this.input).val().length > 1) {
 
 	    // @todo Refactor
 	    event.stopImmediatePropagation();
 	    //event.preventDefault();
-		
-	    /*
-	     * @author goodnowt This line is disabled temporarily for release to disable the enter key creating tokens from the autocomplete (until that functionality is fixed)
-	     *
-	     * @author griffinj Uncertain as to why or how this disabled the "enter" key; the event.which value should be restricted for this case
-	     *
-	     */
-	    var inputElement = this.input;
 
-	    var $listElem = $(this.input).parents('.controls').find('.form-autocomplete');
+	    // #autocomplete ul li
+	    //var $listElem = $(this.input).parents('.controls').find('.form-autocomplete');
+	    var $listElem = $(this.input).parents('.controls').find('#autocomplete');
 
 	    /**
 	     * Long polling is utilized here in order to "wait" for the proper values for the AJAX request
@@ -760,20 +778,20 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 	    if($listElem.length > 0) {
 
 		this.set('autoCompleteKey', true);
-		var listItem = $listElem.parents('li.selected').length > 0 ? $listElem.parents('li.selected').data('autocompleteValue') : $listElem.parents('li:first').data('autocompleteValue');
-		this.set('autoCompleteItem', listItem);
+		//var listItem = $listElem.parents('li.selected').length > 0 ? $listElem.parents('li.selected').data('autocompleteValue') : $listElem.parents('li:first').data('autocompleteValue');
+		var listItem = $listElem.find('li.selected').length > 0 ? $listElem.find('li.selected').data('autocompleteValue') : $listElem.find('li:first').data('autocompleteValue');
 
-		/**
-		 * Additional handling for volumes and issues
-		 *
-		 */
-		
-		event.target = inputElement;
+		if(typeof(listItem) != 'undefined') {
 
-		this.tokenize(event);
+		    this.set('autoCompleteItem', listItem);
 
-		this.set('autoCompleteKey', false);
-		this.set('autoCompleteItem', null);
+		    event.target = inputElement;
+
+		    this.tokenize(event);
+
+		    this.set('autoCompleteKey', false);
+		    this.set('autoCompleteItem', null);
+		}
 	    } else {
 
 		$(document).data('islandoraDssElc.autocomplete.poll', this);
@@ -796,7 +814,7 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 			 * @todo Investigate as to why islandoraDssElc.autocomplete.pollInterval is still accessible but not islandoraDssElc.autocomplete.poll
 			 *
 			 */
-			if(!context || (timeElapsed > 1000)) {
+			if(!context || (timeElapsed > Islandora.ELC.Autocomplete.TIMEOUT )) {
 
 			    window.clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
 			    $(document).data('islandoraDssElc.autocomplete.poll', null);
@@ -813,7 +831,6 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 				event.target = inputElement;
 
 				context.tokenize(event);
-
 				context.set('autoCompleteKey', false);
 				context.set('autoCompleteItem', null);
 
@@ -826,6 +843,99 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 		
 		$(document).data('islandoraDssElc.autocomplete.pollInterval', intervalId);
 	    }
+	} else {
+
+	    // Set the handlers for the <ul>
+	    var $listElem = $(this.input).parents('.controls').find('#autocomplete');
+
+	    // Start polling for responses
+	    
+	    /*
+	    if($listElem.length > 0) {
+
+		console.log('trace4');
+
+		//var listItems = $listElem.parents('li.selected').length > 0 ? $listElem.parents('li.selected').data('autocompleteValue') : $listElem.parents('li:first').data('autocompleteValue');
+		var listItems = $listElem.children('li');
+
+		console.log(listItems);
+	    } else {
+
+		console.log('trace5');
+	    }
+	    */
+
+	    $(document).data('islandoraDssElc.autocomplete.poll', this);
+	    $(document).data('islandoraDssElc.autocomplete.pollEvent', event);
+	    $(document).data('islandoraDssElc.autocomplete.timeInit', +new Date());
+
+	    // No time-effective and safe manner by which to hook in to the autocomplete functionality for Drupal 7.x
+	    // Polling the DOM for changes until the AJAX submission is complete...
+	    /**
+	     * Synchronously poll the DOM state
+	     *
+	     */
+	    var intervalId = window.setInterval(function() {
+
+		    var context = $(document).data('islandoraDssElc.autocomplete.poll');
+		    var event = $(document).data('islandoraDssElc.autocomplete.pollEvent');
+		    var timeElapsed = +new Date() - $(document).data('islandoraDssElc.autocomplete.timeInit');
+
+		    /**
+		     * @todo Investigate as to why islandoraDssElc.autocomplete.pollInterval is still accessible but not islandoraDssElc.autocomplete.poll
+		     *
+		     */
+		    if(!context || (timeElapsed > Islandora.ELC.Autocomplete.TIMEOUT )) {
+
+			window.clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
+			$(document).data('islandoraDssElc.autocomplete.poll', null);
+			$(document).data('islandoraDssElc.autocomplete.pollEvent', null);
+		    } else {
+
+			var $listElem = $(context.input).parents('.controls').find('.reference-autocomplete');
+
+			if($listElem.length > 0) {
+
+			    // Set the handlers for the newly appended DOM Elements
+			    $listElem.find('li').on('click keydown', function(event) {
+
+				    // Retrieve the related input widget within the scope of the Document instance
+				    //var autocomplete = $(document).data();
+				    var autocomplete = context;
+
+				    // Tokenize
+				    autocomplete.set('autoCompleteItem', listItem);
+				    event.target = autocomplete.input;
+				    autocomplete.tokenize(event);
+
+				    autocomplete.set('autoCompleteKey', false);
+				    autocomplete.set('autoCompleteItem', null);
+				});
+
+			    /*
+			    context.set('autoCompleteKey', true);
+			    context.set('autoCompleteItem', $listElem.parents('li.selected').data('autocompleteValue'));
+			    */
+		
+			    /*
+			    event.target = inputElement;
+
+			    context.tokenize(event);
+			    */
+
+			    /*
+			    context.set('autoCompleteKey', false);
+			    context.set('autoCompleteItem', null);
+			    */
+			    
+			    window.clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
+			    $(document).data('islandoraDssElc.autocomplete.poll', null);
+			    $(document).data('islandoraDssElc.autocomplete.pollEvent', null);
+			}
+		    }
+		}, 250);
+		
+	    $(document).data('islandoraDssElc.autocomplete.pollInterval', intervalId);
 	}
     };
 
@@ -1200,11 +1310,6 @@ Islandora.ELC.Autocomplete = Islandora.ELC.Autocomplete || {};
 
 		    //var options = $.extend(klassOptions, field.options);
 		    var options = $.extend({ type: klass, context: context }, field.options);
-
-		    console.log('trace12');
-		    console.log(field.options);
-		    console.log(options);
-		    console.log(klassOptions);
 
 		    var selector = field.selector.join(',');
 		    var $elements = $(context).find(selector);
