@@ -336,6 +336,25 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	    }
 
 	    $fieldElem.val(updatedValue);
+
+	    // A race condition exists here (perhaps due to AJAX response handling integration with the Drupal autocomplete widget?)
+	    if(updatedValue == '') {
+
+		$(document).data('Islandora.ELC.Autocomplete.timeout.$fieldElem', $fieldElem);
+
+		// Set a timer to clear the field value
+		var timeoutID = window.setTimeout(function() {
+
+			var $fieldElem = $(document).data('Islandora.ELC.Autocomplete.timeout.$fieldElem');
+			$fieldElem.val('');
+
+			var timeoutID = $(document).data('Islandora.ELC.Autocomplete.timeout.id');
+
+			window.clearTimeout(timeoutID);
+		    }, 125);
+
+		$(document).data('Islandora.ELC.Autocomplete.timeout.id', timeoutID);
+	    }
 	}
     };
 
@@ -1318,40 +1337,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		    $elements.dssElcAutocomplete(options);
 		}
 	    }
-
-	    /*
-	    if(settings.dssElcAutocomplete.fields.hasOwnProperty(field)) {
-
-		/*
-		if(field == 'loans') {
-
-		    var selector = settings.dssElcAutocomplete.fields[field].join(',').first();
-		} else {
-
-		    var selector = settings.dssElcAutocomplete.fields[field].join(',');
-		}
-		* /
-
-		var field = settings.dssElcAutocomplete.fields[field];
-		options = $.extend(options, field.options);
-
-		var selector = field.selector.join(',');
-		var $elements = $(context).find(selector);
-		$elements.dssElcAutocomplete(options);
-	    }
-	    */
 	}
-
-	/**
-	 * Resolves EDDC-117
-	 *
-	 */
-	/*
-	if(settings.dssElcAutocomplete.fields.hasOwnProperty('terms')) {
-
-	    $(settings.dssElcAutocomplete.fields.terms.join(',')).dssElcAutocomplete({context: context});
-	}
-	*/
     };
 
     /** 
