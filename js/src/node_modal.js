@@ -494,6 +494,10 @@ NodeFormModal.key = function(e) {
     return $(e).attr('data-content-type') + '-' + $(e).attr('data-node-type');
 };
 
+NodeFormModal.BUTTON_SAVE = 'Save & View Record';
+NodeFormModal.BUTTON_SHAREHOLDER = 'Save Shareholder';
+NodeFormModal.BUTTON_REPRESENTATIVE = 'Save Representative';
+
 /**
  * Static method for handling form submissions
  *
@@ -548,22 +552,24 @@ NodeFormModal.onSubmitHandler = function(event) {
 
 	if(formData[i].name == 'op') {
 
-	    formData[i].value = 'Save & View Record';
+	    formData[i].value = NodeFormModal.BUTTON_SAVE;
 	} else if(formData[i].name == 'field_person_type[und]' && document.getElementById("loan-node-form") !== null) {
 
-	    if($(event.target).attr('value') == 'Save as Shareholder') {
+	    if($(event.target).attr('value') == NodeFormModal.BUTTON_SHAREHOLDER) {
 
 		formData[i].value = 'Shareholder';
-	    } else if($(event.target).attr('value') == 'Save as Representative') {
+	    } else if($(event.target).attr('value') == NodeFormModal.BUTTON_REPRESENTATIVE) {
 		
 		formData[i].value = 'Representative';
 	    }
-	} 
+	}
     }
 
     // Transmit the POST request
     $.post($(form).attr('action'), formData, NodeFormModal.onFormAjaxSuccessHandler);
 };
+
+
 
 /**
  * Static method for handling AJAX responses
@@ -746,8 +752,8 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
 
 	    // Append <button> elements for each type of Human Node and hide the default submit button
 	    /* @todo Refactor */
-	    $shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="Save Shareholder" name="op">Save as Shareholder</button>').appendTo($buttonContainer);
-	    $representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="Save Representative" name="op">Save as Representative</button>').appendTo($buttonContainer);
+	    $shareholderSubmit = $('<button id="edit-publish-share" class="btn btn-primary form-submit" type="submit" value="' + NodeFormModal.BUTTON_SHAREHOLDER + '" name="op">Save as Shareholder</button>').appendTo($buttonContainer);
+	    $representativeSubmit = $('<button id="edit-publish-repr" class="btn btn-primary form-submit" type="submit" value="' + NodeFormModal.BUTTON_REPRESENTATIVE + '" name="op">Save as Representative</button>').appendTo($buttonContainer);
 	}
 	$modal.find('#edit-publish').hide();
 

@@ -277,8 +277,6 @@ function dss_elc_node_submit($node, $form, &$form_state) {
 
   case 'loan':
 
-    dpm($form);
-
     // Work-around
     // @todo Refactor
     $end_date = $form['field_loan_duration'][ $form['field_loan_duration']['#language'] ][0]['value2']['#value']['date'];
@@ -1559,12 +1557,15 @@ function dss_elc_views_api() {
 		);
 }
 
+/**
+ * @author stathisw@lafayette.edu
+ *
+ */
 function hold_button_publish_node($form, &$form_state){
 	
-	$form['values']['status'] = 0;
+  $form['values']['status'] = 0;
 	
-	publish_add_node_form_submit($form, $form_state);
-	
+  publish_add_node_form_submit($form, $form_state);	
 }
 
 /**
