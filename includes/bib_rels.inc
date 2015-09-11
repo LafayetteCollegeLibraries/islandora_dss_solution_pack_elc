@@ -45,6 +45,33 @@ function dss_elc_get_bib_rels($subjectNid) {
 }
 
 /**
+ * Generate the title for any given Node
+ * @param node $loan The Loan Node
+ *
+ * @return string The normalized title of the Loan Node
+ */
+function dss_elc_loan_node_title($loan) {
+
+  $subject = dss_elc_get_node('nid', $loan->field_bib_rel_subject[$loan->language][0]['target_id'], 'human');
+  $object = dss_elc_get_node('nid', $loan->field_bib_rel_object[$loan->language][0]['target_id']);
+
+  // Retrieve the formatted date
+  $subject_title = substr($subject->title, 0, 100);
+  $object_title = substr($object->title, 0, 100);
+  $field_loan_duration_value = $loan->field_loan_duration[$loan->language][0]['value'];
+
+  if(preg_match('/(.*?)T/', $loan->field_loan_duration[$loan->language][0]['value'], $matches)) {
+
+    $loan_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  $matches[1];
+  } else {
+
+    $loan_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  date('Y/m/d', $field_loan_duration_value);
+  }
+
+  return $loan_title;
+}
+
+/**
  * Functionality for parsing nodes
  * Implements hook_node_presave().
  *
@@ -64,29 +91,9 @@ function dss_elc_loan_node_presave($node) {
       dss_elc_update_pers_rels(intval($node->field_bib_rel_subject[$node->language][0]['target_id']), intval($node->field_loan_shareholder[$node->language][0]['target_id']));
     }
   }
-
-  $subjectNode = dss_elc_get_node('nid', $node->field_bib_rel_subject[$node->language][0]['target_id'], 'human');
-  $objectNode = dss_elc_get_node('nid', $node->field_bib_rel_object[$node->language][0]['target_id']);
     
-  //Override the title
-  #$node->title = $node->field_bib_rel_subject[$node->language][0]['target_id'] . ' borrowed ' . $node->field_bib_rel_object[$node->language][0]['target_id'] . ' on ';
-
-  // Retrieve the formatted date
-  preg_match('/(.*?)T/', $node->field_loan_duration[$node->language][0]['value'], $matches);
-
-  $subject_title = substr($subjectNode->title, 0, 100);
-  $object_title = substr($objectNode->title, 0, 100);
-  $field_loan_duration_value = $node->field_loan_duration[$node->language][0]['value'];
-
-  if($matches) {
-
-    $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  $matches[1];
-  } else {
-
-    $node_title = $subject_title . ' borrowed ' . $object_title . ' on ' .  date('Y/m/d', $field_loan_duration_value);
-  }
-
-  $node->title = $node_title;
+  // Override the title
+  $node->title = dss_elc_loan_node_title($node);
 
   // Properly format the datestamps for the field_loan_duration field
   // Resolves EDDC-486

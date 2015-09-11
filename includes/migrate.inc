@@ -24,16 +24,7 @@ define('ITEM_VOLUMES_TAXON', 'item_volumes');
  *   An optional identified for a specific "book" record to be migrated
  *
  */
-function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path = NULL, $limit = 0, $bookId = NULL) {
-
-  // Insert the limit clause
-  if($limit > 0) {
-
-    $sql = "SELECT * FROM :table_name LIMIT $limit";
-  } else {
-
-    $sql = 'SELECT * FROM :table_name';
-  }
+function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path = NULL, $bookId = NULL) {
 
   // Load the publication year data
   $csv_file_data = array();
@@ -66,6 +57,8 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       fclose($csv_handle);
     }
   }
+  
+  $limit = 0;
 
   // Retrieve all book records and serialize them as Book or Periodical Nodes
   foreach(drush_dss_elc_get_records($db, 'books', $limit, $bookId) as $book) {
@@ -73,55 +66,74 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
     $frbr_entities = array();
     $book_title = mb_convert_encoding($book['title'], "UTF-8", 'ASCII');
 
-    // Instantiate a new manifestion for each book or periodical
-    drush_log(dt("Migrating the manifestation !book_title", array('!book_title' => $book_title)), 'ok');
+    // Normalize the Book title value as a Manifestation Title
+    $manifestation_md_title = dss_elc_manifestation_normalize_title($book);
 
-    $manifestation_entity = entity_create('node', array('type' => 'manifestation',
-							'uid' => 1,
-							'status' => $book['flagStatus'] == '1' ? 0 : 1, // Publish or unpublish the node based upon whether or not it was "flagged" in the legacy system
-							'comment' => 1,
-							'promote' => 0,
-							));
-
-    $manifestation_md = entity_metadata_wrapper('node', $manifestation_entity);
-
-    // Set the title of the manifestation
-    /**
-     * Field length cannot be set by the administrative user
-     * Please see the issue https://drupal.org/node/1921302
-     *
-     */
-    $manifestation_md->field_artifact_title->set($book_title);    
-    if(strlen($book_title) > 255) {
-      
-      $manifestation_md->title->set(substr($book_title, 0, 255));
-    } else {
-      
-      $manifestation_md->title->set($book_title);
-    }
-
-    $manifestation_md->field_manifest_total_vol->set(intval($book['totalVolumes']));
-
-    // Retrieve the author Entity
-
-    //$author_entity = dss_elc_get_person();
-    //$manifestation_md->field_artifact_was_authored_by->set(intval($author_entity->nid));
     // Set the author for the item
     $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
 
-    $author_nids = array();
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'manifestation')
+      ->fieldCondition('field_artifact_title', 'value', $manifestation_md_title)
+      ->execute();
 
-    // Note that the author name may be delimited by a semi-colon
-    foreach(preg_split('/;/', $author_name) as $delim_author_name) {
+    if(!empty($result['node'])) {
 
-      $author_entity = dss_elc_get_human($delim_author_name, 'Author');
-      $author_nids[] = intval($author_entity->nid);
+      drush_log(dt("Previously migrated the manifestation !book_title", array('!book_title' => $manifestation_md_title)), 'ok');
+
+      $nids = array_keys($result['node']);
+      $nodes = array_map(function($nid) {
+
+	  return node_load($nid);
+	}, $nids);
+
+      $manifestation_entity = $nodes[0];
+      $manifestation_md = entity_metadata_wrapper('node', $manifestation_entity);
+    } else {
+
+      // Instantiate a new manifestion for each book or periodical
+      drush_log(dt("Migrating the manifestation !book_title", array('!book_title' => $manifestation_md_title)), 'ok');
+
+      $manifestation_entity = entity_create('node', array('type' => 'manifestation',
+							  'uid' => 1,
+							  'status' => $book['flagStatus'] == '1' ? 0 : 1, // Publish or unpublish the node based upon whether or not it was "flagged" in the legacy system
+							  'comment' => 1,
+							  'promote' => 0,
+							  ));
+
+      $manifestation_md = entity_metadata_wrapper('node', $manifestation_entity);
+
+      // Set the title of the manifestation
+      /**
+       * Field length cannot be set by the administrative user
+       * Please see the issue https://drupal.org/node/1921302
+       *
+       */
+      $manifestation_md->field_artifact_title->set($manifestation_md_title);
+      $manifestation_md->title->set($manifestation_md_title);
+
+      $manifestation_md->field_manifest_total_vol->set(intval($book['totalVolumes']));
+
+      // Retrieve the author Entity
+
+      //$author_entity = dss_elc_get_person();
+      //$manifestation_md->field_artifact_was_authored_by->set(intval($author_entity->nid));
+
+      $author_nids = array();
+
+      // Note that the author name may be delimited by a semi-colon
+      foreach(preg_split('/;/', $author_name) as $delim_author_name) {
+
+	$author_entity = dss_elc_get_human($delim_author_name, 'Author');
+	$author_nids[] = intval($author_entity->nid);
+      }
+      $manifestation_md->field_artifact_was_authored_by->set($author_nids);
+
+      // Serialize the manifestation Node
+      $manifestation_md->save(true);
+      entity_save('node', $manifestation_entity);
     }
-    $manifestation_md->field_artifact_was_authored_by->set($author_nids);
-
-    // Serialize the manifestation Node
-    $manifestation_md->save(true);
-    entity_save('node', $manifestation_entity);
 
     $frbr_entities[] = $manifestation_entity;
 
@@ -135,10 +147,25 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $book_volumes = range(1, (int) $book['totalVolumes']);
     }
 
+    //print_r($book_volumes);
+    //exit(1);
+
     // Instantiate a new book or periodical node for each book volume
     foreach($book_volumes as $book_volume) {
 
-      drush_log(dt("Migrating volume $book_volume of the item $book_title"), 'ok');
+      // Titles must have HTML character entities removed
+      $book_title = html_entity_decode($book_title);
+      $book_node_title = dss_elc_normalize_book_title($book, $book_volume);
+
+      $books = dss_elc_get_items($book_node_title, $book_title, $manifestation_md_title);
+      
+      if(!empty($books)) {
+
+	drush_log(dt("Previously migrated volume !book_volume of the item !book_node_title", array('!book_volume' => $book_volume, '!book_node_title' => $book_node_title)), 'success');
+	continue;
+      }
+
+      drush_log(dt("Migrating volume !book_volume of the item !book_node_title", array('!book_volume' => $book_volume, '!book_node_title' => $book_node_title)), 'ok');
 
       // Deprecated due to focus being paid to Item Nodes
       $values = array('type' => 'item',
@@ -151,6 +178,12 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       // Entity is...
       $book_entity = entity_create('node', $values);
       $book_md = entity_metadata_wrapper('node', $book_entity);
+      
+      // Resolves EDDC-527
+      if(intval($book['type']) == '3') {
+	
+	$book['type'] = 1;
+      }
 
       $book_md->field_book_or_periodical->set(intval($book['type']));
 
@@ -158,18 +191,10 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
        * Field length cannot be set by the administrative user
        * Please see the issue https://drupal.org/node/1921302
        */
-
-      // Titles must have HTML character entities removed
-      $book_title = html_entity_decode($book_title);
-
-      $book_node_title = dss_elc_normalize_book_title($book, $book_title, $book_volume, $author_name);
-
-      drush_log(dt("Normalizing the title into $book_node_title"), 'ok');
-
       $book_md->title->set($book_node_title);
       $book_md->field_artifact_title->set($book_node_title);
 
-      $book_md->field_artifact_was_authored_by = $author_nids;
+      $book_md->field_artifact_was_authored_by->set($author_nids);
 
       if($book_volume > 0) {
 
@@ -191,7 +216,9 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       
       case '': // Handle for cases in which the format is set to a NULL value
 
-	$book_md->field_item_format->set(NULL);
+	//$book_md->field_item_format->set(NULL);
+	$book_md->field_item_format->set(0);
+	$book['format'] = 'Octavo';
 	break;
       case 'Octavo':
 	
@@ -217,7 +244,8 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $book_number_term = dss_elc_get_taxonomy_term($book['number'], 'item_numbers');
       $book_md->field_item_number_taxon->set($book_number_term->tid);
 
-      $book_md->body->set(array('value' => $book['flagMessage']));
+      $book_flag_message = mb_convert_encoding($book['flagMessage'], "UTF-8", 'ASCII');
+      $book_md->body->set(array('value' => $book_flag_message));
 
       // Relate the book or periodical to the manifestation entity being instantiated
       $book_md->field_item_embodies->set(intval($manifestation_entity->nid));

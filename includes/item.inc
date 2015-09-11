@@ -1,5 +1,90 @@
 <?php
 
+function dss_elc_book_normalize_format($book) {
+
+  /**
+   * Ensure that the title is mapped to the proper value
+   *
+   */
+  switch($book['format']) {
+
+  case '0':
+
+    $book['format'] = 'Octavo';
+    break;
+
+  case '1':
+
+    $book['format'] = 'Quarto';
+    break;
+
+  case '2':
+
+    $book['format'] = 'Duodecimo';
+    break;
+
+  default:
+
+    $book['format'] = $book['format'];
+    break;
+  }
+
+  return $book;
+  }
+
+function dss_elc_book_normalize_title($book_title, $book_author, $title_suffix) {
+
+  $book_title = mb_convert_encoding($book_title, "UTF-8", 'ASCII');
+  $book_title = html_entity_decode($book_title);
+
+  // Normalize in response to EDDC-514
+  if( preg_match('/^Works(.+)/', $book_title, $book_title_match) ) {
+
+    $book_author_names = explode($book_author, ',');
+    $book_author_surname = array_pop($book_author_names);
+
+    $book_title = $book_author_surname . "'" . substr($book_author_surname, -1) === 's' ? '' : 's' . " Works" . $book_title_match[1];
+  }
+
+  // Resolves EDDC-530
+  $book_title = preg_replace('/—/', '-', $book_title);
+
+  // Resolve length issues
+  if(strlen($book_title) > (254 - strlen($title_suffix))) {
+
+    $book_node_title = substr($book_title, 0, 128) . '...' . $title_suffix;
+  } else {
+
+    $book_node_title = $book_title . $title_suffix;
+  }
+
+  return $book_node_title;
+}
+
+function dss_elc_book_normalize_author($book) {
+
+  $book_author = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
+  $book_author = html_entity_decode($book_author);
+
+  return $book_author;
+}
+
+function dss_elc_manifestation_normalize_title($book) {
+
+  print 'TRACE2';
+
+  $book = dss_elc_book_normalize_format($book);
+  //$book_title = dss_elc_book_normalize_title($book);
+  $book_author = dss_elc_book_normalize_author($book);
+
+  // Ensure that the format and catalog number are formatted for the title
+  $title_suffix = ' (' . $book['format'] . ' ' . $book['number'] . ')';
+
+  $normalized_title = dss_elc_book_normalize_title($book['title'], $book_author, $title_suffix);
+
+  return $normalized_title;
+}
+
 function dss_elc_items_by_manifestation($manifestation) {
 
   // Does the related Manifestation exist?
