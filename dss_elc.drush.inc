@@ -108,6 +108,14 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array('elc-nb'));
 
+  $items['dss-elc-books-normalize-works'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-books-normalize-works',
+			      ),
+	  'aliases' => array());
+
   $items['dss-elc-migrate-loans'] =
     array(
 	  'description' => dt('Migrate the ELC "loan" records into Loan Nodes'),
@@ -217,6 +225,48 @@ function dss_elc_drush_command() {
 	  'aliases' => array(''));
 
   return $items;
+}
+
+function drush_dss_elc_books_normalize_works() {
+
+  $query = new EntityFieldQuery();
+
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('manifestation', 'item'), 'IN')
+    ->propertyCondition('title', 'Works%', 'LIKE')
+    ->execute();
+
+  if(!empty($result['node'])) {
+
+    $nids = array_keys($result['node']);
+    $nodes = array_map(function($nid) {
+
+	return node_load($nid);
+      }, $nids);
+
+    foreach($nodes as $node) {
+
+      drush_log(dt("Normalizing !node_title...", array('!node_title' => $node->title)), 'ok');
+
+      $node_md = entity_metadata_wrapper('node', $node);
+
+      $author = node_load($node->field_artifact_was_authored_by[$node->language][0]['target_id']);
+
+      $author_name_segments = preg_split('/[,;]/', $author->title);
+      $author_surname = trim($author_name_segments[0]);
+
+      $normalized_title = preg_match('/s$/', $author_surname) ? $author_surname . "' " : $author_surname . "'s ";
+      $normalized_title .= $node->title;
+
+      $node->title = $normalized_title;
+      $node_md->field_artifact_title->set($normalized_title);
+
+      $node_md->save(true);
+      entity_save('node', $node);
+
+      drush_log(dt("Normalized the title to !node_title", array('!node_title' => $node->title)), 'success');
+    }
+  }
 }
 
 function drush_dss_elc_manifestation_migrate_title() {
@@ -1150,6 +1200,12 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
 
   $items = array();
 
+  print $title;
+  print "\n";
+  print utf8_encode($title);
+  print "\n";
+  //exit(1);
+
   if(!in_array($title, array('Diary of an ennuyée',
 			     "Narrative of the Texan Santa Fé expedition",
 			     "Henrici à Deventer, medicinae doctoris, operationum chirurgiearum, novum lumen, exhibentium obstetricantibus",
@@ -1162,6 +1218,13 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
     $normalized_title = preg_replace('/\?\?/', '?', $normalized_title);
     $title = preg_replace('/[[:^print:]]/', '?', $title);
     $title = preg_replace('/\?\?/', '?', $title);
+
+    //$manifestation_title = preg_replace('/[[:^print:]]/', '?', $manifestation_title);
+    //$manifestation_title = mb_ereg_replace('/[[:^print:]]/', '?', $manifestation_title);
+
+    $manifestation_title = utf8_decode($manifestation_title);
+    $manifestation_title = preg_replace('/[[:^print:]]/', '?', $manifestation_title);
+    $manifestation_title = preg_replace('/\?\?/', '?', $manifestation_title);
   }
 
   $drupalQuery = new EntityFieldQuery();
@@ -1179,7 +1242,7 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
 
     if(is_null($manifestation)) {
 
-      drush_log(dt("Failed to retrieve any Manifestations for !title", array('!title' => $title)), 'error');
+      drush_log(dt("Failed to retrieve any Manifestations for !title", array('!title' => $manifestation_title)), 'error');
       exit(1);
     } else {
 

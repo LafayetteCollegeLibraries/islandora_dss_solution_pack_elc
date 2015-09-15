@@ -46,6 +46,8 @@ function dss_elc_book_normalize_title($book_title, $book_author, $title_suffix) 
     $book_title = $book_author_surname . "'" . substr($book_author_surname, -1) === 's' ? '' : 's' . " Works" . $book_title_match[1];
   }
 
+  $book_title = utf8_decode($book_title);
+
   // Resolves EDDC-530
   $book_title = preg_replace('/—/', '-', $book_title);
 
@@ -71,10 +73,7 @@ function dss_elc_book_normalize_author($book) {
 
 function dss_elc_manifestation_normalize_title($book) {
 
-  print 'TRACE2';
-
   $book = dss_elc_book_normalize_format($book);
-  //$book_title = dss_elc_book_normalize_title($book);
   $book_author = dss_elc_book_normalize_author($book);
 
   // Ensure that the format and catalog number are formatted for the title
