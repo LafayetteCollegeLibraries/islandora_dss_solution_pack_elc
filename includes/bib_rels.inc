@@ -97,6 +97,7 @@ function dss_elc_loan_node_presave($node) {
 
   // Properly format the datestamps for the field_loan_duration field
   // Resolves EDDC-486
+  $field_loan_duration_value = $node->field_loan_duration['und']['0']['value'];
 
   // This function can be invoked recursively
   // Attempt to reformat the ISO-formatted datestamp into a POSIX datestamp
