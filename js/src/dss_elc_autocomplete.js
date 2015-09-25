@@ -122,6 +122,8 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	this.input = input;
 	this.filterAutocomplete = filterAutocomplete || false;
 
+	this.tokens = new Tokens(this);
+
 	/**
 	 * Handling for the submission of node forms
 	 *
@@ -133,8 +135,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 
 	    this.tokenizeField(this.input);
 	}
-
-	this.tokens = new Tokens(this);
     };
 
     /**
