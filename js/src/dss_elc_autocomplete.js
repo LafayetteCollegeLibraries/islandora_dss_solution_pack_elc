@@ -294,6 +294,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		// Handling for race conditions (i. e. the data hasn't been bound to the element, but the AJAX response has been received and parsed
 		//var inputElement = this.input;
 		var $selectedItem = $fieldElem.parents('.controls').find('#autocomplete li.selected');
+
 		if($selectedItem.length > 0) {
 
 		    this.set('autoCompleteItem', $selectedItem.data('autocompleteValue') );
@@ -305,8 +306,23 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		}
 	    } else {
 
+		/**
+		 * This handles cases for dialogs
+		 *
+		 */
+		// @todo Refactor
+		var $selectedItem = $fieldElem.parents('.controls').find('#autocomplete li.selected');
+
+		if($selectedItem.length > 0) {
+
+		    this.set('autoCompleteItem', $selectedItem.data('autocompleteValue') );
+		    var items = [$selectedItem.data('autocompleteValue')];
+		} else {
+
+		    var items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
+		}
+
 		// ...otherwise, iterate over the new values
-		var items = this.get('autoCompleteItem') ? [ this.get('autoCompleteItem') ] : $fieldElem.val().split(',');
 		var updatedValue = '';
 	    }
 
@@ -393,10 +409,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	     * @todo Refactor with EntityRef.prototype.keydown
 	     *
 	     */
-	    if(false) {
-
-		// no-op
-	    } else {
 
 		/*
 		 * @author goodnowt This line is disabled temporarily for release to disable the enter key creating tokens from the autocomplete (until that functionality is fixed)
@@ -478,7 +490,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		    
 		    $(document).data('islandoraDssElc.autocomplete.pollInterval', intervalId);
 		}
-	    }
+
 	}	
     };
 
@@ -495,7 +507,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 
     DssElcAutocompleteEntityRef.submit = function(e, callback) {
 
-	console.log(this);
 	return callback(e);
     };
 
@@ -629,9 +640,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	 *
 	 */
 	$(document).ajaxComplete(function(event, xhr, settings) {
-
-		console.log('ajax');
-		console.log(+new Date);
 
 		if(settings && /system\/ajax/.exec(settings.url)) {
 		    

@@ -108,35 +108,6 @@ NodeFormModal.prototype.getMethodForElement = function() {
 NodeFormModal.prototype.getContentTypeForElement = function() {
 
     return this.button.attr('data-content-type');
-
-    /*
-    switch(this.method) {
-		
-    case 'edit':
-	    
-    pattern = RegExp('edit\-(.+?)\-([0-9]+?)\-modal');
-    break;
-	    
-    case 'add':
-	    
-    pattern = RegExp('add\-(.+?)\-modal');
-    matchIndex = 1;
-    break;
-	    
-    default:
-	    
-    throw new Error('Badly formed element ID does not contain the method name "' + this.method + '": ' + this.$element.attr('id'));
-    }
-	    
-    m = pattern.exec( this.$element.attr('id'));
-    if(m) {
-		
-	return m[1];
-    } else {
-	
-	return 'node';
-    }
-    */
 };
 
 NodeFormModal.prototype.openDialog = function() {
@@ -365,16 +336,6 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 
     var $modalContainer = dssNodeFormModal.$container;
 
-    /*
-      $modal = $modalContainer.data('nodeFormModal')['modal'];
-      contentTypeName = $modalContainer.data('nodeFormModal')['contentTypeName'];
-      $relatedFormElement = $modalContainer.data('nodeFormModal')['relatedFormElement'];
-      
-      $submit = $( '.ui-dialog').last().find('#edit-publish.btn');
-    */
-	    
-    //$submit = $modalContainer.data('nodeFormModal')['relatedFormElement'];
-
     /**
      * Error handling
      * HTTP headers are consistently 200 when form submissions are not valid
@@ -460,13 +421,6 @@ NodeFormModal.onFormAjaxSuccessHandler = function(data, textStatus, xhr) {
 	 * Find the ID of the newly-saved Node by parsing the HTML
 	 */
 	nodeId = /node\-(\d+)/.exec($(data).find('article').attr('id'))[1];
-
-	/*
-	if($relatedInputField.attr('id') == "edit-field-bib-rel-object-und") {
-
-	    nodeId = (parseInt(nodeId) - 1).toString();
-	}
-	*/
 
 	if($relatedInputField.attr('id') == "edit-field-bib-rel-object-und") {
 
@@ -715,15 +669,6 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
      * @todo Refactor into the constructor (?)
      *
      */
-
-    /*
-    // Set the submit form button to the publish button
-    dssNodeFormModal.$submit = $modal.find('#edit-publish');
-    $submit = dssNodeFormModal.$submit;
-
-    // Set the <form> element
-    dssNodeFormModal.$form = dssNodeFormModal.$submit.parents('form');
-    */
 
     /**
      * Forcibly append the hidden form element for the Publish action and the append certain JavaScript <script> elements
