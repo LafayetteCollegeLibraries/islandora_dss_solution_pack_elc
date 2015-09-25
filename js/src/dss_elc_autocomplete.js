@@ -878,22 +878,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	    var $listElem = $(this.input).parents('.controls').find('#autocomplete');
 
 	    // Start polling for responses
-	    
-	    /*
-	    if($listElem.length > 0) {
-
-		console.log('trace4');
-
-		//var listItems = $listElem.parents('li.selected').length > 0 ? $listElem.parents('li.selected').data('autocompleteValue') : $listElem.parents('li:first').data('autocompleteValue');
-		var listItems = $listElem.children('li');
-
-		console.log(listItems);
-	    } else {
-
-		console.log('trace5');
-	    }
-	    */
-
 	    $(document).data('islandoraDssElc.autocomplete.poll', this);
 	    $(document).data('islandoraDssElc.autocomplete.pollEvent', event);
 	    $(document).data('islandoraDssElc.autocomplete.timeInit', +new Date());
@@ -941,22 +925,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 				    autocomplete.set('autoCompleteItem', null);
 				});
 
-			    /*
-			    context.set('autoCompleteKey', true);
-			    context.set('autoCompleteItem', $listElem.parents('li.selected').data('autocompleteValue'));
-			    */
-		
-			    /*
-			    event.target = inputElement;
-
-			    context.tokenize(event);
-			    */
-
-			    /*
-			    context.set('autoCompleteKey', false);
-			    context.set('autoCompleteItem', null);
-			    */
-			    
 			    window.clearInterval($(document).data('islandoraDssElc.autocomplete.pollInterval'));
 			    $(document).data('islandoraDssElc.autocomplete.poll', null);
 			    $(document).data('islandoraDssElc.autocomplete.pollEvent', null);
@@ -1277,7 +1245,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		     * @todo Refactor for a plug-in
 		     *
 		     */
-		    $(document).on('click', '#autocomplete .selected div, .reference-autocomplete', function(event) {
+		    $(document).on('click keyup', '#autocomplete .selected div, .reference-autocomplete', function(event) {
 			    
 			    //$(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete').tokenize(event);
 			    var autocomplete = $(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete');
@@ -1288,7 +1256,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 			});
 		    $(this).on('keyup', '#autocomplete .selected div, .reference-autocomplete', function(event) {
 		    
-			    if(event.which == 13){
+			    if(event.which == 13) {
 
 				//$(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete').tokenize(event);
 				var autocomplete = $(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete');
