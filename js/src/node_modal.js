@@ -231,6 +231,8 @@ NodeFormModal.prototype.loadingStart = function() {
 
 	// Add an overlay for the page
 	var $overlay = $('<div class="dialog-loading-overlay">').appendTo('body');
+
+	// Add the loading animation
 	var $bars = $('<div id="floatingBarsG"></div>').appendTo($overlay);
 	Array(1,2,3,4,5,6,7,8).map(function (i) {
 		    
