@@ -210,8 +210,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		    }
 		})
 	    );
-
-	console.log( $(this).serializeArray() );
     };
 
     /**
@@ -246,6 +244,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
     DssElcAutocomplete.prototype.bindInputHandlers = function() {
 
 	var that = this;
+	/*
 	$(this.input).keydown(function(e) {
 
 		$(this).data('islandoraDssElc.autocomplete').keydown(e);
@@ -254,6 +253,11 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	$(this.input).keyup(function(e) {
 
 		$(this).data('islandoraDssElc.autocomplete').keyup(e);
+	    });
+	*/
+	$(this.input).keypress(function(e) {
+
+		$(this).data('islandoraDssElc.autocomplete').keypress(e);
 	    });
     };
 
@@ -395,9 +399,9 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
      * For all events in which the user attempts to tokenize a value
      *
      */
-    DssElcAutocomplete.prototype.keydown = function(event) {
+    DssElcAutocomplete.prototype.keypress = function(event) {
 
-	if((event.which == 188 || event.which == 13) && $(this.input).val().length > 1) {
+	if((event.which == 188 || event.which == 13) && $(this.input).val() != "") {
 
 	    event.preventDefault();
 
@@ -492,15 +496,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		}
 
 	}	
-    };
-
-    /**
-     * @todo Is this being called twice?
-     *
-     */
-    DssElcAutocomplete.prototype.keyup = function(event) {
-
-	return this.keydown(event);
     };
 
     Islandora.ELC.Autocomplete.Term = DssElcAutocomplete;
@@ -737,7 +732,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		     * For the population of each field-human-pers-rels field based upon the values within the field specifying the Role and Object of each personal relationship
 		     *
 		     */
-		    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+		    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keypress(function(e) {
 				
 			    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
 				
@@ -779,7 +774,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
      * For the selection of widget values for entity references
      *
      */
-    DssElcAutocompleteEntityRef.prototype.keydown = function(event) {
+    DssElcAutocompleteEntityRef.prototype.keypress = function(event) {
 
 	/*
 	 * @author goodnowt This line is disabled temporarily for release to disable the enter key creating tokens from the autocomplete (until that functionality is fixed)
@@ -789,7 +784,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 	 */
 	var inputElement = this.input;
 
-	if((event.which == 188 || event.which == 13) && $(this.input).val().length > 1) {
+	if((event.which == 188 || event.which == 13) && $(this.input).val() != "") {
 
 	    // @todo Refactor
 	    event.stopImmediatePropagation();
@@ -910,7 +905,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 			if($listElem.length > 0) {
 
 			    // Set the handlers for the newly appended DOM Elements
-			    $listElem.find('li').on('click keydown', function(event) {
+			    $listElem.find('li').on('click keypress', function(event) {
 
 				    // Retrieve the related input widget within the scope of the Document instance
 				    //var autocomplete = $(document).data();
@@ -1135,7 +1130,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		     *
 		     */
 		    //$('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').change(function(e) {
-		    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keydown(function(e) {
+		    $('#edit-field-pers-rel-role-und, #edit-field-pers-rel-object-und').keypress(function(e) {
 			    
 			    var $relationFieldElem = $(this).parents('.controls').children('.form-text');
 			    
@@ -1159,7 +1154,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 				$relationFieldElem.val((humanName + ' is a ' + $roleFieldElem.val() + ' in relation to ' + $objectFieldElem.val().replace(/\(\d+\)/, '')).trim());
 				
 				// Trigger the autocompletion
-				//$relationFieldElem.keyup();
 				$.get('/entityreference/autocomplete/single/field_human_pers_rels/node/human/NULL/' + encodeURI($relationFieldElem.val()), function(data) {
 					
 					var lastEntity = Object.keys(data).pop();
@@ -1245,7 +1239,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 		     * @todo Refactor for a plug-in
 		     *
 		     */
-		    $(document).on('click keyup', '#autocomplete .selected div, .reference-autocomplete', function(event) {
+		    $(document).on('click keypress', '#autocomplete .selected div, .reference-autocomplete', function(event) {
 			    
 			    //$(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete').tokenize(event);
 			    var autocomplete = $(this).parents('.controls').find('.form-text').data('islandoraDssElc.autocomplete');
@@ -1254,7 +1248,7 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 				autocomplete.tokenize(event);
 			    }
 			});
-		    $(this).on('keyup', '#autocomplete .selected div, .reference-autocomplete', function(event) {
+		    $(this).on('keypress', '#autocomplete .selected div, .reference-autocomplete', function(event) {
 		    
 			    if(event.which == 13) {
 
@@ -1363,8 +1357,6 @@ Islandora.ELC.Autocomplete.TIMEOUT = 4000;
 					    var e = $(document).data('islandoraDssElc.keypress.event');
 					    var targetValue = $(document).data('islandoraDssElc.keypressTarget.value');
 					    e.currentTarget.value = targetValue;
-
-					    console.log('trace9');
 
 					    /**
 					     *
