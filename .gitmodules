@@ -1,0 +1,6 @@
+[submodule "dss_elc_metrics"]
+	path = dss_elc_metrics
+	url = git@github.com:LafayetteCollegeLibraries/dss_elc_metrics.git
+[submodule "dss_elc_visualize"]
+	path = dss_elc_visualize
+	url = git@github.com:LafayetteCollegeLibraries/dss_elc_visualize.git
