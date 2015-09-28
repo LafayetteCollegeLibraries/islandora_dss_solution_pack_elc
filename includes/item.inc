@@ -122,9 +122,9 @@ function dss_elc_item_node_presave($node) {
     foreach($node->field_artifact_was_authored_by['und'] as $key => $value){
 
       for($comp_key = $key + 1; $comp_key < count($node->field_artifact_was_authored_by['und']); $comp_key ++ ){
-  		
+
 	if($value['target_id'] == $node->field_artifact_was_authored_by['und'][$comp_key]['target_id']){
-			
+
 	  unset($node->field_artifact_was_authored_by['und'][$comp_key]);
 	}
       }
@@ -133,14 +133,14 @@ function dss_elc_item_node_presave($node) {
 
   // Append the volume number to the node title field
   if(isset($node->field_item_volume) && isset($node->field_item_volume[$node->language][0])) {
-    
+
     /**
      * @todo Implement for Item title generation
      *
      */
     $volumeTerm = taxonomy_term_load($node->field_item_volume[$node->language][0]['tid']);
     //$format = $book_md->field_item_format;
-    
+
     //$node->title = $itemTitle . ' (Vol. ' . $volumeTerm->name . ')';
     //$book_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
     //$node->title = $itemTitle . ' [Vol. ' . $volumeTerm->name . '] (' . $book['format'] . ' ' . $book['number'] . ')';
@@ -173,7 +173,7 @@ function dss_elc_item_node_presave($node) {
 						     'promote' => 0));
 
       $manifest_md = entity_metadata_wrapper('node', $manifest_entity);
-      
+
       // Set the title for the Manifestation
       $manifest_md->field_artifact_title->set($itemTitle);
 
@@ -214,37 +214,57 @@ function dss_elc_item_node_insert($node) {
       ->execute();
 
     if(isset($result['node'])) {
-    
+
       $authorship_entity = array_pop(entity_load('node', array_keys($result['node'])));
     } else {
-    
+
       // Instantiate the authorship Node for Authors
       $authorship_entity = entity_create('node', array('type' => 'authorship',
 						       'uid' => 1,
 						       'status' => 1,
 						       'comment' => 1,
 						       'promote' => 0));
-      
+
       $authorship_md = entity_metadata_wrapper('node', $authorship_entity);
-      
+
       // Set the author as 1 (Array, 1 elemthe subject
       //$authorship_md->field_bib_rel_subject->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id'] ));
       $authorship_md->field_bib_rel_subject->set(intval($author_entity->nid ));
-    
+
       // auto_nodetitle appends a single space
       $objectTitle = substr($node->title, 0, 63) . '...';
-    
+
       //$title = $author_entity->title . " authored " . $objectTitle;
       //$title = preg_replace('/\s\(Manifestation\)$/', '', $title);
-    
+
       $authorship_md->title = $author_entity->title . " authored " . $objectTitle;
     }
 
     // Set the authored works as the objects
     $authorship_md->field_bib_rel_object[] = intval($node->nid);
-  
+
     // Instantiate the Personal Relationship
     $authorship_md->save(true);
     entity_save('node', $authorship_entity);
   }
+}
+
+/**
+ * Retrieve all Manifestation Nodes which are linked to items of a given Item (by the Node ID)
+ *
+ */
+function dss_elc_manifestations_ajax() {
+
+  $manifestations = array();
+  foreach(func_get_args() as $item_nid) {
+
+    $item = node_load($item_nid);
+
+    if(!empty($item->field_item_embodies[$item->language]) and array_key_exists('target_id', $item->field_item_embodies[$item->language][0])) {
+
+      $manifestations[] = node_load($item->field_item_embodies[$item->language][0]['target_id']);
+    }
+  }
+
+  drupal_json_output($manifestations);
 }

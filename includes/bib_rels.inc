@@ -80,7 +80,7 @@ function dss_elc_loan_node_presave($node) {
 
   // If the subject of the loan relationship (i. e. the Representative) field is empty...
   if(empty($node->field_bib_rel_subject[$node->language])) {
-    
+
     $node->field_bib_rel_subject[$node->language][] = $node->field_loan_shareholder[$node->language][0];
   } elseif(property_exists($node, 'field_loan_shareholder') && array_key_exists($node->language, $node->field_loan_shareholder)) {
 
@@ -91,7 +91,7 @@ function dss_elc_loan_node_presave($node) {
       dss_elc_update_pers_rels(intval($node->field_bib_rel_subject[$node->language][0]['target_id']), intval($node->field_loan_shareholder[$node->language][0]['target_id']));
     }
   }
-    
+
   // Override the title
   $node->title = dss_elc_loan_node_title($node);
 
@@ -127,7 +127,7 @@ function dss_elc_loan_node_presave($node) {
 
       // For cases in which the terminal value for the loan duration range was unspecified, set the value to an empty string
       if($field_loan_duration_value2 == '0000-00-00T00:00:00') {
-	
+
 	$field_loan_duration_value2 = '';
       } else {
 
@@ -154,4 +154,9 @@ function dss_elc_loan_node_presave($node) {
       $node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
     }
   }
+}
+
+function dss_elc_get_bib_rels_ajax($subjectNid) {
+
+  drupal_json_output(dss_elc_get_bib_rels($subjectNid) );
 }
