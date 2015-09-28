@@ -282,25 +282,14 @@ NodeFormModal.onNodeIdSuccessHandler = function() {
     var $ = NodeFormModal.jQuery;
 
     /**
-     * Work-around
-     * Handling for personal relationship nodes
-     * @todo Refactor
+     * Tokenization integration
+     *
+     * @todo Attempt to integrate with the tokenization widget exposed within dss_elc_autocomplete
      *
      */
     // Anomalous handling for the addition of multiple personal relationships
-    if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und') {
-		    
-	$relatedInputField.val(entityRefStr);
-	//$relatedInputField.change();
-    } else {
-		    
-	/**
-	 * Integration for tokenization
-	 * @todo Refactor
-	 */
-	$("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
-	$relatedInputField.val('');
-    }
+    $("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+    $relatedInputField.val('');
 
     // Trigger any handlers bound to the form field using the jQuery "change" event
     $relatedInputField.change();
