@@ -598,7 +598,6 @@ function drush_dss_elc_migrate_books($mysql_user,
   module_load_include('inc', 'dss_elc', 'includes/migrate');
 
   $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
-  //dss_elc_migrate_books($db, $csv_file_path, $normalize_file_path, $bookId);
   dss_elc_migrate_books($db, NULL, NULL, $bookId);
 
   drush_dss_elc_relate_subjects($mysql_user,

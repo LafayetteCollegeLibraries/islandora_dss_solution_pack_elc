@@ -71,10 +71,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 
     // Set the author for the item
     $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
-
-
-    $manifestation_md_title = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
-    print $manifestation_md_title;
+    $manifestation_md_title = mb_convert_encoding($manifestation_md_title, 'UTF-8', 'ASCII');
 
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'node')
@@ -138,6 +135,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $manifestation_md->save(true);
       entity_save('node', $manifestation_entity);
     }
+
 
     $frbr_entities[] = $manifestation_entity;
 
