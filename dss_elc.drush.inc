@@ -1200,11 +1200,7 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
 
   $items = array();
 
-  print $title;
-  print "\n";
-  print utf8_encode($title);
-  print "\n";
-  //exit(1);
+  $raw_manifestation_title = $manifestation_title;
 
   if(!in_array($title, array('Diary of an ennuyée',
 			     "Narrative of the Texan Santa Fé expedition",
@@ -1242,8 +1238,13 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
 
     if(is_null($manifestation)) {
 
-      drush_log(dt("Failed to retrieve any Manifestations for !title", array('!title' => $manifestation_title)), 'error');
-      exit(1);
+      $manifestation = dss_elc_get_manifestation($raw_manifestation_title);
+
+      if(is_null($manifestation)) {
+
+	drush_log(dt("Failed to retrieve any Manifestations for !title", array('!title' => $manifestation_title)), 'error');
+	exit(1);
+      }
     } else {
 
       drush_log(dt("Mapping the loaned volume to the last book volume for !title", array('!title' => $title)), 'ok');
@@ -1510,10 +1511,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
       // Extending the data model beyond the depth of "volume" would be trivial and unnecessary; cataloging is outside of the scope of the project
       if(empty($items)) {
 
-	print $book_title;
-	print $node_book_title;
-	print $loan['book_id'];
-	print 'TRACE';
+	drush_log(dt('Failed to resolve Items from the legacy Volumes for the Book !book_title using !node_book_title', array('!book_title' => $book_title, '!node_book_title' => $node_book_title)), 'error');
 	exit(1);
 	
 	$manifestation = dss_elc_get_manifestation($book_title);

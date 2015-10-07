@@ -72,6 +72,10 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
     // Set the author for the item
     $author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
 
+
+    $manifestation_md_title = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
+    print $manifestation_md_title;
+
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'manifestation')
@@ -147,14 +151,12 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $book_volumes = range(1, (int) $book['totalVolumes']);
     }
 
-    //print_r($book_volumes);
-    //exit(1);
-
     // Instantiate a new book or periodical node for each book volume
     foreach($book_volumes as $book_volume) {
 
       // Titles must have HTML character entities removed
       $book_title = html_entity_decode($book_title);
+
       $book_node_title = dss_elc_normalize_book_title($book, $book_volume);
 
       $books = dss_elc_get_items($book_node_title, $book_title, $manifestation_md_title);
