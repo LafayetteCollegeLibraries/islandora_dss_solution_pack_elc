@@ -7,6 +7,7 @@
 <ul>
 <li><span class="add-form-legend-asterisk">*</span> = Required field</li>	
 <li><span class="add-form-legend-circle">&#9702;</span> = Features autocomplete; if value not listed, please create new record</li>
+<li class="help-legend">For further assistance, please see our <a href="https://elc.stage.lafayette.edu/add/help">Help</a> page.</li>
 </ul>
 
 </div>
