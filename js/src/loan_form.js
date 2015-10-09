@@ -173,13 +173,13 @@
             $('#edit-loan-subset-1-3').click(function (e) {
 
                 $(this).addClass('active').siblings().removeClass('active');
-                $('.type-column, .fine-column, .shareholder-column').show();
+                $('.form-item-field-loan-notes-und, .fine-column, .shareholder-column').show();
 
             });
             $('#edit-loan-subset-4-5').click(function (e) {
 
                 $(this).addClass('active').siblings().removeClass('active');
-                $('.type-column, .fine-column, .shareholder-column').hide();
+                $('.form-item-field-loan-notes-und, .fine-column, .shareholder-column').hide();
 
             });
 
