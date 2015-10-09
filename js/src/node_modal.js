@@ -290,7 +290,13 @@ NodeFormModal.onNodeIdSuccessHandler = function() {
      *
      */
     // Anomalous handling for the addition of multiple personal relationships
-    $("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+    //$("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
+    $("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").click(function(e) {
+
+	    e.preventDefault();
+	    $(this).remove();
+	}).appendTo( $relatedInputField.parents('.controls').find('.token-list') );
+    
     $relatedInputField.val('');
 
     // Trigger any handlers bound to the form field using the jQuery "change" event

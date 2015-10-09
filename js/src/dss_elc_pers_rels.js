@@ -380,18 +380,6 @@ function DssElcPersRelsField(document, options) {
      *
      */
     this.$button.hide();
-    //this.$button.click(Islandora.ELC.Relationship.Form.Button.click);
-
-    /*
-    this.$button.click(function(e) {
-
-	    e.stopImmediatePropagation();
-
-	    //$(document).data(Islandora.ELC.Relationship.DATA_KEY, relationships);
-	    var relationships = $(document).data(Islandora.ELC.Relationship.DATA_KEY, relationships);
-	    relationships.addField($(this));
-	});
-    */
 };
 
 /**
@@ -426,7 +414,8 @@ DssElcPersRelsField.addField = function($button) {
 		 * @todo Decouple and implement within the appropriate Drupal hook implementations
 		 *
 		 */
-		var $fields = $('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div></div>');
+		//var $fields = $('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div></div>');
+		var $fields = $('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div></div>');
 		
 		// Append the newly-added form fields
 		$element.parent().append($fields);
@@ -605,7 +594,8 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 				
 				$objectFieldElem.prop('disabled', false);
 				$objectFieldElem.val('');
-				$roleFieldElem.val('_none');
+				//$roleFieldElem.val('_none');
+				$roleFieldElem.val('658');
 			    }
 			});
 		}
