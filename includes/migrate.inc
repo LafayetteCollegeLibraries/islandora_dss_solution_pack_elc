@@ -134,6 +134,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       // Serialize the manifestation Node
       $manifestation_md->save(true);
       entity_save('node', $manifestation_entity);
+
     }
 
 

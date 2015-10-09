@@ -13,8 +13,9 @@ Islandora.ELC.Relationship.FIELDS_TOTAL = 'dssElcPersRelsFieldTotal';
 
 Islandora.ELC.Relationship.Form = Islandora.ELC.Relationship.Form || {};
 Islandora.ELC.Relationship.Form.KEY = 'IslandoraElcRelForm';
-
 Islandora.ELC.Relationship.Form.TOKEN_KEY = 'IslandoraElcRelFormToken';
+
+Islandora.ELC.Relationship.Form.Button = Islandora.ELC.Relationship.Form.Button || {};
 
 Islandora.ELC.Relationship.Field = Islandora.ELC.Relationship.Field || {};
 
@@ -326,6 +327,14 @@ Islandora.ELC.AjaxComplete = function(event, xhr, settings) {
     }
 };
 
+/**
+ *
+ */
+Islandora.ELC.Relationship.Form.Button.click = function(event) {
+
+    
+};
+
 // Islandora.ELC.Relationship.Form
 function DssElcPersRelsField(document, options) {
 
@@ -371,6 +380,18 @@ function DssElcPersRelsField(document, options) {
      *
      */
     this.$button.hide();
+    //this.$button.click(Islandora.ELC.Relationship.Form.Button.click);
+
+    /*
+    this.$button.click(function(e) {
+
+	    e.stopImmediatePropagation();
+
+	    //$(document).data(Islandora.ELC.Relationship.DATA_KEY, relationships);
+	    var relationships = $(document).data(Islandora.ELC.Relationship.DATA_KEY, relationships);
+	    relationships.addField($(this));
+	});
+    */
 };
 
 /**

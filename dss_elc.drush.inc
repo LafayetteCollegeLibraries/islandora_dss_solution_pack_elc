@@ -1490,11 +1490,6 @@ function drush_dss_elc_migrate_loans($mysql_user,
       foreach($volume_fields['volumes'] as $volume) {
 
 	// Here, an attempt has been made to retrieve the book by its title
-	//
-	//$book = dss_elc_get_book($db, $book_title);
-
-	//$author_name = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
-
 	// The volume is encoded within the label of the Node
 	// @todo Refactor this for a taxonomy term
 	$node_book_title = dss_elc_normalize_book_title($book, $volume);
@@ -1510,33 +1505,27 @@ function drush_dss_elc_migrate_loans($mysql_user,
       // Extending the data model beyond the depth of "volume" would be trivial and unnecessary; cataloging is outside of the scope of the project
       if(empty($items)) {
 
-	drush_log(dt('Failed to resolve Items from the legacy Volumes for the Book !book_title using !node_book_title', array('!book_title' => $book_title, '!node_book_title' => $node_book_title)), 'error');
-	exit(1);
-	
-	$manifestation = dss_elc_get_manifestation($book_title);
-	if(!$manifestation) {
+	drush_log(dt('Failed to resolve Items from the legacy Volumes for the Book !book_title using !node_book_title', array('!book_title' => $book_title, '!node_book_title' => $node_book_title)), 'warning');
 
-	  drush_log(dt('Failed to retrieve the Manifestation for !book_title', array('!book_title' => $book_title, '!node_id' => $manifestation->nid)), 'error');
+	$node_book_title = dss_elc_normalize_book_title($book, '1');
+	$items = array_merge($items, dss_elc_get_items($node_book_title, $book_title, $manifestation_title));
+
+	if(empty($items)) {
+
+	  drush_log(dt('Failed to resolve Items from the legacy Volumes for the Book !book_title using !node_book_title', array('!book_title' => $book_title, '!node_book_title' => $node_book_title)), 'warning');
 	  exit(1);
 	}
 
-	$loan_md->field_bib_rel_object->set(array(intval($manifestation->nid)));
-	drush_log(dt("Mapped the \"book_id\" foreign key !book_title to the Manifestation !node_id", array('!book_title' => $book_title, '!node_id' => $manifestation->nid)), 'ok');
+	$item = $items[0];
 
-	exit(1);
+	$manifestation = node_load($item->field_item_embodies[$item->language][0]['target_id']);
+	$loan_md->field_bib_rel_object->set(array(intval($manifestation->nid)));
+
+	drush_log(dt("Mapped the \"book_id\" foreign key !book_title to the Manifestation !node_id", array('!book_title' => $book_title, '!node_id' => $manifestation->nid)), 'ok');
       } else {
 
 	// Loans must be mapped to individual manifestations
 	// Retrieve a manifestation in relation to an Item
-
-	/*
-	foreach($items as $item) {
-
-	  drush_log(dt("Mapped the \"book_id\" foreign key $book_title to " . $item->title), 'ok');
-	  
-	  $loan_md->field_bib_rel_object[] = intval($item->nid);
-	}
-	*/
 	$item = $items[0];
 
 	$manifestation = node_load($item->field_item_embodies[$item->language][0]['target_id']);
@@ -1609,14 +1598,6 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
       // Issues with the "date" Module and the Entity API
       // (https://drupal.org/node/1803286)
-
-      /*
-      $loan_md->field_checkout = strtotime($loan['checkout']);
-      drush_log(dt('Mapped the "checkout" field value ' . $loan['checkout']), 'ok');
-      $loan_md->field_returned = strtotime($loan['returned']);
-      drush_log(dt('Mapped the "returned" field value ' . $loan['returned']), 'ok');
-      */
-
       $loan_md->field_loan_duration = array('value' => strtotime($loan['checkout']),
 					    'value2' => strtotime($loan['returned']));
       drush_log(dt('Mapped the "checkout" field value ' . $loan['checkout']), 'ok');

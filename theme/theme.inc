@@ -5,11 +5,6 @@
  *
  */
 
-function dss_elc_preprocess_node(&$vars) {
-  
-  
-  }
-
 function dss_elc_preprocess_node_form(&$variables) {
 
   hide($variables['form']['additional_settings']);
@@ -157,7 +152,7 @@ function template_preprocess_human_node_form(&$variables) {
 								    ),
 						  'term' => array(
 								  array(
-									'selector' => array("#edit-field-human-occupation-und1"),
+									'selector' => array("#edit-field-human-occupation-und"),
 									'options' => array()
 									),
 								  array(
