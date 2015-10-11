@@ -1,16 +1,24 @@
 <?php
 
+/**
+ * Implements hook_drush_help().
+ *
+ */
 function dss_elc_drush_help($command) {
 
   switch($command) {
-    
+
   case 'islandora-ingest-root':
-    return dt('to be implemented');
+    return dt();
   case 'islandora-purge-root':
-    return dt('to be implemented');
+    return dt();
   }
   }
 
+/**
+ * Implements hook_drush_command().
+ *
+ */
 function dss_elc_drush_command() {
 
   $items = array();
@@ -227,6 +235,11 @@ function dss_elc_drush_command() {
   return $items;
 }
 
+/**
+ * Drush task for the normalization of all Manifestation Nodes containing the substring "Works"
+ * Resolves EDDC-514
+ *
+ */
 function drush_dss_elc_books_normalize_works() {
 
   $query = new EntityFieldQuery();
@@ -269,10 +282,14 @@ function drush_dss_elc_books_normalize_works() {
   }
 }
 
+/**
+ * Drush task for migrating the legacy Book titles into Manifestation Node titles
+ *
+ */
 function drush_dss_elc_manifestation_migrate_title() {
 
   $query = new EntityFieldQuery();
-  
+
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'manifestation');
   //->range(0,1);
@@ -296,15 +313,12 @@ function drush_dss_elc_manifestation_migrate_title() {
 
       $docs = $results->response->docs;
 
-      //if(!empty($result['node'])) {
       if( !empty($docs) ) {
 
 	$item_doc = $docs[0];
 
 	$item = (object) array('title' => $item_doc->label);
 
-	print_r($item);
-      
 	drush_log('Updating ' . $node->nid . ' (' . $node->title . ') with ' . $item->title . '...', 'ok');
 
 	$node_md->field_artifact_title->set($item->title);
@@ -320,20 +334,23 @@ function drush_dss_elc_manifestation_migrate_title() {
   }
 }
 
+/**
+ * Drush task for generating path aliases for Islandora Objects
+ *
+ */
 function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
 
   // Get the connection
   $connection = islandora_get_tuque_connection(user_load(1), $url);
-  
+
   module_load_include('inc', 'islandora', 'includes/utilities');
 
   //! @todo Refactor using the Object-Oriented API
-
   $f = function($options) {
 
     $pid = $options['pid'];
     $connection = $options['connection'];
-		   
+
 
     $query = 'SELECT $object $title $content
      FROM <#ri>
@@ -344,23 +361,11 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
                    <fedora-model:state> <fedora-model:Active> .
             FILTER(sameTerm($collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm($collection_predicate, <fedora-rels-ext:isMemberOf>))
             FILTER (!sameTerm($content, <info:fedora/fedora-system:FedoraObject-3.0>))';
-    
-    /*
-    $enforced = variable_get('islandora_namespace_restriction_enforced', FALSE);
-    if ($enforced) {
-      $namespace_array = explode(' ', variable_get('islandora_pids_allowed', 'default: demo: changeme: ilives: islandora-book: books: newspapers: '));
-      $namespace_array = array_map('islandora_get_namespace', $namespace_array);
-      $namespace_array = array_filter($namespace_array, 'trim');
-      $namespace_sparql = implode('|', $namespace_array);
-      $query .= 'FILTER(regex(str(?object), "info:fedora/(' . $namespace_sparql . '):"))';
-    }
-    */
+
     $query .= '} ORDER BY $title';
     $query_array = array(
 			 'query' => $query,
 			 'type' => 'sparql',
-			 //'pid' => $obj_pid,
-			 // Seems as though this is ignored completely.
 			 'page_size' => $page_size,
 			 'page_number' => $page_number,
 			 );
@@ -371,14 +376,10 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
       }, $connection->repository->ri->query($query_array['query'], $query_array['type']));
   };
 
-  //foreach($connection->repository->ri->query($query_array['query'], $query_array['type']) as $result) {
-
   $options = array('pid' => $pid,
 		   'connection' => $connection);
 
   foreach($f($options) as $coll) {
-
-    //$object = islandora_object_load($result['object']['value']);
 
     $options = array('pid' => $coll->id,
 		     'connection' => $connection);
@@ -387,7 +388,7 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
 
       // Construct the path from the label
       preg_match('/(.+?)\.tif$/', $object->label, $m);
-	
+
       $alias = 'collections/eastonlibrary/' . $m[1];
       $source = 'islandora/object/' . $object->id;
 
@@ -416,7 +417,7 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
 
     path_delete( array('source' => $source));
     path_save($path);
-    
+
     drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
   }
 
@@ -430,33 +431,9 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
 
   path_delete( array('source' => $source));
   path_save($path);
-    
+
   drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
 }
-
-/*
-function dss_elc_get_taxonomy_term($term_value, $vocab_name) {
-
-  // Check for the taxonomical term containing the term
-  $terms = taxonomy_get_term_by_name($term_value, $vocab_name);
-  
-  // If the term has not been linked to this vocabulary yet, instantiate the term
-  if(!empty($terms)) {
-
-    return array_pop($terms);
-  } else {
-
-    $vocab = taxonomy_vocabulary_machine_name_load($vocab_name);
-    
-    $term = new stdClass();
-    $term->name = $term_value;
-    $term->vid = $vocab->vid;
-
-    taxonomy_term_save($term);
-    return $term;
-  }
-}
-*/
 
 /**
  * Retrieves the records from the "books" table within the legacy application
@@ -466,7 +443,7 @@ function drush_dss_elc_get_records($db, $table_name, $limit = 0, $bookId = NULL)
 
   // Select the book record by its primary key "id"
   if(isset($bookId)) {
-    
+
     $sql = "SELECT * FROM $table_name WHERE id=$bookId";
 
   // Insert the limit clause
@@ -483,7 +460,6 @@ function drush_dss_elc_get_records($db, $table_name, $limit = 0, $bookId = NULL)
 
 /**
  *
- * @author griffinj@lafayette.edu
  * Node labels can only be structured using a string of a fixed length
  *
  */
@@ -554,7 +530,7 @@ function dss_elc_normalize_book_title($book, $book_volume) {
   } else {
 
     $book_node_title = $book_title . $title_suffix;
-  }  
+  }
 
   return $book_node_title;
 }
@@ -586,19 +562,15 @@ function drush_dss_elc_migrate_books($mysql_user,
 				     $mysql_database='elc',
 				     $mysql_server='localhost',
 
-				     //$csv_file_path = NULL,
-				     //$normalize_file_path = NULL,
-
-				     //$limit=0,
 				     $bookId=NULL
 				     ) {
 
+  // Prompt the user for a password
   $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
 
   module_load_include('inc', 'dss_elc', 'includes/migrate');
 
   $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
-  //dss_elc_migrate_books($db, $csv_file_path, $normalize_file_path, $bookId);
   dss_elc_migrate_books($db, NULL, NULL, $bookId);
 
   drush_dss_elc_relate_subjects($mysql_user,
@@ -611,43 +583,15 @@ function drush_dss_elc_migrate_books($mysql_user,
   return;
 }
 
-function drush_dss_elc_relate_pers_rel_objects() {
-
-  $drupalQuery = new EntityFieldQuery();
-
-  $items = $drupalQuery->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'personal_relationship')
-    //->fieldCondition('field_pers_rel_object', 'target_id', 0)
-    ->fieldCondition('field_pers_rel_subject', 'target_id', 0)
-    ->execute();
-
-  if(isset($items['node'])) {
-
-    foreach(entity_load('node', array_keys($items['node'])) as $item) {
-
-      /*
-      $item_md = entity_metadata_wrapper('node', $item);
-      drush_log(dt("Normalizing the title for " . $item->title . '...'), 'ok');
-      */
-
-      //print_r($item);
-
-      drush_log(dt("Linking the object for " . $item->title . ' (' . $item->nid . ')...'), 'ok');
-
-      /*
-      //node_save($item);
-      $item_md->save(true);
-      entity_save('node', $item);
-      */
-    }
-  }
-}
-
+/**
+ * Relating legacy Book Subject headings to Item Nodes
+ *
+ */
 function drush_dss_elc_relate_subjects($mysql_user,
 				       $mysql_pass,
 				       $mysql_database='elc',
 				       $mysql_server='localhost') {
-  
+
   $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass);
   $query = "SELECT title,subject FROM books;";
 
@@ -662,30 +606,29 @@ function drush_dss_elc_relate_subjects($mysql_user,
     // Instantiate a new book or periodical node for each book volume
     foreach(range(1, (int) $original_item['totalVolumes']) as $book_volume) {
 
-      //$author_name = mb_convert_encoding($original_item['author'], 'UTF-8', 'ASCII');
       $original_item_title = dss_elc_normalize_book_title($original_item, $book_volume);
 
       $items = $drupalQuery->entityCondition('entity_type', 'node')
-	->entityCondition('bundle', array('book', 'periodical', 'item'))
+	->entityCondition('bundle', array('item'))
 	->propertyCondition('title', $original_item_title)
 	->execute();
 
       if(!is_null($items['node'])) {
-      
+
 	foreach(entity_load('node', array_keys($items['node'])) as $item) {
-	
+
 	  if($original_item['subject'] and $original_item['subject'] != '') {
-	    
+
 	    $item_md = entity_metadata_wrapper('node', $item);
 	    $terms = taxonomy_get_term_by_name($original_item['subject'], 'item_subjects');
-	  
+
 	    if(!empty($terms)) {
-	      
+
 	      $subject_term = array_shift($terms);
-	      
+
 	      // Set the type of the item
 	      $item_md->field_item_subject->set(array(intval($subject_term->tid)));
-	    
+
 	      drush_log(dt('Linking ' . $item->title . ' to the subject heading ' . $subject_term->name), 'ok');
 	      $item_md->save(true);
 	      entity_save('node', $item);
@@ -698,6 +641,11 @@ function drush_dss_elc_relate_subjects($mysql_user,
   }
 }
 
+/**
+ * Relates legacy Book Subject headings to Item Nodes
+ * Deprecated?
+ *
+ */
 function drush_dss_elc_relate_bib_rel_objects($mysql_user,
 					      $mysql_pass,
 					      $mysql_database='elc_production') {
@@ -713,16 +661,8 @@ function drush_dss_elc_relate_bib_rel_objects($mysql_user,
 
     foreach(entity_load('node', array_keys($loans['node'])) as $loan) {
 
-      /*
-      $loan_md = entity_metadata_wrapper('node', $loan);
-      drush_log(dt("Normalizing the title for " . $loan->title . '...'), 'ok');
-      */
-
-      //print_r($loan);
-
       drush_log(dt("Linking the object for " . $loan->title . ' (' . $loan->nid . ')...'), 'ok');
 
-      // Wolf, Charles E. borrowed  on 1818/09/26
       preg_match('/(.+?) borrowed  on (.+)/', $loan->title, $m);
       $representative = $m[1];
       $checkout = $m[2];
@@ -737,7 +677,7 @@ function drush_dss_elc_relate_bib_rel_objects($mysql_user,
 	drush_log(dt("Searching for " . $original_loan['title'] . '...'), 'ok');
 
 	$items = $drupalQuery->entityCondition('entity_type', 'node')
-	  ->entityCondition('bundle', 'book')
+	  ->entityCondition('bundle', 'item')
 	  ->propertyCondition('title', '%' . substr($original_loan['title'], 0, 20) . '%' . substr($original_loan['title'], 21), 'LIKE')
 	  ->execute();
 
@@ -764,11 +704,15 @@ function drush_dss_elc_relate_bib_rel_objects($mysql_user,
   }
 }
 
+/**
+ * Normalizes Item Node titles (Supports UTF-8 encoding)
+ *
+ */
 function drush_dss_elc_normalize_books_utf8() {
 
   $drupalQuery = new EntityFieldQuery();
 
-  foreach(array('book', 'periodical', 'manifestation', 'item') as $content_type) {
+  foreach(array('manifestation', 'item') as $content_type) {
 
     $items = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', $content_type)
@@ -794,30 +738,30 @@ function drush_dss_elc_normalize_books_utf8() {
   }
 }
 
+/**
+ * Normalizes Item Node titles (lacks support for UTF-8 encoding)
+ * Deprecated?
+ *
+ */
 function drush_dss_elc_normalize_books() {
 
   $drupalQuery = new EntityFieldQuery();
 
-  foreach(array('book', 'periodical', 'manifestation', 'item') as $content_type) {
+  foreach(array('manifestation', 'item') as $content_type) {
 
     $items = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', $content_type)
-      //->propertyCondition('title', '%' . '&amp;' . '%', 'LIKE')
-      //->propertyCondition('title', '%' . '&#039;' . '%', 'LIKE')
       ->propertyCondition('title', '%' . '&%;' . '%', 'LIKE')
       ->execute();
 
     if(isset($items['node'])) {
 
-      //$item = array_pop(entity_load('node', array_keys($items['node'])));
       foreach(entity_load('node', array_keys($items['node'])) as $item) {
 
 	$item = node_load($item->nid);
 	drush_log(dt("Normalizing the title for " . $item->title . '...'), 'ok');
 
 	$item->title = preg_replace('/&amp;/', '&', $item->title);
-
-	//$item->title = preg_replace('/&#039;/', "’", $item->title);
 	$item->title = preg_replace('/&#039;/', "'", $item->title);
 
 	//entity_save('node', $item);
@@ -828,6 +772,10 @@ function drush_dss_elc_normalize_books() {
   }
 }
 
+/**
+ * Drush task for deleting all Item, Manifestation, and Authorship Nodes
+ *
+ */
 function drush_dss_elc_delete_books() {
 
   drush_print(dt('WARNING: THIS WILL DELETE ALL BOOK, PERIODICAL, MANIFESTATION, AUTHOR, AND AUTHORSHIP NODES WITHIN THE SITE.'));
@@ -835,12 +783,12 @@ function drush_dss_elc_delete_books() {
 
     $drupalQuery = new EntityFieldQuery();
 
-    foreach(array('item', 'book', 'periodical', 'manifestation', 'authorship') as $content_type) {
+    foreach(array('item', 'manifestation', 'authorship') as $content_type) {
 
       $items = $drupalQuery->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', $content_type)
 	->execute();
-    
+
       if(isset($items['node'])) {
 
 	entity_delete_multiple('node', array_keys($items['node']));
@@ -853,18 +801,17 @@ function drush_dss_elc_delete_books() {
   $author_term = dss_elc_get_taxonomy_term('Author', PERSON_TYPES_TAXON);
 
   $drupalQuery = new EntityFieldQuery();
-      
+
   $authors = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'human')
     ->fieldCondition('field_person_type', 'tid', intval($author_term->tid))
     ->execute();
-  
+
   if(isset($authors['node'])) {
-    
+
     entity_delete_multiple('node', array_keys($authors['node']));
   }
 }
-
 
 /**
  * Find the location Node captured for Easton, PA (TGN: 2088025)
@@ -874,20 +821,19 @@ function drush_dss_elc_delete_books() {
  * Hierarchy of United States (nation)  ........  United States (nation) (P)
  * Hierarchy of Pennsylvania (state)  ............  Pennsylvania (state) (P)
  * Hierarchy of Northampton (county)  ................  Northampton (county) (P)
- * Hierarchy of Easton (inhabited place)  ....................  Easton (inhabited place) (P) 
+ * Hierarchy of Easton (inhabited place)  ....................  Easton (inhabited place) (P)
  */
-
 function dss_elc_get_easton_location() {
 
   $drupalQuery = new EntityFieldQuery();
-      
+
   $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'location')
     ->propertyCondition('title', 'Easton');
-  
+
   $locations = $drupalQuery->execute();
   if(isset($locations['node'])) {
-    
+
     return array_pop(entity_load('node', array_keys($locations['node'])));
   } else {
 
@@ -907,7 +853,7 @@ function dss_elc_get_easton_location() {
 
     $easton_md->save(true);
     entity_save('node', $easton_entity);
-    
+
     return $easton_entity;
   }
 }
@@ -916,16 +862,21 @@ function dss_elc_get_easton_location() {
 define('SHAREHOLDER', 0);
 define('REPRESENTATIVE', 1);
 
+/**
+ * Retrieve the name of the table for the legacy database given a certain person type
+ * i. e. Shareholder or Representative
+ *
+ */
 function dss_elc_migrate_get_person_table_name($person_type) {
 
   switch($person_type) {
 
   case 0:
     return $table_name = 'shareholders';
-    
+
   case 1:
     return $table_name = 'representatives';
-    
+
   default:
     throw new Exception('Unhandled person type');
   }
@@ -942,24 +893,27 @@ function dss_elc_migrate_person_type($db, $limit, $person_type) {
   // Retrieve all person records and serialize them as Human Person Nodes
   foreach(drush_dss_elc_get_records($db, $table_name, $limit) as $person) {
 
-    $person_term = dss_elc_get_taxonomy_term($person_type == SHAREHOLDER ? 'Shareholder' : 'Representative', PERSON_TYPES_TAXON);
+    $person_type_normalized = $person_type == SHAREHOLDER ? 'Shareholder' : 'Representative', PERSON_TYPES_TAXON;
+    $person_term = dss_elc_get_taxonomy_term($person_type_normalized);
 
     $person_name = trim($person['name']);
 
-    echo 'Migrating the ' . ($person_type == SHAREHOLDER ? 'shareholder ' : 'representative ') . $person_name . "...\n";
+    drush_log(dt("Migrating the %person_type %person_name...\n",
+		 array('%person_type' => ($person_type == SHAREHOLDER ? 'shareholder ' : 'representative '),
+		       '%person_name' => $person_name)), 'ok');
 
     // PDO issues related to JOINS
     // Retrieve the person Human
     $drupalQuery = new EntityFieldQuery();
-  
+
     $persons = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'human')
       ->fieldCondition('field_person_name', 'value', $person_name, '=')
       ->execute();
-  
+
     // If the person doesn't exist, create a new person
     if(!isset($persons['node'])) {
-    
+
       $person_entity = entity_create('node', array('type' => 'human',
 						   'uid' => 1,
 						   'status' => $person['flagStatus'] == '1' ? 0 : 1,
@@ -988,7 +942,7 @@ function dss_elc_migrate_person_type($db, $limit, $person_type) {
       // Add the new type for the person
       $person_md->field_person_type[] = intval($person_term->tid);
     }
-    
+
     $person_md->save(true);
     entity_save('node', $person_entity);
   }
@@ -1019,94 +973,37 @@ function drush_dss_elc_migrate_humans($mysql_user,
 
   $results = dss_elc_migrate_person_type($db, $limit, SHAREHOLDER);
   $results = $results and dss_elc_migrate_person_type($db, $limit, REPRESENTATIVE);
-  
+
   return $results;
-
-  // yum: sudo yum -y install php-mysql
-  // Connect to the MySQL server
-  $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass,
-		array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-
-  // Retrieve all shareholder records and serialize them as Human Person Nodes
-
-
-  /*
-  foreach(drush_dss_elc_get_records($db, 'shareholders', 1) as $shareholder) {
-
-    echo "Migrating the shareholder " . $shareholder['name'] . "...\n";
-    
-    $shareholder_entity = entity_create('node', array(
-						      'type' => 'human',
-						      'uid' => 1,
-						      'status' => $shareholder['flagStatus'] == '1' ? 1 : 0,
-						      'comment' => 1,
-						      'promote' => 0,
-						      ));
-
-    $shareholder_md = entity_metadata_wrapper('node', $shareholder_entity);
-
-    $shareholder_md->title->set($shareholder['name']);
-    $shareholder_md->field_person_name->set($shareholder['name']);
-
-    // Always set the default location to the "Easton" location Node
-    $shareholder_md->field_person_name->set(intval(dss_elc_get_easton_location()));
-
-    $shareholder_md->body->set(array('value' => $shareholder['flagMessage']));
-    $shareholder_md->save(true);
-    entity_save('node', $shareholder_entity);
-  }
-  */
-
-
-
-  // Retrieve all representative records and instantiate them as Human Person Nodes, as well as instantiate Personal Relationship Nodes
-  // Refactor
-  /*
-  foreach($db->prepare($sql)
-	  ->execute(array(':table_name' => 'representatives'))
-	  ->fetchAll() as $representative) {
-
-    echo "Migrating the representative " . $representative['name'] . "...\n";
-    
-    $representative_entity = entity_create('node', array(
-							 'type' => 'human',
-							 'uid' => 1,
-							 'status' => $representative['flagStatus'] == '1' ? 1 : 0,
-							 'comment' => 1,
-							 'promote' => 0,
-							 ));
-
-    $representative_md = entity_metadata_wrapper('node', $representative_entity);
-
-    $representative_md->title->set($representative['name']);
-    $representative_md->field_person_name->set($representative['name']);
-
-    $representative_md->body->set(array('value' => $representative['flagMessage']));
-    $representative_md->save(true);
-    entity_save('node', $representative_entity);
-  }
-  */
 }
 
+/**
+ * Drush task for deleting all Human Nodes
+ *
+ */
 function drush_dss_elc_delete_humans() {
 
   drush_print(dt('WARNING: THIS WILL DELETE ALL HUMAN NODES WITHIN THE SITE.'));
   if(drush_confirm(dt('Do you wish to continue?'))) {
 
     $drupalQuery = new EntityFieldQuery();
-    
+
     // Implement some manner by which to determine whether or not a human is an author
     $humans = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'human')
       ->execute();
-    
+
     if(isset($humans['node'])) {
 
-      entity_delete_multiple('node', array_keys($humans['node']));      
+      entity_delete_multiple('node', array_keys($humans['node']));
     }
   }
 }
 
+/**
+ * Retrieves legacy Person records
+ *
+ */
 function dss_elc_get_person_record($db, $person_record_id, $person_type) {
 
   $table_name = dss_elc_migrate_get_person_table_name($person_type);
@@ -1114,7 +1011,7 @@ function dss_elc_get_person_record($db, $person_record_id, $person_type) {
   // PDOStatement::fetch() is failing to retrieve the results
   // Results cannot be serialized as an array
   foreach($db->query("SELECT name FROM $table_name WHERE id=" . $person_record_id . " LIMIT 1") as $person) {
-    
+
     $person_name = trim($person['name']);
   }
 
@@ -1122,24 +1019,28 @@ function dss_elc_get_person_record($db, $person_record_id, $person_type) {
 
     throw new Exception(($person_type == SHAREHOLDER ? 'Shareholder' : 'Representative') . " foreign key $person_record_id cannot be resolved.");
   }
-  
+
   // PDO issues related to JOINS
   // Retrieve the person Human
   $drupalQuery = new EntityFieldQuery();
-  
+
   $persons = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'human')
     ->fieldCondition('field_person_name', 'value', $person_name, '=')
     ->execute();
-  
+
   if(!isset($persons['node'])) {
-    
+
     throw new Exception(($person_type == SHAREHOLDER ? 'Shareholder' : 'Representative') . " $person_name has not been migrated into a Drupal Human Node.");
   }
-  
+
   return array_pop(entity_load('node', array_keys($persons['node'])));
 }
 
+/**
+ * Retrieves the User bearing the name 'Easton Library Company Project Researcher'
+ *
+ */
 function dss_elc_get_user_elc_editor() {
 
   $query = new EntityFieldQuery();
@@ -1163,6 +1064,11 @@ function dss_elc_get_user_elc_editor() {
   }
 }
 
+/**
+ * Adds a Comment to a Node
+ * This is invoked within the context of migrating notes from legacy Loan records
+ *
+ */
 function dss_elc_add_comment_to_node($node_entity, $comment_body, $comment_mtime) {
 
   $user = dss_elc_get_user_elc_editor();
@@ -1176,10 +1082,7 @@ function dss_elc_add_comment_to_node($node_entity, $comment_body, $comment_mtime
 
   $comment->mail = $user->mail;
   $comment->name = $user->name;
-  //$comment->thread = '01/'; // OPTIONAL. If you need comments to be threaded you can fill this value. Otherwise omit it.
-  //$comment->hostname = '127.0.01' // OPTIONAL. You can log poster's ip here
   $comment->created = $comment_mtime;
-  //$comment->is_anonymous = 0;
   $comment->homepage = 'http://elc.lafayette.edu/';
   $comment->status = COMMENT_PUBLISHED;
   $comment->language = LANGUAGE_NONE;
@@ -1193,18 +1096,12 @@ function dss_elc_add_comment_to_node($node_entity, $comment_body, $comment_mtime
 }
 
 /**
- * Retrieve an Item Node
+ * Retrieves an Item Node
  *
  */
 function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
 
   $items = array();
-
-  print $title;
-  print "\n";
-  print utf8_encode($title);
-  print "\n";
-  //exit(1);
 
   if(!in_array($title, array('Diary of an ennuyée',
 			     "Narrative of the Texan Santa Fé expedition",
@@ -1219,9 +1116,6 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
     $title = preg_replace('/[[:^print:]]/', '?', $title);
     $title = preg_replace('/\?\?/', '?', $title);
 
-    //$manifestation_title = preg_replace('/[[:^print:]]/', '?', $manifestation_title);
-    //$manifestation_title = mb_ereg_replace('/[[:^print:]]/', '?', $manifestation_title);
-
     $manifestation_title = utf8_decode($manifestation_title);
     $manifestation_title = preg_replace('/[[:^print:]]/', '?', $manifestation_title);
     $manifestation_title = preg_replace('/\?\?/', '?', $manifestation_title);
@@ -1232,7 +1126,7 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
     ->entityCondition('bundle', 'item')
     ->fieldCondition('field_artifact_title', 'value', $normalized_title)
     ->execute();
-  
+
   if(isset($results['node'])) {
 
     $items = entity_load('node', array_keys($results['node']));
@@ -1256,10 +1150,7 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
 	  ->fieldCondition('field_item_embodies', 'target_id', $manifestation->nid)
 	  ->execute();
 
-	if(!isset($results['node'])) {
-
-	  //drush_log(dt("Failed to retrieve any Items for the Manifestation !title (!manifestation_id)", array('!title' => $title, '!manifestation_id' => $manifestation->nid)), 'error');
-	} else {
+	if(isset($results['node'])) {
 
 	  $result_nodes = array_keys($results['node']);
 	  $items = entity_load('node', $result_nodes);
@@ -1301,17 +1192,16 @@ function dss_elc_get_manifestation($book_title) {
  *
  */
 function dss_elc_get_book($db, $book_id) {
-  
+
   $books = array();
 
-  //foreach($db->query("SELECT * FROM books WHERE title='" . preg_replace("/'/", "\'", $title) . "' LIMIT 1") as $book) {
   foreach($db->query("SELECT * FROM books WHERE id='" . $book_id . "'") as $book) {
 
     $books[] = $book;
   }
 
   if(empty($books)) {
-    
+
     throw new Exception("Book record with the title $title could not be resolved.");
   }
 
@@ -1325,12 +1215,12 @@ function dss_elc_get_book($db, $book_id) {
 function dss_elc_get_book_title($db, $book_record_id) {
 
   foreach($db->query("SELECT title FROM books WHERE id=" . $book_record_id . " LIMIT 1") as $book) {
-    
+
     $book_title = $book['title'];
   }
 
   if(!isset($book_title)) {
-    
+
     throw new Exception("Book foreign key $book_record_id cannot be resolved.");
   }
 
@@ -1355,7 +1245,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 		$mysql_user,
 		$mysql_pass,
 		array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-  
+
   foreach(drush_dss_elc_get_records($db, 'loans') as $loan) {
 
     if(!is_null($start) and $loan['id'] < intval($start)) {
@@ -1373,7 +1263,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 					       'promote' => 0));
 
     $loan_md = entity_metadata_wrapper('node', $loan_entity);
-    
+
     // Instantiate personal_representative Nodes for the representative -> shareholder relationship
     if(isset($loan['representative_id']) && trim($loan['representative_id']) != '') {
 
@@ -1387,7 +1277,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 	  $loan_md->field_loan_shareholder->set(intval($shareholder->nid));
 	}
       } catch(Exception $e) {
-	
+
 	// Should there be an issue related to the deserialization of the "representative" Node, a warning is logged and only the "shareholder" is specified in the Loan Node
 	drush_log(dt($e->getMessage()), 'warning');
 	$subject = $shareholder;
@@ -1420,9 +1310,9 @@ function drush_dss_elc_migrate_loans($mysql_user,
 	  for($i=0; $i < sizeof($volumes);$i++) {
 
 	    $volumes[$i] = trim($volumes[$i]);
-	    
+
 	    if(preg_match('/^\d+$/', $volumes[$i])) {
-	      
+
 	      preg_match('/([a-zA-Z\.]+?)\s\d*/', $volumes[$i - 1], $matches);
 	      $volumes[$i] = $matches[1] . ' ' . $volumes[$i];
 	    }
@@ -1434,7 +1324,9 @@ function drush_dss_elc_migrate_loans($mysql_user,
 	return array($borrowed_volumes_field);
       };
 
+      // This value is typically formatted in the following manner:
       // "issue;volume;month;year"
+      // Please see the following for further reference:
       // (https://lafayettecollegelibraries.atlassian.net/wiki/display/EDDC/Notes+on+transcription+for+summer+2013)
       $VOLUME_FIELDS_MAP = array(0 => 'issues',
 				 1 => 'volumes',
@@ -1455,7 +1347,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	    $volume_fields[$VOLUME_FIELDS_MAP[$i] ] = preg_split('/,/', $volume_fields[$i]);
 	  } elseif(preg_match('/\[.+?\]/', $volume_fields[$i], $matches)) {
-	    
+
 	    // "In cases where issue numbers aren't normally included, we'll count how many issues go in a volume and give the number in brackets (e.g., [43])."
 	    // (Ibid.)
 	    $volume_fields[$VOLUME_FIELDS_MAP[$i] ] = range(1, $matches[1]);
@@ -1502,7 +1394,7 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	// Resolves EDDC-530
 	$book_title = preg_replace('/—/', '-', $book['title']);
-	
+
 	$items = array_merge($items, dss_elc_get_items($node_book_title, $book_title, $manifestation_title));
       }
 
@@ -1510,12 +1402,6 @@ function drush_dss_elc_migrate_loans($mysql_user,
       // Extending the data model beyond the depth of "volume" would be trivial and unnecessary; cataloging is outside of the scope of the project
       if(empty($items)) {
 
-	print $book_title;
-	print $node_book_title;
-	print $loan['book_id'];
-	print 'TRACE';
-	exit(1);
-	
 	$manifestation = dss_elc_get_manifestation($book_title);
 	if(!$manifestation) {
 
@@ -1531,15 +1417,6 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 	// Loans must be mapped to individual manifestations
 	// Retrieve a manifestation in relation to an Item
-
-	/*
-	foreach($items as $item) {
-
-	  drush_log(dt("Mapped the \"book_id\" foreign key $book_title to " . $item->title), 'ok');
-	  
-	  $loan_md->field_bib_rel_object[] = intval($item->nid);
-	}
-	*/
 	$item = $items[0];
 
 	$manifestation = node_load($item->field_item_embodies[$item->language][0]['target_id']);
@@ -1613,13 +1490,6 @@ function drush_dss_elc_migrate_loans($mysql_user,
       // Issues with the "date" Module and the Entity API
       // (https://drupal.org/node/1803286)
 
-      /*
-      $loan_md->field_checkout = strtotime($loan['checkout']);
-      drush_log(dt('Mapped the "checkout" field value ' . $loan['checkout']), 'ok');
-      $loan_md->field_returned = strtotime($loan['returned']);
-      drush_log(dt('Mapped the "returned" field value ' . $loan['returned']), 'ok');
-      */
-
       $loan_md->field_loan_duration = array('value' => strtotime($loan['checkout']),
 					    'value2' => strtotime($loan['returned']));
       drush_log(dt('Mapped the "checkout" field value ' . $loan['checkout']), 'ok');
@@ -1665,11 +1535,12 @@ function drush_dss_elc_migrate_loans($mysql_user,
 
 /**
  *
+ *
  */
 function dss_elc_loan_node_query($loan) {
 
   $drupalQuery = new EntityFieldQuery();
-  
+
   $result = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'loan')
     ->propertyCondition('title', $loan->title)
@@ -1679,86 +1550,28 @@ function dss_elc_loan_node_query($loan) {
   $results = array();
 
   if(isset($result['node'])) {
-    
+
     $results = entity_load('node', array_keys($result['node']));
   }
 
   return $results;
 }
 
-function drush_dss_elc_random_loans() {
-
-  $drupalQuery = new EntityFieldQuery();
-  
-  $result = $drupalQuery->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'loan')
-    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
-    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
-    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
-    ->propertyCondition('status', 0)
-    ->range(0, 1000)
-    ->execute();
-
-  if(isset($result['node'])) {
-
-    /*
-    foreach(entity_load('node', array_keys($result['node'])) as $loan) {
-
-      drush_log('Publishing ' . $loan->title . '...', 'ok');
-      $loan->status = 1;
-      entity_save('node', $loan);
-    }
-    */
-
-    $rand_subset = entity_load('node', array_keys($result['node']));
-    $rand_indices = array();
-
-    for($i=0;$i<256;$i++) {
-
-      $loan_indices = array_keys($rand_subset);
-      $loan_indices[0];
-      do {
-
-	$rand_index = rand($loan_indices[0],
-			   $loan_indices[count($loan_indices) - 1]);
-      } while(in_array($rand_index, $rand_indices));
-
-      $rand_indices[] = $rand_subset;
-
-      $loan = array_pop(entity_load('node', array($rand_index)));
-
-      drush_log('Publishing ' . $loan->title . '...', 'ok');
-      $loan->status = 1;
-
-      drush_log('Adding the term "Reviewed" to ' . $loan->title . '...', 'ok');
-      $loan_md = entity_metadata_wrapper('node', $loan);
-
-      $term = array_pop(taxonomy_get_term_by_name('Reviewed', 'bib_rel_types'));
-      $loan_md->field_bib_rel_type->set(intval($term->tid));
-
-      $loan_md->save(true);
-      entity_save('node', $loan);
-
-      drush_log('Saving the Loan ' . $loan->title . '...', 'success');
-    }
-  }
-}
-
+/**
+ * Drush task for publishing all Human Nodes
+ *
+ */
 function drush_dss_elc_publish_humans() {
 
   $drupalQuery = new EntityFieldQuery();
-  
+
   $result = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'human')
-    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
-    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
-    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
     ->propertyCondition('status', 0)
-    //->range(0, 1000)
     ->execute();
 
   if(isset($result['node'])) {
-    
+
     foreach(entity_load('node', array_keys($result['node'])) as $human) {
 
       drush_log('Publishing ' . $human->title . '...', 'ok');
@@ -1768,25 +1581,25 @@ function drush_dss_elc_publish_humans() {
   }
 }
 
+/**
+ * Drush task for publishing all Item and Manifestation Nodes
+ *
+ */
 function drush_dss_elc_publish_items() {
 
   $drupalQuery = new EntityFieldQuery();
 
-  foreach(array('book', 'periodical') as $bundle) {
+  foreach(array('item', 'manifestation') as $bundle) {
 
     $result = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', $bundle)
-      //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
-      //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
-      //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
       ->propertyCondition('status', 0)
-      //->range(0, 1000)
       ->execute();
 
     if(isset($result['node'])) {
-    
+
       foreach(entity_load('node', array_keys($result['node'])) as $item) {
-	
+
 	drush_log('Publishing ' . $item->title . '...', 'ok');
 	$item->status = 1;
 	entity_save('node', $item);
@@ -1795,21 +1608,22 @@ function drush_dss_elc_publish_items() {
   }
 }
 
+/**
+ * Drush task for publishing all Loan Nodes
+ *
+ */
 function drush_dss_elc_publish_loans() {
 
   $drupalQuery = new EntityFieldQuery();
-  
+
   $result = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'loan')
-    //->entityCondition('field_pers_rel_subject', 'target_id', intval($representative->nid))
-    //->entityCondition('field_pers_rel_object', 'target_id', intval($shareholder->nid))
-    //->entityCondition('field_pers_rel_role', 'tid', intval(dss_elc_get_taxonomy_term('Representative', ROLES_TAXON)->tid))
     ->propertyCondition('status', 0)
     ->range(0, 1000)
     ->execute();
 
   if(isset($result['node'])) {
-    
+
     foreach(entity_load('node', array_keys($result['node'])) as $loan) {
 
       drush_log('Publishing ' . $loan->title . '...', 'ok');
@@ -1819,6 +1633,10 @@ function drush_dss_elc_publish_loans() {
   }
 }
 
+/**
+ * Drush task for cleaning legacy system values migrated into Taxonomy Terms
+ *
+ */
 function drush_dss_elc_clean_terms($vocab_name = 'loan_filenames') {
 
   $vocab = taxonomy_vocabulary_machine_name_load($vocab_name);
@@ -1850,36 +1668,36 @@ function drush_dss_elc_clean_terms($vocab_name = 'loan_filenames') {
   }
 }
 
+/**
+ * Drush task for cleaning Loans
+ * (i. e. mapping the appropriate ELC ledger identifier to the Loan Node Field)
+ *
+ */
 function drush_dss_elc_clean_loans() {
 
   $drupalQuery = new EntityFieldQuery();
-  
+
   $result = $drupalQuery->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'loan')
     ->range(0, 1000)
     ->execute();
 
   if(isset($result['node'])) {
-    
+
     foreach(entity_load('node', array_keys($result['node'])) as $loan) {
 
       $tid = $loan->field_loan_filename['und'][0]['tid'];
       $term = taxonomy_term_load($tid);
-
-      //if( preg_match('/ELCv\d_[A-Z]_[1-9]/', 'ELCv1_C_1') ) {
-      if( preg_match('/ELCv\d_[A-Z]_[1-9]/', $term->name) ) {
-
-	drush_log('Cleaning ' . $loan->title . '...', 'ok');
-	print_r($term->name);
-	print 'trace';
-	exit(1);
-      }
 
       entity_save('node', $loan);
     }
   }
 }
 
+/**
+ * Drush Task for deleting all Personal Relationship Nodes
+ *
+ */
 function drush_dss_elc_delete_relationships() {
 
   drush_print(dt('WARNING: THIS WILL DELETE ALL RELATIONSHIP NODES WITHIN THE SITE.'));
@@ -1890,14 +1708,18 @@ function drush_dss_elc_delete_relationships() {
     $loans = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'personal_relationship')
       ->execute();
-    
+
     if(isset($loans['node'])) {
-      
+
       entity_delete_multiple('node', array_keys($loans['node']));
     }
   }
 }
 
+/**
+ * Drush Task for deleting all Loan Nodes
+ *
+ */
 function drush_dss_elc_delete_loans() {
 
   drush_print(dt('WARNING: THIS WILL DELETE ALL LOAN NODES WITHIN THE SITE.'));
@@ -1908,18 +1730,22 @@ function drush_dss_elc_delete_loans() {
     $loans = $drupalQuery->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'loan')
       ->execute();
-    
+
     if(isset($loans['node'])) {
-      
+
       entity_delete_multiple('node', array_keys($loans['node']));
     }
   }
 }
 
-function drush_dss_elc_ingest_root($root_pid = 'islandora:root', $url = 'http://localhost:8080/fedora') {
+/**
+ * Drush Task for ingesting the ELC root collection Object
+ *
+ */
+function drush_dss_elc_ingest_root($root_pid = 'islandora:elc', $url = 'http://localhost:8080/fedora') {
 
   $module_path = drupal_get_path('module', 'islandora');
-  
+
   // Get the connection
   $connection = islandora_get_tuque_connection(user_load(1), $url);
 
@@ -1935,7 +1761,7 @@ function drush_dss_elc_ingest_root($root_pid = 'islandora:root', $url = 'http://
 
       $root_collection = islandora_islandora_required_objects($connection);
       islandora_add_object(array_shift($root_collection['islandora']['objects']));
-    
+
       drush_log('The Islandora root Object ' . $root_pid . ' was successfully ingested', 'success');
     } else {
 
@@ -1945,6 +1771,10 @@ function drush_dss_elc_ingest_root($root_pid = 'islandora:root', $url = 'http://
   }
 }
 
+/**
+ * Drush Task for purging the ELC root collection Object
+ *
+ */
 function drush_dss_elc_purge_root($root_pid = 'islandora:root', $url = 'http://localhost:8080/fedora') {
 
   // Get the connection
@@ -1961,53 +1791,4 @@ function drush_dss_elc_purge_root($root_pid = 'islandora:root', $url = 'http://l
     islandora_delete_object($root_collection);
     drush_log('Islandora root Object ' . $root_pid . ' was successfully purged', 'success');
   }
-}
-
-function drush_dss_elc_metrics_network() {
-
-  /*
-  //$redis = new Predis\Client('tcp://10.0.0.1:6379');
-  $redis = Redis_Client::getClient();
-  */
-
-  /*
-  $collection = mongodb_collection($this->bin);
-  // Garbage collection necessary when enforcing a minimum cache lifetime.
-  $this->garbageCollection($this->bin);
-  $cache = $collection->findOne(array('_id' => (string)$cid));
-  return $this->prepareItem($cache);
-  */
-
-  $params = array('loan', array('125645'), '-5005047600', '-4859982000');
-
-  $collection = mongodb_collection('dss_elc_metrics');
-  $mongo_id = json_encode($params);
-
-  $data = $collection->findOne(array('_id' => $mongo_id));
-  //$data = $redis->get(json_encode($params));
-
-  //if(!isset($data)) {
-  if(!$data || !isset($data['data'])) {
-
-    $object = dss_elc_metrics_network('loan', array('125645'), '-5005047600', '-4859982000');
-
-    //$redis->set(json_encode($params), json_encode($object));
-
-    $entry = array('_id' => $mongo_id,
-		   'cid' => $mongo_id,
-		   //'created' => REQUEST_TIME,
-		   //'expire' => $expire,
-		   //'serialized' => !$scalar,
-		   //'data' => $scalar ? $data : serialize($data),
-		   'data' => $object);
-
-    $collection->save($entry);
-
-    $data = $object;
-  } else {
-
-    print_r('trace');
-  }
-
-  //print_r($data);
 }

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Normalization for the format of the Book records
+ * @todo Structure this within the migration functions
+ *
+ */
 function dss_elc_book_normalize_format($book) {
 
   /**
@@ -32,6 +37,11 @@ function dss_elc_book_normalize_format($book) {
   return $book;
   }
 
+/**
+ * Normalization for the titles of the Book records
+ * @todo Structure this within the migration functions
+ *
+ */
 function dss_elc_book_normalize_title($book_title, $book_author, $title_suffix) {
 
   $book_title = mb_convert_encoding($book_title, "UTF-8", 'ASCII');
@@ -63,6 +73,11 @@ function dss_elc_book_normalize_title($book_title, $book_author, $title_suffix) 
   return $book_node_title;
 }
 
+/**
+ * Normalization for the authors specified within Book records
+ * @todo Structure this within the migration functions
+ *
+ */
 function dss_elc_book_normalize_author($book) {
 
   $book_author = mb_convert_encoding($book['author'], 'UTF-8', 'ASCII');
@@ -84,6 +99,12 @@ function dss_elc_manifestation_normalize_title($book) {
   return $normalized_title;
 }
 
+/**
+ * Normalization for the titles of the Book records (with respect to Manifestation Nodes)
+ * Please recall that Manifestations abstract physical Items (e. g. individual volumes of loaned works)
+ * @todo Structure this within the migration functions
+ *
+ */
 function dss_elc_items_by_manifestation($manifestation) {
 
   // Does the related Manifestation exist?
@@ -105,7 +126,8 @@ function dss_elc_items_by_manifestation($manifestation) {
   }
 
 /**
- * Operations for the node before it is saved
+ * Operations for Item Nodes before they are saved
+ *
  *
  */
 function dss_elc_item_node_presave($node) {
@@ -139,12 +161,6 @@ function dss_elc_item_node_presave($node) {
      *
      */
     $volumeTerm = taxonomy_term_load($node->field_item_volume[$node->language][0]['tid']);
-    //$format = $book_md->field_item_format;
-
-    //$node->title = $itemTitle . ' (Vol. ' . $volumeTerm->name . ')';
-    //$book_title = $book_title . ' [Vol. ' . (string) $book_volume . '] (' . $book['format'] . ' ' . $book['number'] . ')';
-    //$node->title = $itemTitle . ' [Vol. ' . $volumeTerm->name . '] (' . $book['format'] . ' ' . $book['number'] . ')';
-
     $node->title = $itemTitle . ' [Vol. ' . $volumeTerm->name . ']';
   }
 
@@ -195,8 +211,13 @@ function dss_elc_item_node_presave($node) {
     // Establish the FRBR relationship between the book/periodical/item Node and the Manifestation Node
     $node->field_item_embodies[$node->language][0]['target_id'] = intval($manifest_entity->nid);
   }
-  }
+}
 
+/**
+ * Operations for Item Nodes before they are inserted into the database
+ *
+ *
+ */
 function dss_elc_item_node_insert($node) {
 
   // Only update the authorship Node if an author was specified
@@ -228,15 +249,10 @@ function dss_elc_item_node_insert($node) {
       $authorship_md = entity_metadata_wrapper('node', $authorship_entity);
 
       // Set the author as 1 (Array, 1 elemthe subject
-      //$authorship_md->field_bib_rel_subject->set(intval($node->field_artifact_was_authored_by[$node->language][0]['target_id'] ));
       $authorship_md->field_bib_rel_subject->set(intval($author_entity->nid ));
 
       // auto_nodetitle appends a single space
       $objectTitle = substr($node->title, 0, 63) . '...';
-
-      //$title = $author_entity->title . " authored " . $objectTitle;
-      //$title = preg_replace('/\s\(Manifestation\)$/', '', $title);
-
       $authorship_md->title = $author_entity->title . " authored " . $objectTitle;
     }
 

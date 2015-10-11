@@ -37,7 +37,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 
 	$csv_file_data[] = $csv_data;
       }
-      
+
       fclose($csv_handle);
     }
   }
@@ -57,7 +57,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       fclose($csv_handle);
     }
   }
-  
+
   $limit = 0;
 
   // Retrieve all book records and serialize them as Book or Periodical Nodes
@@ -116,10 +116,6 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $manifestation_md->field_manifest_total_vol->set(intval($book['totalVolumes']));
 
       // Retrieve the author Entity
-
-      //$author_entity = dss_elc_get_person();
-      //$manifestation_md->field_artifact_was_authored_by->set(intval($author_entity->nid));
-
       $author_nids = array();
 
       // Note that the author name may be delimited by a semi-colon
@@ -140,15 +136,12 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
     // Iterate over all "Items" related to the "Manifestation"
     $book_volumes = array();
     if(is_null($book['totalVolumes'])) {
-      
+
       $book_volumes = array(0);
     } else {
 
       $book_volumes = range(1, (int) $book['totalVolumes']);
     }
-
-    //print_r($book_volumes);
-    //exit(1);
 
     // Instantiate a new book or periodical node for each book volume
     foreach($book_volumes as $book_volume) {
@@ -158,7 +151,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $book_node_title = dss_elc_normalize_book_title($book, $book_volume);
 
       $books = dss_elc_get_items($book_node_title, $book_title, $manifestation_md_title);
-      
+
       if(!empty($books)) {
 
 	drush_log(dt("Previously migrated volume !book_volume of the item !book_node_title", array('!book_volume' => $book_volume, '!book_node_title' => $book_node_title)), 'success');
@@ -174,14 +167,14 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 		      'comment' => 1,
 		      'promote' => 0,
 		      );
-      
+
       // Entity is...
       $book_entity = entity_create('node', $values);
       $book_md = entity_metadata_wrapper('node', $book_entity);
-      
+
       // Resolves EDDC-527
       if(intval($book['type']) == '3') {
-	
+
 	$book['type'] = 1;
       }
 
@@ -209,11 +202,11 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 	  $book_md->field_item_subject[] = dss_elc_get_taxonomy_term($subject, 'item_subjects')->tid;
 	}
       }
-      
+
       // Set the format for the book or periodical
       // Handle anomalous values identified within the data set
       switch($book['format']) {
-      
+
       case '': // Handle for cases in which the format is set to a NULL value
 
 	//$book_md->field_item_format->set(NULL);
@@ -221,7 +214,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 	$book['format'] = 'Octavo';
 	break;
       case 'Octavo':
-	
+
 	$book_md->field_item_format->set(0);
 	break;
       case 'Quarto':
@@ -229,16 +222,14 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 	$book_md->field_item_format->set(1);
 	break;
       case 'Duodecimo':
-	
+
 	$book_md->field_item_format->set(2);
 	break;
 
       default:
-	
+
 	$book_md->field_item_format->set(intval($book['format']));
       }
-
-      //$book_md->field_item_number->set($book['number'] == 'NULL' ? 0 : intval($book['number']));
 
       // Book/Periodical numbers are managed as taxonomy terms
       $book_number_term = dss_elc_get_taxonomy_term($book['number'], 'item_numbers');
@@ -257,7 +248,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 
 	// For normalize title values, map the records using additional normalization data
 	if( array_key_exists($book['id'], $normalize_data) ) {
-	  
+
 	  $matches = $normalize_data[$book['id']];
 	} else {
 
@@ -265,7 +256,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 
 	    $csv_title = trim($e[2]);
 	    $decoded_csv_title = utf8_encode($csv_title);
-	    
+
 	    if((mb_stristr( $book_title, $csv_title ) or
 		mb_stristr( $csv_title, $book_title )) and $e[0] == $book['format'] and $e[1] == $book['number']) {
 
@@ -281,7 +272,6 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 														  '!book_number' => $book['number']) ), 'warning');
 	} elseif( count($matches) > 1 ) {
 
-	  //print "Duplicates found for " . $data[0] . "\n";
 	  drush_log(dt("Duplicate entries found for !book_title (!book_format) (!book_number)", array('!book_title' => $book_title,
 												      '!book_format' => $book['format'],
 												      '!book_number' => $book['number']) ), 'error');
@@ -290,10 +280,8 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 	  $e = array_shift($matches);
 
 	  if(preg_match('/\d{4}/', $e[8], $year_match)) {
-	    
-	    //$publication_year = trim($publication_year);
-	    $publication_year = $year_match[1];
 
+	    $publication_year = $year_match[1];
 	    $publication_date = new DateTime("$publication_year-01-01 00:00:00", new DateTimeZone('America/New_York')); // Easton
 
 	    // Add the initial publication date from the CSV-formatted file
@@ -315,8 +303,5 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
 	drush_log(dt("Failed to migrate $book_title: {$e->getMessage()}"), 'error');
       }
     }
-
-    // Relate an author to the manifestation, as well as to the items within a single relationship
-    //dss_elc_migrate_author($book['author'], $frbr_entities);
   }
 }

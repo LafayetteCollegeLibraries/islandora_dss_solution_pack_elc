@@ -23,22 +23,14 @@ function dss_elc_get_bib_rels($subjectNid) {
   $bib_rels = array();
   foreach($bib_rel_nids as $bib_rel_nid) {
 
-    // dss_elc_get_node($field, $value, $contentType=NULL, $entityField=0) {
     $edge = dss_elc_get_node('nid', $bib_rel_nid);
 
     $edge->field_bib_rel_subject[$edge->language][0] = $subject;
-
     $edge->field_bib_rel_object[$edge->language][0] = dss_elc_get_node('nid', $edge->field_bib_rel_object[$edge->language][0]['target_id']);
 
     $bib_rels[] = $edge;
 
-    // This will ultimately refactored into the Drupal 7 triple store
-    /*
-    $bib_rels[] = array('subject' => $subject,
-			 'predicate' => $edge,
-			 'object' => dss_elc_get_node('nid', $predicate->field_bib_rel_object->nid)
-			 );
-    */
+    // This should be refactored using ARC2 (as a resource index)
   }
 
   return $bib_rels;
@@ -108,7 +100,6 @@ function dss_elc_loan_node_presave($node) {
     // If the parsing of the datestamp as failed, log an error
     if( $field_loan_duration_date === FALSE ) {
 
-      //drupal_set_message(t('Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value) ), 'error');
       watchdog('dss_elc', 'Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value), WATCHDOG_ERROR);
     } else {
 
@@ -118,7 +109,7 @@ function dss_elc_loan_node_presave($node) {
 
       if(substr($field_loan_duration_value, 0, 1) != '-') {
 
-	$field_loan_duration_value = '00' . $field_loan_duration_value;
+        $field_loan_duration_value = '00' . $field_loan_duration_value;
       }
 
       $node->field_loan_duration[$node->language][0]['value'] = $field_loan_duration_value;
@@ -128,27 +119,24 @@ function dss_elc_loan_node_presave($node) {
       // For cases in which the terminal value for the loan duration range was unspecified, set the value to an empty string
       if($field_loan_duration_value2 == '0000-00-00T00:00:00') {
 
-	$field_loan_duration_value2 = '';
+        $field_loan_duration_value2 = '';
       } else {
 
-	$field_loan_duration_date2 = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value2);
+        $field_loan_duration_date2 = DateTime::createFromFormat('Y-m-d*H:i:s', $field_loan_duration_value2);
 
-	if($field_loan_duration_date2 === FALSE) {
+        if($field_loan_duration_date2 === FALSE) {
 
-	  //drupal_set_message(t('Improperly formatted check-in date: !datestamp', array('!datestamp' => $field_loan_duration_value2) ), 'error');
-	   watchdog('dss_elc', 'Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value), WATCHDOG_ERROR);
-	} else {
+          watchdog('dss_elc', 'Improperly formatted check-out date: !datestamp', array('!datestamp' => $field_loan_duration_value), WATCHDOG_ERROR);
+        } else {
 
-	  //$field_loan_duration_value2 = '00' . $field_loan_duration_date2->format('U');
+          // Resolves EDDC-506
+          $field_loan_duration_value2 = $field_loan_duration_date2->format('U');
 
-	  // Resolves EDDC-506
-	  $field_loan_duration_value2 = $field_loan_duration_date2->format('U');
+          if(substr($field_loan_duration_value2, 0, 1) != '-') {
 
-	  if(substr($field_loan_duration_value2, 0, 1) != '-') {
-
-	    $field_loan_duration_value2 = '00' . $field_loan_duration_value2;
-	  }
-	}
+            $field_loan_duration_value2 = '00' . $field_loan_duration_value2;
+          }
+        }
       }
 
       $node->field_loan_duration[$node->language][0]['value2'] = $field_loan_duration_value2;
@@ -156,6 +144,10 @@ function dss_elc_loan_node_presave($node) {
   }
 }
 
+/**
+ * AJAX callback for bibliographic relationships (currently limited to Loans)
+ *
+ */
 function dss_elc_get_bib_rels_ajax($subjectNid) {
 
   drupal_json_output(dss_elc_get_bib_rels($subjectNid) );

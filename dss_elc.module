@@ -1,9 +1,9 @@
 <?php
 
-  /*
-   * Intramodular dependencies
-   *
-   */
+/*
+ * Intramodular dependencies
+ *
+ */
 module_load_include('inc', 'dss_elc', 'includes/utility');
 module_load_include('inc', 'dss_elc', 'includes/data_access');
 module_load_include('inc', 'dss_elc', 'includes/person');
@@ -159,14 +159,14 @@ function dss_elc_theme($existing, $type, $theme, $path) {
 							  'path' => drupal_get_path('module', 'dss_elc'),
 							  ),
 	       /*
-		* Temporarily disabled for the initial release of the web service
-		* @todo Fully implement for biographical data capture
-		*
+          * Temporarily disabled for the initial release of the web service
+          * @todo Fully implement for biographical data capture
+          *
 
-		'organization_node_form' => array(
-					     'render element' => 'form',
-					     'file' => 'theme/theme.inc',
-					     'template' => 'theme/organization-node-form',
+         'organization_node_form' => array(
+               'render element' => 'form',
+               'file' => 'theme/theme.inc',
+               'template' => 'theme/organization-node-form',
 					     'path' => drupal_get_path('module', 'dss_elc'),
 					     ),
 	       'location_node_form' => array(
@@ -1221,6 +1221,10 @@ function dss_elc_views_pre_build(&$view) {
   }
 }
 
+/**
+ * Implements hook_views_pre_render().
+ *
+ */
 function dss_elc_views_pre_render(&$view) {
 
   $results = &$view->result;
@@ -1467,6 +1471,8 @@ function dss_elc_views_api() {
 
 /**
  * @author stathisw@lafayette.edu
+ * Callback for the submission functionality of the "publish" button
+ * Sets a given Node as unpublished
  *
  */
 function hold_button_publish_node($form, &$form_state){
@@ -1478,6 +1484,7 @@ function hold_button_publish_node($form, &$form_state){
 
 /**
  * @author stathisw@lafayette.edu
+ * Callback for the submission functionality of the "publish" button
  *
  */
 //overriding publish button to add functionality for repopulation of fields.
@@ -1494,8 +1501,8 @@ function publish_add_button_publish_node($form, &$form_state) {
 }
 
 /*
- * Edited node_form_submit() or the publish and add another button, only changing redirect function
  * @author stathisw@lafayette.edu
+ * Edited node_form_submit() or the publish and add another button, only changing redirect function
  *
  */
 function publish_add_node_form_submit($form, &$form_state) {
@@ -1572,6 +1579,7 @@ function publish_add_node_form_submit($form, &$form_state) {
 
 /**
  * @author stathisw@lafayette.edu
+ * Redirects clients to the previous Node form when discarding updates
  *
  */
 function edit_node_discard_updates($form, &$form_state){
@@ -1582,6 +1590,7 @@ function edit_node_discard_updates($form, &$form_state){
 
 /**
  * @author stathisw@lafayette.edu
+ * Sets a Node as "held for review" (i. e. unpublished)
  *
  */
 function edit_node_hold_for_review($form, &$form_state){
