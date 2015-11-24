@@ -19,4 +19,10 @@ class Book extends Record {
     $this->type = $record['type'];
     $this->author = is_null($author) ? new Author($record['author']) : $author;
   }
+
+  /*
+  public function normalize_title($title, $author) {
+    if(preg_match('', '')
+  }
+  */
 }

@@ -175,7 +175,16 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array());
 
-  $items['dss-elc-clean-loans'] =
+  $items['dss-elc-clean-loan-objects'] =
+    array(
+	  'description' => dt('Clean all ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-loans',
+			      ),
+	  'aliases' => array());
+
+  $items['dss-elc-clean-loan-vols'] =
     array(
 	  'description' => dt('Clean all ELC "loan" records'),
 	  'arguments' => array(),
@@ -637,20 +646,122 @@ function dss_elc_solr_query($query_string) {
 
   $solr_response = $solr_query->search($keys);
 
-  //print_r($solr_response);
-  //print_r($_query);
-  //print_r($solr_query);
-
   return $solr_response->response->docs;
 }
-
 
 /**
  *
  */
-function drush_dss_elc_clean_loans($mysql_user,
-				   $mysql_database='elc',
-				   $mysql_server='localhost') {
+function drush_dss_elc_clean_loan_vols($mysql_user,
+				       $mysql_database='elc',
+				       $mysql_server='localhost') {
+
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $query_string = 'sm_field_loan_volumes_loaned:"" AND bundle:loan';
+  $loan_docs = dss_elc_solr_query($query_string);
+
+  foreach($loan_docs as $loan_doc) {
+    
+    /**
+     * Retrieve the shareholder using the name
+     *
+     */    
+    $shareholder_name = $loan_doc->ss_field_loan_shareholder_label;
+    $shareholder = $db->shareholder($shareholder_name);
+
+    /**
+     * Retrieve the loans for the shareholder, filtering by the checkout date
+     *
+     */
+    $loan_node = node_load($loan_doc->entity_id);
+
+    $checkout_date = date('Y-m-d', $loan_node->field_loan_duration[$loan_node->language][0]['value']);
+
+    if( empty($loan_node->field_loan_duration[$loan_node->language][0]['value2']) ) {
+      drush_log(dt("Loan !loan_id does not reference a return date", array('!loan_id' => $loan_doc->entity_id)), 'warning');
+      $condition = "checkout='$checkout_date'";
+    } else {
+      $return_date = date('Y-m-d', $loan_node->field_loan_duration[$loan_node->language][0]['value2']);
+      $condition = "checkout='$checkout_date' AND returned='$return_date'";
+    }
+
+    $loans = $shareholder->select_loans_where($condition);
+
+    if(count($loans) > 1) {
+      drush_log(dt('Found more than one loan for !shareholder_name using !condition', array('!shareholder_name' => $shareholder_name, '!condition' => $condition)), 'warning');
+    }
+
+    foreach($loans as $loan) {
+      $loan_doc_item = $loan_doc->sm_field_bib_rel_object[0];
+
+      if( empty($loan_doc_item) ) {
+	drush_log(dt("Loan !loan_id does not reference a borrowed Item", array('!loan_id' => $loan_doc->entity_id)), 'warning');
+	continue;
+      }
+
+      $book_nid = preg_replace('/node\:/', '', $loan_doc_item);
+      $book_node = node_load($book_nid);
+
+      // Clean the titles
+      $book_node->title = htmlspecialchars_decode($book_node->title, ENT_QUOTES);
+      entity_save('node', $book_node);
+
+      // Compare the titles
+      // If the loans don't match, iterate to the next record
+      if(strstr($book_node->title, $loan->book->title) === FALSE) {	
+	continue;
+      }
+
+      // If this is a manifestation...
+      if($book_node->type == 'manifestation') {
+
+	$item_query = "sm_field_item_embodies:\"node:{$book_node->nid}\" AND bundle:item";
+	$item_docs = dss_elc_solr_query($item_query);
+
+	// ...retrieve the Item Node
+	$item_doc = array_shift($item_docs);
+	$item_node = node_load($item_doc->entity_id);
+
+	$loan_node = node_load($loan_doc->entity_id);
+
+	// Link the loan to the item
+	$loan_node->field_bib_rel_object[$loan_node->language][0]['target_id'] = intval($item_node->nid);
+
+	// Set the borrowed items
+	$loan_node->field_loan_volumes_loaned[$loan_node->language][0]['value'] = $item_doc->is_field_item_volume_migrate;
+	$loan_node->field_loan_volumes_loaned[$loan_node->language][0]['safe_value'] = $item_doc->is_field_item_volume_migrate;
+
+	entity_save('node', $loan_node);
+
+	drush_log(dt('Successfully linked the loan !loan_nid to the item !book_nid', array('!loan_nid' => $loan_node->nid,
+											   '!book_nid' => $item_node->nid)), 'success');
+      } else {
+	$volume_tid = taxonomy_term_load($book_node->field_item_volume_migrate[$book_node->language][0]['tid']);
+
+	// Set the borrowed items
+	$loan_node->field_loan_volumes_loaned[$loan_node->language][0]['value'] = $volume_tid->name;
+	$loan_node->field_loan_volumes_loaned[$loan_node->language][0]['safe_value'] = $volume_tid->name;
+
+	entity_save('node', $loan_node);
+
+	drush_log(dt('Successfully linked the loan !loan_nid to the item !book_nid', array('!loan_nid' => $loan_node->nid,
+											   '!book_nid' => $book_node->nid)), 'success');
+      }
+    }
+  }
+}
+
+/**
+ *
+ */
+function drush_dss_elc_clean_loan_objects($mysql_user,
+					  $mysql_database='elc',
+					  $mysql_server='localhost') {
 
   $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
   $db = new ELC\Database($mysql_user,
@@ -715,7 +826,7 @@ function drush_dss_elc_clean_loans($mysql_user,
 	  
 	  if(empty($book_docs)) {
 	    // If the search yet again fails, report this
-	    drush_log(dt("\n\nFound no books for !book_title (!book_number)", array('!book_title' => $loan->book->title,
+	    drush_log(dt("Found no books for !book_title (!book_number)", array('!book_title' => $loan->book->title,
 										    '!book_number' => $loan->book->number,)), 'error');
 	    continue;
 	  }

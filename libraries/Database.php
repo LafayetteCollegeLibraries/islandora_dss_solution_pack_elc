@@ -27,11 +27,6 @@ class Database {
    *
    */
   public function book($book_id) {
-
-    print "TRACE01:";
-    print_r($book_id);
-    print "TRACE02\n\n";
-
     if(!array_key_exists($book_id, $this->books)) {
       $query = "SELECT * FROM books WHERE id=$book_id";
       $records = $this->db->query($query);
