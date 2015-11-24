@@ -336,7 +336,8 @@ function DssElcViewsFilter(options) {
 			
 				var temp = parseInt($(e).text());
 				var dateObj = new Date((temp)*1000);
-				$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+				//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+				$(e).text( moment(dateObj).format('YYYY-MM-DD') );
 				
 			});
 		}
@@ -348,7 +349,8 @@ function DssElcViewsFilter(options) {
 			
 				var temp = parseInt($(e).text());
 				var dateObj = new Date((temp)*1000);
-				$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+				//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+				$(e).text( moment(dateObj).format('YYYY-MM-DD') );
 				
 			});
 			if(window.location.pathname =='/loans' ||
@@ -359,11 +361,13 @@ function DssElcViewsFilter(options) {
 					var temp = parseInt($(e).text());
 					if(temp > 0){
 						var dateObj = new Date((temp)*1000);
-						$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+						//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+						$(e).text( moment(dateObj).format('YYYY-MM-DD') );
 					}
 					else{
-						var dateObj = new Date((temp)*1000);
-						$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+					        var dateObj = new Date((temp)*1000);
+						//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+						$(e).text( moment(dateObj).format('YYYY-MM-DD') );
 					}
 			});
 			

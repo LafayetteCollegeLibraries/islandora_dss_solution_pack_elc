@@ -1259,10 +1259,12 @@ function dss_elc_views_pre_render(&$view) {
       $volume_refs = array();
       foreach($items as $i => $item) {
 
-	$volume = $item->field_item_volume_migrate[$item->language][0]['tid'];
+	if(array_key_exists($item->language, $item->field_item_volume_migrate)) {
+	  $volume = $item->field_item_volume_migrate[$item->language][0]['tid'];
 
-	// Retrieve the individual loans for volumes
-	$volume_refs[$volume] = array('rendered' => array('#markup' => '<a href="/node/' . $item->nid . '">' . $volume . '</a>'));
+	  // Retrieve the individual loans for volumes
+	  $volume_refs[$volume] = array('rendered' => array('#markup' => '<a href="/node/' . $item->nid . '">' . $volume . '</a>'));
+	}
       }
 
       ksort($volume_refs);

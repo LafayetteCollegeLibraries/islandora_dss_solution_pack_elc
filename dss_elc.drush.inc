@@ -302,8 +302,6 @@ function drush_dss_elc_manifestation_migrate_title() {
 	$item_doc = $docs[0];
 
 	$item = (object) array('title' => $item_doc->label);
-
-	print_r($item);
       
 	drush_log('Updating ' . $node->nid . ' (' . $node->title . ') with ' . $item->title . '...', 'ok');
 
@@ -609,6 +607,144 @@ function drush_dss_elc_migrate_books($mysql_user,
 
   return;
 }
+
+require_once dirname(__DIR__) . '/islandora_dss_solution_pack_elc/libraries/Record.php';
+require_once dirname(__DIR__) . '/islandora_dss_solution_pack_elc/libraries/Person.php';
+require_once dirname(__DIR__) . '/islandora_dss_solution_pack_elc/libraries/Book.php';
+require_once dirname(__DIR__) . '/islandora_dss_solution_pack_elc/libraries/Loan.php';
+require_once dirname(__DIR__) . '/islandora_dss_solution_pack_elc/libraries/Database.php';
+
+/**
+ *
+ */
+function dss_elc_solr_query($query_string) {
+  $docs = array();
+
+  $params = array('q' => $query_string,
+		  'rows' => 30000,
+		  //'rows' => 3
+		  );
+
+  $solr = apachesolr_get_solr('production_solr_server');
+  //$query = apachesolr_drupal_query( (string) time() , $params, '', '', $solr);
+  $query = apachesolr_drupal_query(NULL, $params, '', '', $solr);
+
+  $solr_query = apachesolr_current_query('production_solr_server', $query);
+
+  $keys = $solr_query->getParam('q');
+  $keys = htmlspecialchars($keys, ENT_NOQUOTES, 'UTF-8');
+  $keys = str_replace("'", '&#039;', $keys);
+
+  $solr_response = $solr_query->search($keys);
+
+  //print_r($solr_response);
+  //print_r($_query);
+  //print_r($solr_query);
+
+  return $solr_response->response->docs;
+}
+
+
+/**
+ *
+ */
+function drush_dss_elc_clean_loans($mysql_user,
+				   $mysql_database='elc',
+				   $mysql_server='localhost') {
+
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $query_string = '-sm_field_bib_rel_object:* AND bundle:loan';
+  $loan_docs = dss_elc_solr_query($query_string);
+
+  foreach($loan_docs as $loan_doc) {
+
+    /**
+     * Retrieve the shareholder using the name
+     *
+     */    
+    $shareholder_name = $loan_doc->ss_field_loan_shareholder_label;
+    $shareholder = $db->shareholder($shareholder_name);
+
+    /**
+     * Retrieve the loans for the shareholder, filtering by the checkout date
+     *
+     */
+    $loan_node = node_load($loan_doc->entity_id);
+
+    $checkout_date = date('Y-m-d', $loan_node->field_loan_duration[$loan_node->language][0]['value']);
+    $return_date = date('Y-m-d', $loan_node->field_loan_duration[$loan_node->language][0]['value2']);
+
+    $condition = "checkout='$checkout_date' AND returned='$return_date'";
+
+    $loans = $shareholder->select_loans_where($condition);
+    if(count($loans) > 1) {
+      drush_log(dt('Found more than one loan for !shareholder_name using !condition', array('!shareholder_name' => $shareholder_name, '!condition' => $condition)), 'warning');
+    }
+
+    foreach($loans as $loan) {
+
+      foreach($loan->borrowed_volumes as $borrowed_volume) {
+
+	$book_title = $loan->book->title;
+
+	if( empty($loan->book->id) ) {
+	  drush_log(dt('Illegible title for !loan_id (!shareholder_name using !condition)', array('!loan_id' => $loan->id, '!shareholder_name' => $shareholder_name, '!condition' => $condition)), 'warning');
+	  continue;
+	}
+
+	$book_title = preg_replace('/\[/', '\[', $book_title);
+	$book_title = preg_replace('/\]/', '\]', $book_title);
+
+	if( empty($borrowed_volume) ) {
+	  $book_query = "label:($book_title) AND sm_vid_Item_Numbers:{$loan->book->number} AND bundle:item";
+	} else {
+	  $book_query = "label:($book_title) AND is_field_item_volume_migrate:($borrowed_volume) AND sm_vid_Item_Numbers:{$loan->book->number} AND bundle:item";
+	}
+
+	$book_docs = dss_elc_solr_query($book_query);
+	
+	if(empty($book_docs)) {
+	  // If the search fails, attempt to locate the item again (and assume that this is a single volume)
+	  $book_query = "label:($book_title) AND is_field_item_volume_migrate:(1) AND sm_vid_Item_Numbers:{$loan->book->number} AND bundle:item";
+	  $book_docs = dss_elc_solr_query($book_query);
+	  
+	  if(empty($book_docs)) {
+	    // If the search yet again fails, report this
+	    drush_log(dt("\n\nFound no books for !book_title (!book_number)", array('!book_title' => $loan->book->title,
+										    '!book_number' => $loan->book->number,)), 'error');
+	    continue;
+	  }
+	} elseif(count($book_docs) > 1) {
+	  drush_log(dt('Found more than one book for !book_title', array('!book_title' => $loan->book->title )), 'warning');
+	  exit(1);
+	  continue;
+	}
+	
+	$book_doc = array_shift($book_docs);
+	$book_node = node_load($book_doc->entity_id);
+	
+	$loan_node->field_bib_rel_object[$loan_node->language][0]['target_id'] = intval($book_node->nid);
+	
+	$loan_title = dss_elc_loan_node_title($loan_node);
+	
+	$loan_node->title = $loan_title;
+	
+	entity_save('node', $loan_node);
+	
+	drush_log(dt('Successfully linked the loan !loan_nid to the item !book_nid', array('!loan_nid' => $loan_node->nid,
+											   '!book_nid' => $book_node->nid)), 'success');
+      }
+    }
+  }
+
+  return;
+}
+
 
 function drush_dss_elc_relate_pers_rel_objects() {
 
@@ -1824,36 +1960,6 @@ function drush_dss_elc_clean_terms($vocab_name = 'loan_filenames') {
 	taxonomy_term_save($term);
 	drush_log('Saved the cleaned term ' . $term->name, 'success');
       }
-    }
-  }
-}
-
-function drush_dss_elc_clean_loans() {
-
-  $drupalQuery = new EntityFieldQuery();
-  
-  $result = $drupalQuery->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'loan')
-    ->range(0, 1000)
-    ->execute();
-
-  if(isset($result['node'])) {
-    
-    foreach(entity_load('node', array_keys($result['node'])) as $loan) {
-
-      $tid = $loan->field_loan_filename['und'][0]['tid'];
-      $term = taxonomy_term_load($tid);
-
-      //if( preg_match('/ELCv\d_[A-Z]_[1-9]/', 'ELCv1_C_1') ) {
-      if( preg_match('/ELCv\d_[A-Z]_[1-9]/', $term->name) ) {
-
-	drush_log('Cleaning ' . $loan->title . '...', 'ok');
-	print_r($term->name);
-	print 'trace';
-	exit(1);
-      }
-
-      entity_save('node', $loan);
     }
   }
 }
