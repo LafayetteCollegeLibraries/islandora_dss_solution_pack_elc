@@ -233,9 +233,112 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array(''));
 
+  $items['dss-elc-item-update-author'] =
+    array(
+	  'description' => dt(''),
+	  'examples' => array(
+			      'Standard example' => '',
+			      ),
+	  'aliases' => array(''));
+
   return $items;
 }
 
+/**
+ *
+ */
+function drush_dss_elc_item_update_author($mysql_user,
+					  $mysql_database='elc',
+					  $mysql_server='localhost') {
+
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $query = new EntityFieldQuery();
+
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('manifestation', 'item'), 'IN')
+    //    ->propertyCondition('title', 'Works%', 'LIKE')
+    ->propertyCondition('title', 's Works%', 'LIKE')
+    ->execute();
+
+  $nids = array_keys($result['node']);
+  $nodes = array_map(function($nid) {
+      return node_load($nid);
+    }, $nids);
+
+  foreach($nodes as $node) {
+    drush_log(dt("Normalizing !node_title...", array('!node_title' => $node->title)), 'ok');
+
+    $author_id = $node->field_artifact_was_authored_by[$node->language][0]['target_id'];
+    $author = node_load($author_id);
+
+    if(!$author) {
+
+      if(preg_match('/(Works;?\s.+?)\s\[/', $node->field_artifact_title[$node->language][0]['value'], $m)) {
+	$book_title = $m[1];
+      } elseif(preg_match('/(Works;?\s.+?)\s\(/', $node->field_artifact_title[$node->language][0]['value'], $m)) {
+	$book_title = $m[1];
+      }
+
+      // Relate the manifestation to the author
+      $book = $db->books_where("title='$book_title'");
+
+      if(!$book->id) {
+	drush_log(dt("Failed to find the Book record for !book_title...", array('!book_title' => $book_title)), 'warning');
+	exit(1);
+      }
+
+      $author_name = trim($book->author->name);
+      $author_query = new EntityFieldQuery();
+      $author_result = $author_query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'human')
+	->propertyCondition('title', $author_name)
+	->execute();
+
+      $author_nids = array_keys($author_result['node']);
+      $author_nid = array_shift($author_nids);
+
+      $author = node_load($author_nid);
+      $node->field_artifact_was_authored_by[$node->language][0]['target_id'] = intval($author->nid);
+
+      $author_name_segments = preg_split('/[,;]/', $author->title);
+      $author_surname = trim($author_name_segments[0]);
+
+      $normalized_title = preg_match('/s$/', $author_surname) ? $author_surname . "' " : $author_surname . "'s ";
+      $node_title = preg_replace('/^s\s/', '', $node->field_artifact_title[$node->language][0]['value']);
+      $normalized_title .= $node_title;
+
+      $node->title = $normalized_title;
+      $node->field_artifact_title[$node->language][0]['value'] = $normalized_title;
+      $node->field_artifact_title[$node->language][0]['safe_value'] = $normalized_title;
+
+      entity_save('node', $node);
+    } else {
+      $node->field_artifact_was_authored_by[$node->language][0]['target_id'] = intval($author->nid);
+
+      $author_name_segments = preg_split('/[,;]/', $author->title);
+      $author_surname = trim($author_name_segments[0]);
+
+      $normalized_title = preg_match('/s$/', $author_surname) ? $author_surname . "' " : $author_surname . "'s ";
+      $node_title = preg_replace('/^s\s/', '', $node->field_artifact_title[$node->language][0]['value']);
+      $normalized_title .= $node_title;
+
+      $node->title = $normalized_title;
+      $node->field_artifact_title[$node->language][0]['value'] = $normalized_title;
+      $node->field_artifact_title[$node->language][0]['safe_value'] = $normalized_title;
+      
+      entity_save('node', $node);
+    }
+  }
+}
+
+/**
+ *
+ */
 function drush_dss_elc_books_normalize_works() {
 
   $query = new EntityFieldQuery();
@@ -249,7 +352,6 @@ function drush_dss_elc_books_normalize_works() {
 
     $nids = array_keys($result['node']);
     $nodes = array_map(function($nid) {
-
 	return node_load($nid);
       }, $nids);
 
@@ -258,7 +360,6 @@ function drush_dss_elc_books_normalize_works() {
       drush_log(dt("Normalizing !node_title...", array('!node_title' => $node->title)), 'ok');
 
       $node_md = entity_metadata_wrapper('node', $node);
-
       $author = node_load($node->field_artifact_was_authored_by[$node->language][0]['target_id']);
 
       $author_name_segments = preg_split('/[,;]/', $author->title);
@@ -284,7 +385,6 @@ function drush_dss_elc_manifestation_migrate_title() {
   
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'manifestation');
-  //->range(0,1);
 
   $result = $query->execute();
 

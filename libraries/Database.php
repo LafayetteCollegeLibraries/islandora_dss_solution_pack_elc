@@ -42,6 +42,17 @@ class Database {
     return new Book($book, $this);
   }
 
+  public function books_where($condition) {
+    $query = "SELECT * FROM books WHERE $condition";
+    $records = $this->db->query($query);
+
+    foreach( $records as $record ) {
+      $book = $record;
+    }
+
+    return new Book($book, $this);
+  }
+
   /**
    *
    */
