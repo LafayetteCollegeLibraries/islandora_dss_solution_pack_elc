@@ -54,19 +54,35 @@ class Database {
   }
 
   /**
+   * This must support book title, shareholder and representative names
    *
    */
-  public function shareholder($shareholder_name) {
-    if(!array_key_exists($shareholder_name, $this->shareholders)) {
-      $query = "SELECT * FROM shareholders WHERE name='$shareholder_name'";
+  public function loans_where($condition) {
+    $loans = array();
+    $query = "SELECT l.* FROM loans AS l INNER JOIN shareholders AS s ON s.id=l.shareholder_id INNER JOIN representatives AS r ON r.id=l.representative_id INNER JOIN books AS b ON b.id=l.book_id WHERE $condition";
+    $records = $this->db->query($query);
+
+    foreach( $records as $record ) {
+      $loans[] = new Loan($record, $this, $this->book($record['book_id']), $this->shareholder($record['shareholder_id']), $this->representative($record['representative_id']));
+    }
+
+    return $loans;
+  }
+
+  /**
+   *
+   */
+  public function shareholder($id) {
+    if(!array_key_exists($id, $this->shareholders)) {
+      $query = "SELECT * FROM shareholders WHERE id='$id'";
       $records = $this->db->query($query);
 
       foreach( $records as $record ) {
 	$shareholder = $record;
-	$this->shareholders[$shareholder_name] = $shareholder;
+	$this->shareholders[$id] = $shareholder;
       }
     } else {
-      $shareholder = $this->shareholders[$shareholder_name];
+      $shareholder = $this->shareholders[$id];
     }
 
     return new Shareholder($shareholder, $this);
@@ -75,17 +91,44 @@ class Database {
   /**
    *
    */
-  public function representative($representative_name) {
-    if(!array_key_exists($representative_name, $this->representatives)) {
-      $query = "SELECT * FROM representatives WHERE name='$representative_name'";
+  public function shareholders_where($condition) {
+    $shareholders = array();
+    $query = "SELECT * FROM shareholders WHERE $condition";
+    $records = $this->db->query($query);
+
+    foreach( $records as $record ) {
+      $shareholders[] = new Shareholder($loan, $this);
+    }
+
+    return $shareholders;
+  }
+
+  public function representatives_where($condition) {
+    $representatives = array();
+    $query = "SELECT * FROM representatives WHERE $condition";
+    $records = $this->db->query($query);
+
+    foreach( $records as $record ) {
+      $representatives[] = new Representative($loan, $this);
+    }
+
+    return $representatives;
+  }
+
+  /**
+   *
+   */
+  public function representative($id) {
+    if(!array_key_exists($id, $this->representatives)) {
+      $query = "SELECT * FROM representatives WHERE id='$id'";
       $records = $this->db->query($query);
 
       foreach( $records as $record ) {
 	$representative = $record;
-	$this->representatives[$representative_name] = $representative;
+	$this->representatives[$id] = $representative;
       }
     } else {
-      $representative = $this->representatives[$representative_name];
+      $representative = $this->representatives[$id];
     }
 
     return new Representative($representative, $this);

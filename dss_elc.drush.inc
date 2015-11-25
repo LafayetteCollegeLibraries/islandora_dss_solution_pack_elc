@@ -175,6 +175,15 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array());
 
+  $items['dss-elc-clean-bib-rel-titles'] =
+    array(
+	  'description' => dt('Clean all ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-loans',
+			      ),
+	  'aliases' => array());
+
   $items['dss-elc-clean-loan-objects'] =
     array(
 	  'description' => dt('Clean all ELC "loan" records'),
@@ -439,8 +448,7 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
   $f = function($options) {
 
     $pid = $options['pid'];
-    $connection = $options['connection'];
-		   
+    $connection = $options['connection'];		   
 
     $query = 'SELECT $object $title $content
      FROM <#ri>
@@ -452,16 +460,6 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
             FILTER(sameTerm($collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm($collection_predicate, <fedora-rels-ext:isMemberOf>))
             FILTER (!sameTerm($content, <info:fedora/fedora-system:FedoraObject-3.0>))';
     
-    /*
-    $enforced = variable_get('islandora_namespace_restriction_enforced', FALSE);
-    if ($enforced) {
-      $namespace_array = explode(' ', variable_get('islandora_pids_allowed', 'default: demo: changeme: ilives: islandora-book: books: newspapers: '));
-      $namespace_array = array_map('islandora_get_namespace', $namespace_array);
-      $namespace_array = array_filter($namespace_array, 'trim');
-      $namespace_sparql = implode('|', $namespace_array);
-      $query .= 'FILTER(regex(str(?object), "info:fedora/(' . $namespace_sparql . '):"))';
-    }
-    */
     $query .= '} ORDER BY $title';
     $query_array = array(
 			 'query' => $query,
@@ -478,15 +476,10 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
       }, $connection->repository->ri->query($query_array['query'], $query_array['type']));
   };
 
-  //foreach($connection->repository->ri->query($query_array['query'], $query_array['type']) as $result) {
-
   $options = array('pid' => $pid,
 		   'connection' => $connection);
 
   foreach($f($options) as $coll) {
-
-    //$object = islandora_object_load($result['object']['value']);
-
     $options = array('pid' => $coll->id,
 		     'connection' => $connection);
 
@@ -540,30 +533,6 @@ function drush_dss_elc_collection_generate_paths($pid, $url = 'localhost') {
     
   drush_log('Successfully generated the alias ' . $alias . ' for the path ' . $source, 'success');
 }
-
-/*
-function dss_elc_get_taxonomy_term($term_value, $vocab_name) {
-
-  // Check for the taxonomical term containing the term
-  $terms = taxonomy_get_term_by_name($term_value, $vocab_name);
-  
-  // If the term has not been linked to this vocabulary yet, instantiate the term
-  if(!empty($terms)) {
-
-    return array_pop($terms);
-  } else {
-
-    $vocab = taxonomy_vocabulary_machine_name_load($vocab_name);
-    
-    $term = new stdClass();
-    $term->name = $term_value;
-    $term->vid = $vocab->vid;
-
-    taxonomy_term_save($term);
-    return $term;
-  }
-}
-*/
 
 /**
  * Retrieves the records from the "books" table within the legacy application
@@ -750,6 +719,54 @@ function dss_elc_solr_query($query_string) {
 }
 
 /**
+ * Task for cleaning the titles for bib. relationships (Loan and Authorship Nodes)
+ *
+ */
+function drush_dss_elc_clean_bib_rel_titles() {
+  $drupalQuery = new EntityFieldQuery();
+
+  $bib_rels = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('bibliographic_relationship', 'loan', 'authorship'), 'IN')
+    ->propertyCondition('title', '% s Works%', 'LIKE')
+    ->execute();
+
+  if(isset($bib_rels['node'])) {
+
+    $nodes = entity_load('node', array_keys($bib_rels['node']));
+    foreach($nodes as $node) {
+
+      drush_log(dt("Cleaning the title for !node_title (!node_nid)", array('!node_title' => $node->title,
+									   '!node_nid' => $node->nid)), 'ok');
+
+      $object_nid = $node->field_bib_rel_object[$node->language][0]['target_id'];
+      $object_node = node_load($object_nid);
+
+      if($node->type == 'authorship') {
+
+	$subject_nid = $node->field_bib_rel_subject[$node->language][0]['target_id'];
+	$subject_node = node_load($subject_nid);
+
+	$title = $subject_node->title . " authored " . $object_node->title;
+
+	if(strlen($title) > 254) {
+      
+	  $node->title->set(substr($title, 0, 251) . '...');
+	} else {
+	  
+	  $node->title = $title;
+	}
+      } else {
+	$node->title = dss_elc_loan_node_title($node);
+      }
+
+      entity_save('node', $node);
+      drush_log(dt("Cleaned the title for !node_title (!node_nid)", array('!node_title' => $node->title,
+									  '!node_nid' => $node->nid)), 'success');
+    }
+  }  
+}
+
+/**
  *
  */
 function drush_dss_elc_clean_loan_vols($mysql_user,
@@ -772,7 +789,7 @@ function drush_dss_elc_clean_loan_vols($mysql_user,
      *
      */    
     $shareholder_name = $loan_doc->ss_field_loan_shareholder_label;
-    $shareholder = $db->shareholder($shareholder_name);
+    $shareholder = $db->shareholder_where("name='$shareholder_name'");
 
     /**
      * Retrieve the loans for the shareholder, filtering by the checkout date
@@ -860,6 +877,100 @@ function drush_dss_elc_clean_loan_vols($mysql_user,
  *
  */
 function drush_dss_elc_clean_loan_objects($mysql_user,
+					  $mysql_database='elc',
+					  $mysql_server='localhost') {
+
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $drupalQuery = new EntityFieldQuery();
+
+  $bib_rels = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    ->fieldCondition('field_bib_rel_object', 'target_id', 0)
+    ->execute();
+
+  if(isset($bib_rels['node'])) {
+
+    $nodes = entity_load('node', array_keys($bib_rels['node']));
+    foreach($nodes as $node) {
+
+      drush_log(dt("Cleaning the title for !node_title (!node_nid)", array('!node_title' => $node->title,
+									   '!node_nid' => $node->nid)), 'ok');
+
+      //print_r($node);
+      //exit(1);
+
+      $representative = node_load($node->field_bib_rel_subject[$node->language][0]['target_id']);
+
+      if(!empty( $node->field_loan_shareholder[$node->language][0]['target_id'] )) {
+	$shareholder = node_load($node->field_loan_shareholder[$node->language][0]['target_id']);
+
+	
+
+	$condition = "s.name='{$shareholder->title}' AND r.name='{$representative->title}'";
+      } else {
+	$condition = "s.name='{$representative->title}'";
+      }
+      
+      $checkout = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value']);
+      $returned = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value2']);
+
+      $condition .= " AND checkout='$checkout' AND returned='$returned'";
+
+      $loans = $db->loans_where($condition);
+
+      if(empty($loans)) {
+	drush_log(dt("Failed to find a loan record using !condition", array('!condition' => $condition)), 'error');
+	continue;
+      } elseif(count($loans) > 1) {
+	drush_log(dt("Found multiple loan records using !condition", array('!condition' => $condition)), 'error');
+	continue;
+      } else {
+
+	$loan = array_shift($loans);
+	$borrowed_item_nodes = array();
+
+	$item_query = new EntityFieldQuery();
+	$items = $item_query->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'item')
+	  ->propertyCondition('title', "%{$loan->book->title}%", 'LIKE')
+	  ->execute();
+
+	if(isset($items['node'])) {
+
+	  $nodes = entity_load('node', array_keys($items['node']));
+	  foreach($nodes as $item_node) {
+	    $volume_tid = $item_node->field_item_volume_migrate[$item_node->language][0]['tid'];
+	    $volume = taxonomy_term_load($volume_tid);
+
+	    if(in_array($volume->name, $loan->borrowed_volumes)) {
+	      $borrowed_item_nodes[] = $item_node;
+	    }
+	  }
+	}
+
+	if(empty($borrowed_item_nodes)) {
+	  drush_log(dt("Failed to find the borrowed item for !borrowed_volumes", array('!borrowed_volumes' => implode(',', $loan->borrowed_volumes))), 'error');
+	  continue;
+	}
+
+	$node->field_bib_rel_object[$node->language] = array();
+
+	foreach($borrowed_item_nodes as $borrowed_item_node) {
+	  $node->field_bib_rel_object[$node->language][] = array('target_id' => $borrowed_item_node->nid);
+	}
+
+	entity_save('node', $node);
+      }
+    }
+  }
+}
+
+function drush_dss_elc_clean_loan_objects_deprecated($mysql_user,
 					  $mysql_database='elc',
 					  $mysql_server='localhost') {
 
