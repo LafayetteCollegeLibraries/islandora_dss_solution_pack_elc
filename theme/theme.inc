@@ -1,24 +1,40 @@
 <?php
 
 /**
+ * Implements hook_preprocess_node_form().
  * Operations common to all form preprocessing hooks
  *
  */
-
-function dss_elc_preprocess_node_form(&$variables) {
-
-  hide($variables['form']['additional_settings']);
-  #$variables['form']['actions']['submit']['#value'] = 'Submit for Review';
+function dss_elc_preprocess_node_form(&$vars) {
+  hide($vars['form']['additional_settings']);
 
   // Determine whether or not this is in response to an AJAX request
   if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+    $vars['form']['actions']['publish']['#value'] = t('Save Record');
+  }
 
-    $variables['form']['actions']['publish']['#value'] = t('Save Record');
+  if( preg_match('/edit$/', $vars['form']['#action']) ) {
+    $bundle = ucfirst($vars['form']['#bundle']);
+    drupal_set_title("Edit $bundle");
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ */
+function dss_elc_preprocess_page(&$vars) {
+  if (!empty($vars['page']['content']['system_main']['#form_id']) && $vars['page']['content']['system_main']['#form_id'] == 'item_node_form') {
+    if( preg_match('/edit$/', $vars['page']['content']['system_main']['#action']) ) {
+      $bundle = ucfirst($vars['page']['content']['system_main']['#bundle']);
+      drupal_set_title("Edit $bundle");
+    }
   }
 }
 
 /**
  * Preprocessor for node_form
+ 
  */
 function template_preprocess_location_node_form(&$variables) {
 
@@ -42,12 +58,10 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
   dss_elc_preprocess_node_form($variables);
 
   $autocomplete_fields = array('personal_relationship' => array('entity' => array(
-										  array(
-											'selector' => array("#edit-field-pers-rel-subject-und"),
+										  array('selector' => array("#edit-field-pers-rel-subject-und"),
 											'options' => array()
 											),
-										  array(
-											'selector' => array("#edit-field-pers-rel-object-und"),
+										  array('selector' => array("#edit-field-pers-rel-object-und"),
 											'options' => array()
 											),
 										  ),
@@ -80,15 +94,12 @@ function template_preprocess_item_node_form(&$variables) {
 
   drupal_add_js(drupal_get_path('module', 'dss_elc') . '/js/src/item_form.js');
 
-  //hide($variables['form']['field_artifact_type']);
   hide($variables['form']['field_artifact_metadata_record']);
   hide($variables['form']['field_item_embodies']);
   hide($variables['form']['field_item_volume_migrate']);
-
   hide($variables['form']['body'][$variables['form']['body']['#language']][0]['format']);
   hide($variables['form']['field_book_or_periodical'][$variables['form']['field_book_or_periodical']['#language']]['_none']);
   
-  //hide($variables['form']['additional_settings']);
   dss_elc_preprocess_node_form($variables);
 }
 
