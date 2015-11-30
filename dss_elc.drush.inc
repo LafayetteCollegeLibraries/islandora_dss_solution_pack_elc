@@ -996,7 +996,6 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
 									   '!node_nid' => $node->nid)), 'ok');
 
       $representative = node_load($node->field_bib_rel_subject[$node->language][0]['target_id']);
-      //$representative_title = preg_replace("/'/", "''", $representative->title);
 
       if(!empty( $node->field_loan_shareholder[$node->language][0]['target_id'] )) {
 	$shareholder = node_load($node->field_loan_shareholder[$node->language][0]['target_id']);
@@ -1013,7 +1012,11 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
 
       $loans = $db->loans_where($condition);
 
-      if($representative->title == 'Abigail Ann' and $shareholder->title == 'Tindall, Ralph' and $checkout == '1818-04-18' and $returned == '1818-05-19') {
+      if($representative->title == 'Swift, Edward' and $shareholder->title == 'Hays, James' and $checkout == '1819-01-30' and $returned == '1819-02-02') {
+	$node->field_bib_rel_object[$node->language] = array();
+	$node->field_bib_rel_object[$node->language][] = array('target_id' => 280361);
+	entity_save('node', $node);
+      } elseif($representative->title == 'Abigail Ann' and $shareholder->title == 'Tindall, Ralph' and $checkout == '1818-04-18' and $returned == '1818-05-19') {
 	$node->field_bib_rel_object[$node->language] = array();
 	$node->field_bib_rel_object[$node->language][] = array('target_id' => 280363);
 	entity_save('node', $node);
