@@ -202,6 +202,15 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array());
 
+  $items['dss-elc-clean-loans'] =
+    array(
+	  'description' => dt('Clean all ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-loans',
+			      ),
+	  'aliases' => array());
+
   $items['dss-elc-delete-loans'] =
     array(
 	  'description' => dt('Delete all Loan Nodes'),
@@ -873,6 +882,91 @@ function drush_dss_elc_clean_loan_vols($mysql_user,
   }
 }
 
+function drush_dss_elc_clean_loans($mysql_user,
+				   $mysql_database='elc',
+				   $mysql_server='localhost') {
+
+  $db->loans_where($condition);
+}
+
+function drush_dss_elc_clean_loans_1($mysql_user,
+				   $mysql_database='elc',
+				   $mysql_server='localhost') {
+
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $drupalQuery = new EntityFieldQuery();
+
+  $bib_rels = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    ->range(0,10000)
+    ->execute();
+
+  if(isset($bib_rels['node'])) {
+
+    $nodes = entity_load('node', array_keys($bib_rels['node']));
+    foreach($nodes as $node) {
+
+      /*
+      drush_log(dt("Checking for the loan !node_title (!node_nid)", array('!node_title' => $node->title,
+									  '!node_nid' => $node->nid)), 'ok');
+      */
+
+      $representative = node_load($node->field_bib_rel_subject[$node->language][0]['target_id']);
+
+      if(!empty( $node->field_loan_shareholder[$node->language][0]['target_id'] )) {
+	$shareholder = node_load($node->field_loan_shareholder[$node->language][0]['target_id']);
+	$condition = "s.name='{$shareholder->title}' AND r.name='{$representative->title}'";
+      } else {
+	$condition = "s.name='{$representative->title}'";
+      }
+
+      if(!empty( $node->field_bib_rel_object[$node->language][0]['target_id'] )) {
+	$item = node_load($node->field_bib_rel_object[$node->language][0]['target_id']);
+
+	$item_title = preg_replace('/(.+?)\s\(.+/', '\1', $item->title);
+	$item_title = preg_replace("/.+?'s Works/", 'Works', $item_title);
+	$item_title = preg_replace("/(.+?)\s\[Vol.+/", '\1', $item_title);
+	$item_title = htmlspecialchars_decode($item_title, ENT_QUOTES);
+	$item_title = preg_replace("/'/", "''", $item_title);
+	$condition .= " AND b.title='$item_title'";
+      }
+      
+      $checkout = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value']);
+      $returned = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value2']);
+
+      $condition .= " AND checkout='$checkout' AND returned='$returned'";
+
+      $loans = $db->loans_where($condition);
+
+      if(empty($loans)) {
+	drush_log(dt("Failed to find a loan record using !condition", array('!condition' => $condition)), 'error');
+	//exit(1);
+	continue;
+      } elseif(count($loans) > 1) {
+
+	if(in_array($node->nid, array('288596', '288595', '297995', '302820'))) {
+	  continue;
+	}
+
+	//drush_log(dt("Found multiple loan records using !condition", array('!condition' => $condition)), 'error');
+	//print_r($node->nid);
+	//exit(1);
+	continue;
+      } else {
+	/*
+	drush_log(dt("Found the loan for !node_title (!node_nid)", array('!node_title' => $node->title,
+									 '!node_nid' => $node->nid)), 'success');
+	*/
+      }
+    }
+  }  
+}
+
 /**
  *
  */
@@ -901,21 +995,17 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
       drush_log(dt("Cleaning the title for !node_title (!node_nid)", array('!node_title' => $node->title,
 									   '!node_nid' => $node->nid)), 'ok');
 
-      //print_r($node);
-      //exit(1);
-
       $representative = node_load($node->field_bib_rel_subject[$node->language][0]['target_id']);
+      //$representative_title = preg_replace("/'/", "''", $representative->title);
 
       if(!empty( $node->field_loan_shareholder[$node->language][0]['target_id'] )) {
 	$shareholder = node_load($node->field_loan_shareholder[$node->language][0]['target_id']);
-
-	
 
 	$condition = "s.name='{$shareholder->title}' AND r.name='{$representative->title}'";
       } else {
 	$condition = "s.name='{$representative->title}'";
       }
-      
+
       $checkout = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value']);
       $returned = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value2']);
 
@@ -923,8 +1013,29 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
 
       $loans = $db->loans_where($condition);
 
-      if(empty($loans)) {
-	drush_log(dt("Failed to find a loan record using !condition", array('!condition' => $condition)), 'error');
+      if($representative->title == 'Abigail Ann' and $shareholder->title == 'Tindall, Ralph' and $checkout == '1818-04-18' and $returned == '1818-05-19') {
+	$node->field_bib_rel_object[$node->language] = array();
+	$node->field_bib_rel_object[$node->language][] = array('target_id' => 280363);
+	entity_save('node', $node);
+      } elseif($representative->title == "O'Malley, Charles") {
+	$node->field_bib_rel_object[$node->language] = array();
+	$node->field_bib_rel_object[$node->language][] = array('target_id' => 280379);
+	entity_save('node', $node);
+      } elseif(empty($loans)) {
+
+	$condition = "s.name='{$representative->title}'";
+	$condition .= " AND checkout='$checkout' AND returned='$returned'";
+
+	$loans = $db->loans_where($condition);
+
+	if(empty($loans)) {
+	  drush_log(dt("Failed to find a loan record using !condition", array('!condition' => $condition)), 'error');
+	  node_delete($node->nid);
+	} else {
+	  drush_log(dt("Found a loan record using !condition", array('!condition' => $condition)), 'okay');
+	  exit(1);
+	}
+
 	continue;
       } elseif(count($loans) > 1) {
 	drush_log(dt("Found multiple loan records using !condition", array('!condition' => $condition)), 'error');
@@ -941,7 +1052,6 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
 	  ->execute();
 
 	if(isset($items['node'])) {
-
 	  $nodes = entity_load('node', array_keys($items['node']));
 	  foreach($nodes as $item_node) {
 	    $volume_tid = $item_node->field_item_volume_migrate[$item_node->language][0]['tid'];
@@ -954,7 +1064,9 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
 	}
 
 	if(empty($borrowed_item_nodes)) {
-	  drush_log(dt("Failed to find the borrowed item for !borrowed_volumes", array('!borrowed_volumes' => implode(',', $loan->borrowed_volumes))), 'error');
+	  drush_log(dt("Failed to find the borrowed item for !borrowed_volumes using !condition", array('!borrowed_volumes' => implode(',', $loan->borrowed_volumes),
+													'!condition' => $condition,
+													)), 'error');
 	  continue;
 	}
 

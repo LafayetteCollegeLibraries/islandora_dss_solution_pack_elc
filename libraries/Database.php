@@ -60,6 +60,7 @@ class Database {
   public function loans_where($condition) {
     $loans = array();
     $query = "SELECT l.* FROM loans AS l INNER JOIN shareholders AS s ON s.id=l.shareholder_id INNER JOIN representatives AS r ON r.id=l.representative_id INNER JOIN books AS b ON b.id=l.book_id WHERE $condition";
+
     $records = $this->db->query($query);
 
     foreach( $records as $record ) {
