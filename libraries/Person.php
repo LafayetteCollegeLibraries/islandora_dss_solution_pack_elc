@@ -18,7 +18,7 @@ class Person extends Record {
   public function __construct($record, $db) {
     parent::__construct($record, $db);
     $this->id = $record['id'];
-    $this->name = $record['name'];
+    $this->name = trim($record['name']);
     $this->flag_status = $record['flagStatus'];
     $this->flag_message = $record['flagMessage'];
     $this->review = $record['review'];
@@ -27,9 +27,7 @@ class Person extends Record {
     $this->gender = $record['gender'];
     $this->family_name = $record['familyName'];
     $this->db = $db;
-    
   }
-
 }
 
 class Shareholder extends Person {

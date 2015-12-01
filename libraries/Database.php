@@ -54,6 +54,28 @@ class Database {
   }
 
   /**
+   *
+   */
+  public function loans($limit = NULL, $offset = NULL) {
+    $loans = array();
+    $query = "SELECT l.* FROM loans AS l INNER JOIN shareholders AS s ON s.id=l.shareholder_id INNER JOIN representatives AS r ON r.id=l.representative_id INNER JOIN books AS b ON b.id=l.book_id";
+
+    if(!is_null($offset)) {
+      $query .= " LIMIT $offset,$limit";
+    } elseif(!is_null($limit)) {
+      $query .= " LIMIT $limit";
+    }
+
+    $records = $this->db->query($query);
+
+    foreach( $records as $record ) {
+      $loans[] = new Loan($record, $this, $this->book($record['book_id']), $this->shareholder($record['shareholder_id']), $this->representative($record['representative_id']));
+    }
+
+    return $loans;
+  }
+
+  /**
    * This must support book title, shareholder and representative names
    *
    */

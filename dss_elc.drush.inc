@@ -211,6 +211,15 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array());
 
+  $items['dss-elc-sync-loans'] =
+    array(
+	  'description' => dt('Clean all ELC "loan" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-loans',
+			      ),
+	  'aliases' => array());
+
   $items['dss-elc-delete-loans'] =
     array(
 	  'description' => dt('Delete all Loan Nodes'),
@@ -886,7 +895,269 @@ function drush_dss_elc_clean_loans($mysql_user,
 				   $mysql_database='elc',
 				   $mysql_server='localhost') {
 
-  $db->loans_where($condition);
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $loans = $db->loans();
+
+  foreach( $loans as $loan ) {
+    if(empty($loan->checkout)) {
+      drush_log(dt('No checkout date specified for !loan_id', array('!loan_id' => $loan->id)), 'error');
+      continue;
+    }
+    
+    $checkout_date = DateTime::createFromFormat('Y-m-d', $loan->checkout);
+    $checkout = $checkout_date->format('U');
+    
+    if(!empty($loan->returned)) {
+      $returned_date = DateTime::createFromFormat('Y-m-d', $loan->returned);
+      $returned = $returned_date->format('U');
+    }
+    
+    $query = new EntityFieldQuery();
+    
+    $book_title = substr($loan->book->title, 0, 127);
+    $terms = taxonomy_get_term_by_name($loan->book->number, 'item_numbers');
+    $item_number = array_shift($terms);
+    
+    try {
+      $results = $query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'item')
+	->propertyCondition('title', "$book_title%", 'LIKE')
+	->fieldCondition('field_item_number_taxon', 'tid', $item_number->tid)
+	->range(0,1)
+	->execute();
+    } catch(Exception $e) {
+      drush_log(dt('Could not find the item "!book_title: !exception"', array('!book_title' => $loan->book->title,
+									      '!exception' => $e->getMessage() )), 'error');
+      continue;
+    }
+    
+    if(isset($results['node'])) {
+      $nodes = entity_load('node', array_keys($results['node']));
+      
+      foreach($nodes as $node) {
+	$object_node = $node;
+	$manifest_node = node_load($object_node->field_item_embodies[$object_node->language][0]['target_id']);
+      }
+    } else {
+      drush_log(dt('Could not find the item "!book_title"', array('!book_title' => $loan->book->title)), 'error');
+      continue;
+    }
+    
+    /**
+     * Retrieve subject
+     *
+     */
+    $query = new EntityFieldQuery();
+    
+    $results = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'human')
+      ->propertyCondition('title', "{$loan->shareholder->name}", 'LIKE')
+      ->range(0,1)
+      ->execute();
+    
+    if(isset($results['node'])) {
+      
+      $nodes = entity_load('node', array_keys($results['node']));
+      foreach($nodes as $node) {
+	$subject_node = $node;
+      }
+    }
+    
+    if($loan->representative) {
+      
+      $query = new EntityFieldQuery();
+      
+      $results = $query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'human')
+	->propertyCondition('title', "{$loan->representative->name}", 'LIKE')
+	->range(0,1)
+	->execute();
+      
+      if(isset($results['node'])) {
+	
+	$shareholder_node = $subject_node;
+	
+	$nodes = entity_load('node', array_keys($results['node']));
+	foreach($nodes as $node) {
+	  $subject_node = $node;
+	}
+	
+	/**
+	 * Search for the Loan using the Item, the Representative, and the Shareholder
+	 *
+	 */
+	$query = new EntityFieldQuery();
+	
+	$results = $query->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'loan')
+	  ->fieldCondition('field_bib_rel_object', 'target_id', array($object_node->nid, $manifest_node->nid), 'IN')
+	  ->fieldCondition('field_bib_rel_subject', 'target_id', $subject_node->nid)
+	  ->fieldCondition('field_loan_shareholder', 'target_id', $shareholder_node->nid)
+	  ->range(0,1)
+	  ->execute();
+	
+	if(isset($results['node'])) {
+	  $nodes = entity_load('node', array_keys($results['node']));
+	  foreach($nodes as $node) {
+	    
+	    if(isset( $returned )) {
+	      $checkout_diff = ((int) $checkout) - ((int) $node->field_loan_duration[$node->language][0]['value']);
+	      $returned_diff = ((int) $returned) - ((int) $node->field_loan_duration[$node->language][0]['value2']);
+	      
+	      if($checkout_diff < 1507057 and $returned_diff < 1507057) {
+		$loan_node = $node;
+	      }
+	    } else {
+	      $loan_node = $node;
+	    }
+	  }
+	  
+	  if(isset($loan_node)) {
+	    drush_log(dt('The loan !loan_id was successfully migrated', array('!loan_id' => $loan->id)),'success');
+	  } else {
+	    $checkout_date = strftime("%Y/%m/%d", (int) $node->field_loan_duration[$node->language][0]['value'] );
+	    $returned_date = strftime("%Y/%m/%d", (int) $node->field_loan_duration[$node->language][0]['value2'] );
+	    
+	    drush_log(dt('Loans were found, but not between !checkout and !returned', array('!checkout' => $checkout_date,
+											    '!returned' => $returned_date)), 'error');
+	    
+	    drush_log(dt('Found but could not match the loan for "!book_title" (!item_nid/!manifest_nid) borrowed by "!subject_title" (!subject_nid) for "!shareholder_title" (!shareholder_nid) between "!checkout" and "!returned"',
+			 array('!book_title' => $object_node->title,
+			       '!item_nid' => $object_node->nid,
+			       '!manifest_nid' => $manifest_node->nid,
+			       '!subject_title' => $subject_node->title,
+			       '!subject_nid' => $subject_node->nid,
+			       '!shareholder_title' => $shareholder_node->title,
+			       '!shareholder_nid' => $shareholder_node->nid,
+			       '!checkout' => $loan->checkout,
+			       '!returned' => $loan->returned)), 'error');
+	    
+	    $checkout = strftime("%Y/%m/%d", (int) $checkout);
+	    $node_title = "{$subject_node->title} borrowed {$loan->book->title} % on $checkout";
+	    
+	    $query = new EntityFieldQuery();
+	    
+	    $results = $query->entityCondition('entity_type', 'node')
+	      ->entityCondition('bundle', 'loan')
+	      ->propertyCondition('title', $node_title, 'LIKE')
+	      ->range(0,1)
+	      ->execute();
+	    
+	    if(isset($results['node'])) {
+	      $nodes = entity_load('node', array_keys($results['node']));
+	      foreach($nodes as $node) {
+		
+		drush_log(dt('This may have been migrated to !node_title (!node_nid)', array('!node_title' => $node->title,
+											     '!node_nid' => $node->nid)), 'ok');
+	      }
+	    } else {
+	      
+	      if($loan->representative) {
+		drush_log(dt('Original loan was !representative_name borrowing !book_title (!borrowed_vols) for !shareholder_name between !checkout and !returned',array('!shareholder_name' => $loan->shareholder->name,
+																					 '!representative_name' => $loan->representative->name,
+																					 '!book_title' => $loan->book->title,
+																					 '!borrowed_vols' => implode(',', $loan->borrowed_volumes),
+																					 '!checkout' => $loan->checkout,
+																					 '!returned' => $loan->returned)), 'error');
+	      } else {
+		drush_log(dt('Original loan was !shareholder_name borrowing !book_title (!borrowed_vols) between !checkout and !returned',array('!shareholder_name' => $loan->shareholder->name,
+																		'!book_title' => $loan->book->title,
+																		'!borrowed_vols' => implode(',', $loan->borrowed_volumes),
+																		'!checkout' => $loan->checkout,
+																		'!returned' => $loan->returned)), 'error');
+	      }
+	    }
+	  }
+	} else {
+	  
+	  drush_log(dt('Could not find the loan for "!book_title" (!item_nid/!manifest_nid) borrowed by "!subject_title" (!subject_nid) for "!shareholder_title" (!shareholder_nid) between "!checkout" and "!returned"',
+		       array('!book_title' => $object_node->title,
+			     '!item_nid' => $object_node->nid,
+			     '!manifest_nid' => $manifest_node->nid,
+			     '!subject_title' => $subject_node->title,
+			     '!subject_nid' => $subject_node->nid,
+			     '!shareholder_title' => $shareholder_node->title,
+			     '!shareholder_nid' => $shareholder_node->nid,
+			     '!checkout' => $loan->checkout,
+			     '!returned' => $loan->returned)), 'error');
+	  
+	  $checkout = strftime("%Y/%m/%d", (int) $checkout);
+	  $node_title = "{$subject_node->title} borrowed {$loan->book->title} % on $checkout";
+	  
+	  $query = new EntityFieldQuery();
+	  
+	  $results = $query->entityCondition('entity_type', 'node')
+	    ->entityCondition('bundle', 'loan')
+	    ->propertyCondition('title', $node_title, 'LIKE')
+	    ->range(0,1)
+	    ->execute();
+	  
+	  if(isset($results['node'])) {
+	    $nodes = entity_load('node', array_keys($results['node']));
+	    foreach($nodes as $node) {
+	      
+	      drush_log(dt('This may have been migrated to !node_title (!node_nid)', array('!node_title' => $node->title,
+											   '!node_nid' => $node->nid)), 'ok');
+	    }
+	  } else {
+	    
+	    if($loan->representative) {
+	      drush_log(dt('Original loan was !representative_name borrowing !book_title (!borrowed_vols) for !shareholder_name between !checkout and !returned',array('!shareholder_name' => $loan->shareholder->name,
+																				       '!representative_name' => $loan->representative->name,
+																				       '!book_title' => $loan->book->title,
+																				       '!borrowed_vols' => implode(',', $loan->borrowed_volumes),
+																				       '!checkout' => $loan->checkout,
+																				       '!returned' => $loan->returned)), 'error');
+	    } else {
+	      drush_log(dt('Original loan was !shareholder_name borrowing !book_title (!borrowed_vols) between !checkout and !returned',array('!shareholder_name' => $loan->shareholder->name,
+																	      '!book_title' => $loan->book->title,
+																	      '!borrowed_vols' => implode(',', $loan->borrowed_volumes),
+																	      '!checkout' => $loan->checkout,
+																	      '!returned' => $loan->returned)), 'error');
+	    }
+	  }
+	}
+      } else {
+	drush_log(dt('Could not find representative "!representative_name"', array('!representative_name' => $loan->representative->name)), 'error');
+	exit(1);
+      }
+    } else {
+      /**
+       * Search for the Loan using the Item and the Shareholder
+       *
+       */
+      $query = new EntityFieldQuery();
+      
+      $results = $query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'loan')
+	->fieldCondition('field_bib_rel_object', 'target_id', array($object_node->nid, $manifest_node->nid), 'IN')
+	->fieldCondition('field_bib_rel_subject', 'target_id', $subject_node->nid)
+	->range(0,1)
+	->execute();
+      
+      if(isset($results['node'])) {
+	$nodes = entity_load('node', array_keys($results['node']));
+	foreach($nodes as $node) {
+	  
+	  $checkout_diff = ((int) $checkout) - ((int) $node->field_loan_duration[$node->language][0]['value']);
+	  $returned_diff = ((int) $returned) - ((int) $node->field_loan_duration[$node->language][0]['value2']);
+	  
+	  if($checkout_diff < 1507057 and $returned_diff < 1507057) {
+	    $loan_node = $node;
+	  }
+	}
+	
+	if(isset($loan_node)) {
+	  drush_log(dt('The loan !loan_id was successfully migrated', array('!loan_id' => $loan->id)),'success');
+	}
+      }
+    }
+  }  
 }
 
 function drush_dss_elc_clean_loans_1($mysql_user,
