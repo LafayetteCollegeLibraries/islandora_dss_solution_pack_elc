@@ -956,8 +956,16 @@ function dss_elc_form_human_node_form_alter(&$form, $form_state) {
    */
   unset($form['field_human_gender'][$form['field_human_gender']['#language']]['#options']['_none']);
 
-  /** Set the default value to unknown (for migrated records) */
-  $form['field_human_gender'][$form['field_human_gender']['#language']]['#default_value'] = '_none';
+  /**
+   * Ensure that the existing value is not overridden
+   * Resolves EDDC-516
+   *
+   */
+  if(is_null($form['field_human_gender'][$form['field_human_gender']['#language']]['#default_value'])) {
+
+    /** Set the default value to unknown (for migrated records) */
+    $form['field_human_gender'][$form['field_human_gender']['#language']]['#default_value'] = '_none'; 
+  }
 
   /**
    * Rename the label "N/A" to "Unknown"

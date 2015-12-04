@@ -71,7 +71,7 @@ function DssElcViewsFilter(options) {
 	var this_url;
 
 	//deciding which url to make the ajax request to
-	switch (document.title){
+	switch (document.title) {
             
 	case 'Browse Items | The Easton Library Company Project': 
 	    this_url = '/datatable_item/views/items';
@@ -329,51 +329,43 @@ function DssElcViewsFilter(options) {
 	/*
 	 * Parses the date and changes it to a human-readable form
 	 */
-	function formatDate(){
-	
-		if(window.location.pathname == '/people'){
-			jQuery('td:eq(1)','tr').each(function(i,e){
-			
-				var temp = parseInt($(e).text());
-				var dateObj = new Date((temp)*1000);
-				//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
-				$(e).text( moment(dateObj).format('YYYY-MM-DD') );
-				
+        function formatDate() {
+	        if(window.location.pathname == '/people') {
+			jQuery('td:eq(1)','tr').each(function(i,e) {
+				if(!window.isNaN( $(e).text())) {
+				    var temp = parseInt($(e).text());
+				    var dateObj = new Date((temp)*1000);
+				    $(e).text( moment(dateObj).format('YYYY-MM-DD') );
+				}
 			});
 		}
 		else if(window.location.pathname == '/items' ||
 			window.location.pathname == '/loans' ||
 			/node/.exec(window.location.pathname)) {
 
-			jQuery('td:eq(5)','tr').each(function(i,e){
-			
-				var temp = parseInt($(e).text());
-				var dateObj = new Date((temp)*1000);
-				//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
-				$(e).text( moment(dateObj).format('YYYY-MM-DD') );
-				
+			jQuery('td:eq(5)','tr').each(function(i,e) {
+				if(!window.isNaN( $(e).text())) {
+				    var temp = parseInt($(e).text());
+				    var dateObj = new Date((temp)*1000);
+				    $(e).text( moment(dateObj).format('YYYY-MM-DD') );
+				}
 			});
 			if(window.location.pathname =='/loans' ||
 			   /node/.exec(window.location.pathname)) {
-			
-				jQuery('td:eq(2)','tr').each(function(i,e){
-					
-					var temp = parseInt($(e).text());
-					if(temp > 0){
+				jQuery('td:eq(2)','tr').each(function(i,e) {
+					if(!window.isNaN( $(e).text())) {
+					    var temp = parseInt($(e).text());
+					    if(temp > 0) {
 						var dateObj = new Date((temp)*1000);
-						//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
 						$(e).text( moment(dateObj).format('YYYY-MM-DD') );
-					}
-					else{
-					        var dateObj = new Date((temp)*1000);
-						//$(e).text(dateObj.getFullYear() + '-' + (dateObj.getMonth()+1) + '-' + dateObj.getDate());
+					    } else {
+						var dateObj = new Date((temp)*1000);
 						$(e).text( moment(dateObj).format('YYYY-MM-DD') );
+					    }
 					}
 			});
-			
 			}
 		}
-		
 	}
 	/*
 	 * Does various tasks related to cleaning up the DataTables object to make it presentable in the end
