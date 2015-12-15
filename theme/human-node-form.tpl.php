@@ -47,10 +47,10 @@
 </div>
 </div>
 
-<div class="human-row">
+<div class="human-row" id="human-row-b">
 
 <div id="human-fields-b">
-<div class="human-column">
+<div class="human-column" id="field-human-pers-rels">
     <?php print drupal_render_children($form['field_human_pers_rels']);?>
 </div>
 
