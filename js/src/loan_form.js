@@ -11,6 +11,16 @@
         attach: function (context, settings) {
 
 	    /**
+	     * Work-around for Drupal integration issues
+	     *
+	     */
+	    if(typeof($('#loan-node-form').data('Islandora.ELC.Loan.Form')) != 'undefined') {
+		return;
+	    } else {
+		$('#loan-node-form').data('Islandora.ELC.Loan.Form', this);
+	    }
+
+	    /**
 	     * Disabled in order to resolve EDDC-311
 	     *
 	     */
@@ -19,6 +29,37 @@
              * Date field handling functionality
              *
              */
+
+	    /**
+	     * Handling date fields submitted from the form
+	     * Resolves EDDC-603
+	     *
+	     */
+	    $('#loan-node-form').submit(function(event) {
+
+		    //event.preventDefault();
+
+		    $.each(['value', 'value2'], function(i, value) {
+
+			    var year = $('#edit-field-loan-duration-und-0-' + value + '-year').val().slice(0,4);
+			    var month = $('#edit-field-loan-duration-und-0-' + value + '-month').val().slice(0,2);
+			    var day = $('#edit-field-loan-duration-und-0-' + value + '-day').val().slice(0,2);
+
+			    if(year == 'YYYY' || month == 'MM' || day == 'DD') {
+				var dateValue = '';
+			    } else {
+				/*
+				  var date = moment(dateValue, "YYYY-MM-DD");
+				*/
+				var dateValue = year + "-" + month + "-" + day;
+			    }
+
+			    $('#edit-field-loan-duration-und-0-' + value + '-date').val(dateValue);
+			});
+
+		    console.log( $(this).serializeArray() );
+		});
+
             $('.date-date').each(function (i, e) {
 
                 var fieldNameMap = {
@@ -30,7 +71,7 @@
 
                 for (var j in [0, 1, 2]) {
 
-                    var value = i ? 'value' : 'value2';
+                    var value = i == 0 ? 'value' : 'value2';
                     var id = 'edit-field-loan-duration-und-0-' + value + '-' + fieldNameMap[j].toLowerCase();
                     var name = "field_loan_duration[und][0][" + fieldNameMap[j].toLowerCase() + "][" + value + "]";
 
@@ -66,9 +107,15 @@
                         }
                     };
 
+		    /**
+		     * Ensure that the <input> elements for "year" values is limited to 4 characters, while the "month" and "day" values are limited to 2 characters
+		     *
+		     */
+		    var maxlength = j == 0 ? '4' : '2';
+
                     $('<div class="date-wrapper-' + id + ' date-wrapper"></div>')
 			.appendTo(e)
-			.append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="128" size="60" value="" name="">').keyup(function (event) {
+			.append($('<input id="' + id + '" class="date-clear form-text" type="text" maxlength="' + maxlength + '" size="60" value="" name="">').keyup(function (event) {
 
 			var $input = $(this).parent().siblings('[id$="-date"]');
                         var type = /edit\-field\-loan\-duration\-und\-0\-value2?\-(.+)/.exec(this.id)[1];
@@ -164,7 +211,7 @@
                 // Ensure that the actual field is hidden
                 $(e).children('input:first').hide();
 
-            });
+	    });
 
             /**
              * Loan Subset Functionality
@@ -195,7 +242,6 @@
                 if ($('#edit-loan-subset-4-5').hasClass('active')) {
 
                     $('#edit-field-bib-rel-subject-und').val(this.value);
-
                 }
             });
 
@@ -216,66 +262,13 @@
                 }
             });
 
-            borrVolFieldHandler = function (i, e) {
-
-                $loanedButton = $(e).parentsUntil('div.loan-column').last().find('button.field-add-more-submit');
-
-                $(e).keydown(function (event) {
-
-                    if ($(this).val() && event.which == '13') {
-
-                        event.preventDefault();
-
-                    }
-
-                });
-
-                $(e).keyup(function (event) {
-
-                    if ($(e).parentsUntil('tbody').last().nextAll().length) {
-
-                    } else {
-
-                        if ($(this).val() && (/,$/.exec($(this).val()) || event.which == '13')) {
-
-							event.preventDefault();
-			
-                            if (/,$/.exec($(this).val())) {
-
-                                $(this).val($(this).val().slice(0, -1));
-                            }
-
-                            // Work-around
-                            // Refactor
-                            $(e).parentsUntil('div.loan-column').last().find('button.field-add-more-submit').mousedown();
-
-                            $('#edit-field-loan-issues-loaned-und-' + (i + 1) + '-value').waitUntilExists(function () {
-
-                                $(this).focus();
-                                borrVolFieldHandler(i + 1, this);
-
-                            });
-                        }
-                    }
-
-                });
-            };
-
-            $('div#borrowed-volumes div.loan-column div > div.form-item').each(function (i, e) {
-
-                $(e).find('button#edit-field-loan-issues-loaned-und-add-more').hide();
-                $(e).find('input.text-full.form-text').each(borrVolFieldHandler);
-
-            });
-
-            // html.js body.html div.main-container div.row-fluid section.span12 form#loan-node-form.node-form div div.loan-record div.loan-row div#loan-fields-b div.items-column div#field-bib-rel-object-add-more-wrapper--2 div.form-item table#field-bib-rel-object-values--2.field-multiple-table tbody tr.draggable td div.ajax-new-content div.control-group div.controls input#edit-field-bib-rel-object-und-1-target-id.form-text
             $('#edit-field-bib-rel-object-und-0-target-id');
 
 			/*
 			 * @author goodnowt function to detect whether form has been loaded after "save & add another" was clicked, and add classes to mark-up accordingly 
 			 * 
 			 */
-			
+
 			if (document.getElementsByClassName('alert alert-block alert-success').length == 1){
 						
 				$('#edit-field-loan-shareholder-und').addClass('prepopped');
@@ -403,8 +396,8 @@
 						});
 					};
 				}
-			});
-			
+			    });
+	    
         }
 
     };

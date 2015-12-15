@@ -74,18 +74,17 @@
 			// Work-around
 			if(true) {
 
-			    //return addSubjectContainer.find('button').attr('disabled', true);
 			    return true;
 			}
+
+			// @todo Refactor and remove
 
 			humanTitle = $(this).val();
 			
 			m = /(.+) \((\d+)\)/.exec(humanTitle);
-			//m = /(d+)\)"/.exec(humanTitle);
 			
 			if(m) {
 			    
-			    //humanTitle = m[1];
 			    humanTitle = m[2];
 			    url = '/node/get/nid/' + humanTitle;
 			} else {
@@ -95,10 +94,7 @@
 
 			$shareholderField = $('#edit-field-loan-shareholder-und');
 			
-			//$.get('/node/get/human/title/' + humanTitle, function(data) {
 			$.get(url, function(data) {
-				
-				//console.log(data);
 				
 				subjectField = $('input#edit-field-bib-rel-subject-und');
 				
@@ -136,9 +132,6 @@
 							$.get('/node/get/nid/' + persRel.field_pers_rel_object.und[0].target_id, function(shareholder) {
 
 								$shareholderField.val(shareholder.title + ' (' + persRel.field_pers_rel_object.und[0].target_id + ')');
-								//$('select#edit-representative').val(shareholder.title);
-								//$('<option value=' + persRel.field_pers_rel_object.und[0].target_id + '>' + shareholder.title + '</option>').appendTo($('select#edit-field-loan-shareholder-und') );
-								//$('select#edit-field-loan-shareholder-und').attr('disabled', false);
 							    });
 						    }
 
@@ -146,10 +139,6 @@
 						});
 					}
 				    }
-				    
-				    //pattern = /node\-(add)\-subject/;
-				    //pattern = /node\/add\/human/;
-				    //console.log(addSubjectContainer.parent().html());
 				    
 				    $editSubjectContainer = $(('<div class="node-add-subject">' + addSubjectContainer.html() + '</div>')
 							      .replace('node/add/human', 'node/' + person.nid + '/edit')
@@ -161,11 +150,7 @@
 				    
 				    $editSubjectContainer.insertAfter(addSubjectContainer);
 				    $editSubjectContainer.children('.edit-node-modal').nodeFormModal();
-
-				    //defineModalHandlers($('.edit-node-modal'), 'edit');
-				    //editSubjectContainer = $('node/14/edit');
 				}
-				//console.log( data.field_is_pers_related_to );
 			    });
 		    }
 		});
@@ -182,8 +167,9 @@
 			if(true) {
 
 			    return true;
-			    //return addSubjectContainer.find('button').attr('disabled', false);
 			}
+
+			// @todo Deprecated (to be removed)
 
 			if(event.which == 8 || event.which == 46) {
 

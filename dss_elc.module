@@ -223,13 +223,11 @@ function dss_elc_node_presave($node) {
 
   case 'personal_relationship':
 
-    //Override the title
-    //$node->title = $node->field_pers_rel_subject[$node->language][0]['target_id'] . ' is a ' . $node->field_pers_rel_role[$node->language][0]['tid'] . ' in relation to ' . $node->field_pers_rel_object[$node->language][0]['target_id'];
-
     $subjectNode = dss_elc_get_node('nid', $node->field_pers_rel_subject[$node->language][0]['target_id'], 'human');
     $objectNode = dss_elc_get_node('nid', $node->field_pers_rel_object[$node->language][0]['target_id']);
     $roleTerm = taxonomy_term_load($node->field_pers_rel_role[$node->language][0]['tid']);
 
+    // Override the title
     $node->title = $subjectNode->title . ' is a ' . $roleTerm->name . ' in relation to ' . $objectNode->title;
 
     break;
@@ -243,7 +241,6 @@ function dss_elc_node_presave($node) {
     $fields = array();
     foreach(array('field_person_name', 'field_human_middle_initials', 'field_human_surname') as $field) {
 
-      //if(array_key_exists($node->language, $node->{$field}) and array_key_exists(0, ($node->{$field}[$node->language]))) {
       if(!is_null($node->{$field}) and array_key_exists($node->language, $node->{$field}) and !empty($node->{$field}[$node->language])) {
 
 	$fields[] = $node->{$field}[$node->language];
@@ -1079,21 +1076,23 @@ function dss_elc_form_personal_relationship_node_form_alter(&$form, $form_state)
 
   session_cache_set('type', NULL);
 
-  $node = node_load($_SESSION['nid']);
+  if(array_key_exists('nid', $_SESSION)) {
+    $node = node_load($_SESSION['nid']);
 
-  if(isset($node->field_pers_rel_subject['und'])) {
+    if(isset($node->field_pers_rel_subject['und'])) {
 
-    $subject_node = dss_elc_get_node('nid', $node->field_pers_rel_subject['und']['0']['target_id'], 'human');
-    $form['field_pers_rel_subject']['und']['#value'] = $subject_node->title . ' (' . $subject_node->nid . ')';
+      $subject_node = dss_elc_get_node('nid', $node->field_pers_rel_subject['und']['0']['target_id'], 'human');
+      $form['field_pers_rel_subject']['und']['#value'] = $subject_node->title . ' (' . $subject_node->nid . ')';
+    }
+
+    if(isset($node->field_pers_rel_object['und'])) {
+
+      $object_node = dss_elc_get_node('nid', $node->field_pers_rel_object['und']['0']['target_id'], 'human');
+      $form['field_pers_rel_object']['und']['#value'] = $object_node->title . ' (' . $object_node->nid . ')';
+    }
+
+    session_cache_set('nid', NULL);
   }
-
-  if(isset($node->field_pers_rel_object['und'])) {
-
-    $object_node = dss_elc_get_node('nid', $node->field_pers_rel_object['und']['0']['target_id'], 'human');
-    $form['field_pers_rel_object']['und']['#value'] = $object_node->title . ' (' . $object_node->nid . ')';
-  }
-
-  session_cache_set('nid', NULL);
 }
 
 /**
