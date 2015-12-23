@@ -274,6 +274,32 @@ function dss_elc_node_presave($node) {
 }
 
 /**
+ * Function for manually updating a Drupal Node
+ *
+ */
+function dss_elc_solr_update_node($node, $env_id = 'solr') {
+
+  // Ensure that the Solr index is updated
+  module_load_include('inc', 'apachesolr',  'apachesolr.index');
+
+  // Retrieve the node to be indexed
+  $rows = array( (Object) array('entity_type' => 'node',
+				'entity_id' => $node->nid,
+				'bundle' => $node->type,
+				'status' => $node->status,
+				'changed' => $node->changed) );
+
+  $documents = array();
+
+  foreach ($rows as $row) {
+    $row_documents = apachesolr_index_entities_document($row, 'node', $env_id);
+    $documents = array_merge($documents, $row_documents);
+  }
+
+  $indexed = apachesolr_index_send_to_solr($env_id, $documents);
+}
+
+/**
  * Implements hook_insert()
  * @author griffinj@lafayette.edu
  *
@@ -311,9 +337,17 @@ function dss_elc_node_insert($node) {
   default:
     break;
   }
+
+  dss_elc_solr_update_node($node);
 }
 
-
+/**
+ * Implements hook_node_update().
+ *
+ */
+function dss_elc_node_update($node) {
+  dss_elc_solr_update_node($node);
+}
 
 /**
  * Implements hook_js_alter()
