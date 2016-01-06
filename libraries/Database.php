@@ -46,11 +46,12 @@ class Database {
     $query = "SELECT * FROM books WHERE $condition";
     $records = $this->db->query($query);
 
+    $books = array();
     foreach( $records as $record ) {
-      $book = $record;
+      $books[] = new Book($record, $this);
     }
 
-    return new Book($book, $this);
+    return $books;
   }
 
   /**

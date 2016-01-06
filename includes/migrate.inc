@@ -134,9 +134,7 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       // Serialize the manifestation Node
       $manifestation_md->save(true);
       entity_save('node', $manifestation_entity);
-
     }
-
 
     $frbr_entities[] = $manifestation_entity;
 
@@ -161,7 +159,6 @@ function dss_elc_migrate_books($db, $csv_file_path = NULL, $normalize_file_path 
       $books = dss_elc_get_items($book_node_title, $book_title, $manifestation_md_title);
       
       if(!empty($books)) {
-
 	drush_log(dt("Previously migrated volume !book_volume of the item !book_node_title", array('!book_volume' => $book_volume, '!book_node_title' => $book_node_title)), 'success');
 	continue;
       }

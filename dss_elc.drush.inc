@@ -45,7 +45,6 @@ function dss_elc_drush_command() {
 			       'arg3' => dt('MySQL LIMIT clause'),
 			       'arg4' => dt('MySQL database'),
 			       'arg5' => dt('MySQL server')),
-
 	  'examples' => array(
 			      'Standard example' => 'drush dss-elc-migrate-books',
 			      'Argument example' => 'drush dss-elc-migrate-books cake secret elc_production localhost 9',
@@ -211,6 +210,23 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array());
 
+  $items['dss-elc-clean-humans'] =
+    array(
+	  'description' => dt('Clean all ELC "human" records'),
+	  'arguments' => array(),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-humans',
+			      ),
+	  'aliases' => array());
+
+  $items['dss-elc-clean-authors'] =
+    array(
+	  'description' => dt('Clean all ELC "author" records'),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-authors',
+			      ),
+	  'aliases' => array(''));
+
   $items['dss-elc-sync-loans'] =
     array(
 	  'description' => dt('Clean all ELC "loan" records'),
@@ -267,6 +283,7 @@ function dss_elc_drush_command() {
 			      'Standard example' => '',
 			      ),
 	  'aliases' => array(''));
+
 
   return $items;
 }
@@ -1160,9 +1177,37 @@ function drush_dss_elc_clean_loans($mysql_user,
   }  
 }
 
-function drush_dss_elc_clean_loans_1($mysql_user,
-				   $mysql_database='elc',
-				   $mysql_server='localhost') {
+/**
+ * Drush task for cleaning the Human Nodes specified as Shareholders, Representatives, and Authors
+ *
+ *
+ */
+function drush_dss_elc_clean_humans() {
+  $drupalQuery = new EntityFieldQuery();
+
+  $humans = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'loan')
+    ->range(0,1)
+    ->execute();
+
+  if(isset($humans['node'])) {
+
+    $nodes = entity_load('node', array_keys($humans['node']));
+    foreach($nodes as $node) {
+
+      print_r($node);
+    }
+  }
+}
+
+/**
+ * Drush task for cleaning the Human Nodes specified as Shareholders, Representatives, and Authors
+ *
+ *
+ */
+function drush_dss_elc_clean_authors($mysql_user,
+				     $mysql_database='elc',
+				     $mysql_server='localhost') {
 
   $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
   $db = new ELC\Database($mysql_user,
@@ -1170,75 +1215,276 @@ function drush_dss_elc_clean_loans_1($mysql_user,
 			 $mysql_database,
 			 $mysql_server);
 
-  $drupalQuery = new EntityFieldQuery();
+  foreach($db->books_where("title LIKE 'Works%'") as $book) {
 
-  $bib_rels = $drupalQuery->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'loan')
-    ->range(0,10000)
-    ->execute();
+    $author_nids = array();
 
-  if(isset($bib_rels['node'])) {
+    foreach($book->authors as $author) {
 
-    $nodes = entity_load('node', array_keys($bib_rels['node']));
-    foreach($nodes as $node) {
-
-      /*
-      drush_log(dt("Checking for the loan !node_title (!node_nid)", array('!node_title' => $node->title,
-									  '!node_nid' => $node->nid)), 'ok');
-      */
-
-      $representative = node_load($node->field_bib_rel_subject[$node->language][0]['target_id']);
-
-      if(!empty( $node->field_loan_shareholder[$node->language][0]['target_id'] )) {
-	$shareholder = node_load($node->field_loan_shareholder[$node->language][0]['target_id']);
-	$condition = "s.name='{$shareholder->title}' AND r.name='{$representative->title}'";
-      } else {
-	$condition = "s.name='{$representative->title}'";
-      }
-
-      if(!empty( $node->field_bib_rel_object[$node->language][0]['target_id'] )) {
-	$item = node_load($node->field_bib_rel_object[$node->language][0]['target_id']);
-
-	$item_title = preg_replace('/(.+?)\s\(.+/', '\1', $item->title);
-	$item_title = preg_replace("/.+?'s Works/", 'Works', $item_title);
-	$item_title = preg_replace("/(.+?)\s\[Vol.+/", '\1', $item_title);
-	$item_title = htmlspecialchars_decode($item_title, ENT_QUOTES);
-	$item_title = preg_replace("/'/", "''", $item_title);
-	$condition .= " AND b.title='$item_title'";
-      }
+      $author_name = $author->name;
       
-      $checkout = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value']);
-      $returned = date('Y-m-d', $node->field_loan_duration[$node->language][0]['value2']);
+      // Attempt to locate the existing person
+      $drupalQuery = new EntityFieldQuery();
+      
+      $humans = $drupalQuery->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'human')
+	->propertyCondition('title', '%' . $author_name . '%', 'LIKE')
+	->range(0,1)
+	->execute();
+      
+      if(isset($humans['node'])) {
+	$nodes = entity_load('node', array_keys($humans['node']));
+	$human_node = array_shift($nodes);
+	drush_log(dt('Found Author for !author_name', array('!author_name' => $author_name)), 'ok');
+      } else {
+	drush_log(dt('Failed to find the Author for !author_name', array('!author_name' => $author_name)), 'warning');
+	$human_node = dss_elc_get_human($author_name, 'Author');
+      }
 
-      $condition .= " AND checkout='$checkout' AND returned='$returned'";
+      $author_nids[] = $human_node->nid;
 
-      $loans = $db->loans_where($condition);
+      $terms = taxonomy_get_term_by_name($book->number, 'item_numbers');
+      $item_number = array_shift($terms);
 
-      if(empty($loans)) {
-	drush_log(dt("Failed to find a loan record using !condition", array('!condition' => $condition)), 'error');
-	//exit(1);
-	continue;
-      } elseif(count($loans) > 1) {
+      // Retrieve the Nodes for the item
+      $drupalQuery = new EntityFieldQuery();
+      $books = $drupalQuery->entityCondition('entity_type', 'node')
+	//->entityCondition('bundle', array('manifestation', 'item'), 'IN')
+	->entityCondition('bundle', 'item')
+	->propertyCondition('title', 'Works ' . '%', 'LIKE')
+	->fieldCondition('field_item_number_taxon', 'tid', $item_number->tid)
+	->execute();
 
-	if(in_array($node->nid, array('288596', '288595', '297995', '302820'))) {
-	  continue;
+      if(isset($books['node'])) {
+	$nodes = entity_load('node', array_keys($books['node']));
+	$book_node = array_shift($nodes);
+	drush_log(dt('Found !book_node_type with the title !book_node_title', array('!book_node_type' => $book_node->type,
+										    '!book_node_title' => $book_node->title)), 'ok');
+
+	$names = preg_split('/,/', $human_node->title);
+	$surname_name = array_shift($names);
+
+	if(substr($surname_name, -1) == "s") {
+	  $book_normal_title = $surname_name . "' " . $book_node->title;
+	} else {
+	  $book_normal_title = $surname_name . "'s " . $book_node->title;
 	}
 
-	//drush_log(dt("Found multiple loan records using !condition", array('!condition' => $condition)), 'error');
-	//print_r($node->nid);
-	//exit(1);
-	continue;
+	$book_md = entity_metadata_wrapper('node', $book_node);
+
+	$new_author_nids = array_map(function($author_nid) {
+	    return array('target_id' => $author_nid);
+	  }, $author_nids);
+
+	$has_new_authors = array_intersect($new_author_nids, $book_node->field_artifact_was_authored_by[$book_node->language]);
+	//$has_new_authors = array_intersect($book_node->field_artifact_was_authored_by[$book_node->language], $new_author_nids);
+	if(!empty($has_new_authors)) {
+
+	  $updated_author_nids = array_merge($book_node->field_artifact_was_authored_by[$book_node->language],
+					     $new_author_nids);
+	} else {
+
+	  $updated_author_nids = $book_node->field_artifact_was_authored_by[$book_node->language];
+	}
+
+	$book_node->field_artifact_was_authored_by[$book_node->language] = $updated_author_nids;
+
+	// Serialize the manifestation Node
+	$book_md->save(true);
+	entity_save('node', $book_node);
+
+	drush_log(dt('Normalized !book_node_title with the title !book_normal_title', array('!book_node_title' => $book_node->title,
+											    '!book_normal_title' => $book_normal_title)), 'success');
       } else {
-	/*
-	drush_log(dt("Found the loan for !node_title (!node_nid)", array('!node_title' => $node->title,
-									 '!node_nid' => $node->nid)), 'success');
-	*/
+	$manifestation_entity = entity_create('node', array('type' => 'manifestation',
+							    'uid' => 1,
+							    'status' => $book->flag_status == '1' ? 0 : 1, // Publish or unpublish the node based upon whether or not it was "flagged" in the legacy system
+							    'comment' => 1,
+							    'promote' => 0,
+							    ));
+
+	$book_title = $book->title . ' (' . $book->format . ' ' . $book->number . ')';
+
+	$names = preg_split('/,/', $human_node->title);
+	$surname_name = array_shift($names);
+
+	if(substr($surname_name, -1) == "s") {
+	  $book_normal_title = $surname_name . "' " . $book_title;
+	} else {
+	  $book_normal_title = $surname_name . "'s " . $book_title;
+	}
+
+	$manifestation_md = entity_metadata_wrapper('node', $manifestation_entity);
+	$manifestation_md->field_artifact_title->set($book_normal_title);
+	$manifestation_md->title->set($book_normal_title);
+	$manifestation_md->field_manifest_total_vol->set(intval($book->total_volumes));
+
+	$manifestation_md->field_artifact_was_authored_by->set($author_nids);
+
+	// Serialize the manifestation Node
+	$manifestation_md->save(true);
+	entity_save('node', $manifestation_entity);
+	drush_log(dt("Migrated the manifestation !book_title", array('!book_title' => $book_normal_title)), 'success');
+	
+	$frbr_entities[] = $manifestation_entity;
+
+	// Iterate over all "Items" related to the "Manifestation"
+	$book_volumes = array();
+	if(is_null($book->total_volumes)) {
+	  $book_volumes = array(0);
+	} else {
+	  $book_volumes = range(1, (int) $book->total_volumes);
+	}
+
+	// Instantiate a new book or periodical node for each book volume
+	foreach($book_volumes as $book_volume) {
+	  
+	  // Titles must have HTML character entities removed
+	  //$book_title = html_entity_decode($book_normal_title);
+	  $book_title = html_entity_decode($book->title);
+
+	  $names = preg_split('/,/', $human_node->title);
+	  $surname_name = array_shift($names);
+
+	  if(substr($surname_name, -1) == "s") {
+	    $book_title = $surname_name . "' " . $book_title;
+	  } else {
+	    $book_title = $surname_name . "'s " . $book_title;
+	  }
+
+	  if($book_volume == 0) {
+	    $title_suffix = ' (' . $book->format . ' ' . $book->number . ')';
+	  } else {
+	    $book_volume_value = trim((string) $book_volume);
+
+	    $title_suffix = ' [Vol. ' . $book_volume_value . '] (' . $book->format . ' ' . $book->number . ')';
+	  }
+
+	  // Resolves EDDC-530
+	  $book_title = preg_replace('/—/', '-', $book_title);
+
+	  if(strlen($book_title) > (254 - strlen($title_suffix))) {
+
+	    $book_node_title = substr($book_title, 0, 128) . '...' . $title_suffix;
+	  } else {
+
+	    $book_node_title = $book_title . $title_suffix;
+	  }
+
+	  drush_log(dt("Migrating volume !book_volume of the item !book_node_title", array('!book_volume' => $book_volume, '!book_node_title' => $book_node_title)), 'ok');
+
+	  // Deprecated due to focus being paid to Item Nodes
+	  $values = array('type' => 'item',
+			  'uid' => 1,
+			  'status' => $book->flag_status == '1' ? 0 : 1,
+			  'comment' => 1,
+			  'promote' => 0,
+			  );
+      
+	  // Entity is...
+	  $book_entity = entity_create('node', $values);
+	  $book_md = entity_metadata_wrapper('node', $book_entity);
+      
+	  // Resolves EDDC-527
+	  if(intval($book->type) == '3') {
+	    $book->type = 1;
+	  }
+
+	  $book_md->field_book_or_periodical->set(intval($book->type));
+
+	  /**
+	   * Field length cannot be set by the administrative user
+	   * Please see the issue https://drupal.org/node/1921302
+	   */
+	  $book_md->title->set($book_node_title);
+	  $book_md->field_artifact_title->set($book_node_title);
+
+	  $book_md->field_artifact_was_authored_by->set($author_nids);
+
+	  if($book_volume > 0) {
+
+	    $volumeTerm = dss_elc_get_taxonomy_term( (string) $book_volume, 'item_volumes');
+	    $book_md->field_item_volume_migrate->set(intval($volumeTerm->tid));
+	  }
+
+	  if(isset($book->subject)) {
+
+	    foreach(preg_split('/;/', $book->subject) as $subject) {
+
+	      $subject_term = dss_elc_get_taxonomy_term($subject, 'item_subjects');
+	      $book_md->field_item_subject[] = $subject_term->tid;
+	    }
+	  }
+
+	  // Set the format for the book or periodical
+	  // Handle anomalous values identified within the data set
+	  switch($book->format) {
+      
+	  case '': // Handle for cases in which the format is set to a NULL value
+
+	    $book_md->field_item_format->set(0);
+	    $book->format = 'Octavo';
+	    break;
+	  case 'Octavo':
+	
+	    $book_md->field_item_format->set(0);
+	    break;
+	  case 'Quarto':
+
+	    $book_md->field_item_format->set(1);
+	    break;
+	  case 'Duodecimo':
+	
+	    $book_md->field_item_format->set(2);
+	    break;
+
+	  default:
+	
+	    $book_md->field_item_format->set(intval($book->format));
+	  }
+	  
+	  $book_number_term = dss_elc_get_taxonomy_term($book->number, 'item_numbers');
+	  $book_md->field_item_number_taxon->set($book_number_term->tid);
+
+	  $book_flag_message = mb_convert_encoding($book->flag_message, "UTF-8", 'ASCII');
+	  $book_md->body->set(array('value' => $book_flag_message));
+
+	  // Relate the book or periodical to the manifestation entity being instantiated
+	  $book_md->field_item_embodies->set(intval($manifestation_entity->nid));
+
+	  // Serialize the book Node
+	  $book_md->save(true);
+	  entity_save('node', $book_entity);
+	}
       }
+
+      /*
+      // Assign the human Nodes as authors for the node
+      $manifestation_md->field_artifact_was_authored_by->set($author_nids);
+
+      // Serialize the manifestation Node
+      $manifestation_md->save(true);
+      entity_save('node', $manifestation_entity);
+      */
+
+      /*
+      // Rename the Item
+
+	$nodes = entity_load('node', array_keys(books['node']));
+	foreach($nodes as $node) {
+	  
+	  print_r($node);
+	}
+      }
+      */
+
     }
-  }  
+  }
 }
 
 /**
+ * Drush task for cleaning the Items/Book/Periodicals specified within Loan Nodes
+ *
  *
  */
 function drush_dss_elc_clean_loan_objects($mysql_user,
@@ -1355,104 +1601,6 @@ function drush_dss_elc_clean_loan_objects($mysql_user,
     }
   }
 }
-
-function drush_dss_elc_clean_loan_objects_deprecated($mysql_user,
-					  $mysql_database='elc',
-					  $mysql_server='localhost') {
-
-  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
-  $db = new ELC\Database($mysql_user,
-			 $mysql_pass,
-			 $mysql_database,
-			 $mysql_server);
-
-  $query_string = '-sm_field_bib_rel_object:* AND bundle:loan';
-  $loan_docs = dss_elc_solr_query($query_string);
-
-  foreach($loan_docs as $loan_doc) {
-
-    /**
-     * Retrieve the shareholder using the name
-     *
-     */    
-    $shareholder_name = $loan_doc->ss_field_loan_shareholder_label;
-    $shareholder = $db->shareholder($shareholder_name);
-
-    /**
-     * Retrieve the loans for the shareholder, filtering by the checkout date
-     *
-     */
-    $loan_node = node_load($loan_doc->entity_id);
-
-    $checkout_date = date('Y-m-d', $loan_node->field_loan_duration[$loan_node->language][0]['value']);
-    $return_date = date('Y-m-d', $loan_node->field_loan_duration[$loan_node->language][0]['value2']);
-
-    $condition = "checkout='$checkout_date' AND returned='$return_date'";
-
-    $loans = $shareholder->select_loans_where($condition);
-    if(count($loans) > 1) {
-      drush_log(dt('Found more than one loan for !shareholder_name using !condition', array('!shareholder_name' => $shareholder_name, '!condition' => $condition)), 'warning');
-    }
-
-    foreach($loans as $loan) {
-
-      foreach($loan->borrowed_volumes as $borrowed_volume) {
-
-	$book_title = $loan->book->title;
-
-	if( empty($loan->book->id) ) {
-	  drush_log(dt('Illegible title for !loan_id (!shareholder_name using !condition)', array('!loan_id' => $loan->id, '!shareholder_name' => $shareholder_name, '!condition' => $condition)), 'warning');
-	  continue;
-	}
-
-	$book_title = preg_replace('/\[/', '\[', $book_title);
-	$book_title = preg_replace('/\]/', '\]', $book_title);
-
-	if( empty($borrowed_volume) ) {
-	  $book_query = "label:($book_title) AND sm_vid_Item_Numbers:{$loan->book->number} AND bundle:item";
-	} else {
-	  $book_query = "label:($book_title) AND is_field_item_volume_migrate:($borrowed_volume) AND sm_vid_Item_Numbers:{$loan->book->number} AND bundle:item";
-	}
-
-	$book_docs = dss_elc_solr_query($book_query);
-	
-	if(empty($book_docs)) {
-	  // If the search fails, attempt to locate the item again (and assume that this is a single volume)
-	  $book_query = "label:($book_title) AND is_field_item_volume_migrate:(1) AND sm_vid_Item_Numbers:{$loan->book->number} AND bundle:item";
-	  $book_docs = dss_elc_solr_query($book_query);
-	  
-	  if(empty($book_docs)) {
-	    // If the search yet again fails, report this
-	    drush_log(dt("Found no books for !book_title (!book_number)", array('!book_title' => $loan->book->title,
-										    '!book_number' => $loan->book->number,)), 'error');
-	    continue;
-	  }
-	} elseif(count($book_docs) > 1) {
-	  drush_log(dt('Found more than one book for !book_title', array('!book_title' => $loan->book->title )), 'warning');
-	  exit(1);
-	  continue;
-	}
-	
-	$book_doc = array_shift($book_docs);
-	$book_node = node_load($book_doc->entity_id);
-	
-	$loan_node->field_bib_rel_object[$loan_node->language][0]['target_id'] = intval($book_node->nid);
-	
-	$loan_title = dss_elc_loan_node_title($loan_node);
-	
-	$loan_node->title = $loan_title;
-	
-	entity_save('node', $loan_node);
-	
-	drush_log(dt('Successfully linked the loan !loan_nid to the item !book_nid', array('!loan_nid' => $loan_node->nid,
-											   '!book_nid' => $book_node->nid)), 'success');
-      }
-    }
-  }
-
-  return;
-}
-
 
 function drush_dss_elc_relate_pers_rel_objects() {
 
@@ -1864,71 +2012,6 @@ function drush_dss_elc_migrate_humans($mysql_user,
   $results = $results and dss_elc_migrate_person_type($db, $limit, REPRESENTATIVE);
   
   return $results;
-
-  // yum: sudo yum -y install php-mysql
-  // Connect to the MySQL server
-  $db = new PDO("mysql:host=$mysql_server;dbname=$mysql_database;charset=utf8", $mysql_user, $mysql_pass,
-		array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-
-  // Retrieve all shareholder records and serialize them as Human Person Nodes
-
-
-  /*
-  foreach(drush_dss_elc_get_records($db, 'shareholders', 1) as $shareholder) {
-
-    echo "Migrating the shareholder " . $shareholder['name'] . "...\n";
-    
-    $shareholder_entity = entity_create('node', array(
-						      'type' => 'human',
-						      'uid' => 1,
-						      'status' => $shareholder['flagStatus'] == '1' ? 1 : 0,
-						      'comment' => 1,
-						      'promote' => 0,
-						      ));
-
-    $shareholder_md = entity_metadata_wrapper('node', $shareholder_entity);
-
-    $shareholder_md->title->set($shareholder['name']);
-    $shareholder_md->field_person_name->set($shareholder['name']);
-
-    // Always set the default location to the "Easton" location Node
-    $shareholder_md->field_person_name->set(intval(dss_elc_get_easton_location()));
-
-    $shareholder_md->body->set(array('value' => $shareholder['flagMessage']));
-    $shareholder_md->save(true);
-    entity_save('node', $shareholder_entity);
-  }
-  */
-
-
-
-  // Retrieve all representative records and instantiate them as Human Person Nodes, as well as instantiate Personal Relationship Nodes
-  // Refactor
-  /*
-  foreach($db->prepare($sql)
-	  ->execute(array(':table_name' => 'representatives'))
-	  ->fetchAll() as $representative) {
-
-    echo "Migrating the representative " . $representative['name'] . "...\n";
-    
-    $representative_entity = entity_create('node', array(
-							 'type' => 'human',
-							 'uid' => 1,
-							 'status' => $representative['flagStatus'] == '1' ? 1 : 0,
-							 'comment' => 1,
-							 'promote' => 0,
-							 ));
-
-    $representative_md = entity_metadata_wrapper('node', $representative_entity);
-
-    $representative_md->title->set($representative['name']);
-    $representative_md->field_person_name->set($representative['name']);
-
-    $representative_md->body->set(array('value' => $representative['flagMessage']));
-    $representative_md->save(true);
-    entity_save('node', $representative_entity);
-  }
-  */
 }
 
 function drush_dss_elc_delete_humans() {
@@ -2093,7 +2176,6 @@ function dss_elc_get_items($normalized_title, $title, $manifestation_title) {
       drush_log(dt("Mapping the loaned volume to the last book volume for !title", array('!title' => $title)), 'ok');
 
       try {
-
 	$drupalQuery = new EntityFieldQuery();
 	$results = $drupalQuery->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'item')

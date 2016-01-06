@@ -23,6 +23,7 @@ function dss_elc_get_taxonomy_term($term_value, $vocab_name) {
     $term->vid = $vocab->vid;
 
     taxonomy_term_save($term);
+
     return $term;
   }
 }
