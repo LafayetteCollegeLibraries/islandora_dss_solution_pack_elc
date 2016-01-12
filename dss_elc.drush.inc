@@ -227,6 +227,14 @@ function dss_elc_drush_command() {
 			      ),
 	  'aliases' => array(''));
 
+  $items['dss-elc-clean-artifact-titles'] =
+    array(
+	  'description' => dt('Clean all ELC "author" records'),
+	  'examples' => array(
+			      'Standard example' => 'drush dss-elc-clean-artifact-titles',
+			      ),
+	  'aliases' => array(''));
+
   $items['dss-elc-sync-loans'] =
     array(
 	  'description' => dt('Clean all ELC "loan" records'),
@@ -1466,20 +1474,124 @@ function drush_dss_elc_clean_authors($mysql_user,
       $manifestation_md->save(true);
       entity_save('node', $manifestation_entity);
       */
-
-      /*
-      // Rename the Item
-
-	$nodes = entity_load('node', array_keys(books['node']));
-	foreach($nodes as $node) {
-	  
-	  print_r($node);
-	}
-      }
-      */
-
     }
   }
+}
+
+function drush_dss_elc_clean_artifact_titles($mysql_user,
+					     $mysql_database='elc',
+					     $mysql_server='localhost') {
+
+  $mysql_pass = drush_prompt(dt('Password'), NULL, TRUE, TRUE);
+  $db = new ELC\Database($mysql_user,
+			 $mysql_pass,
+			 $mysql_database,
+			 $mysql_server);
+
+  $drupalQuery = new EntityFieldQuery();
+
+  $books = $drupalQuery->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('manifestation', 'item'), 'IN')
+    ->propertyCondition('title', 'Works ' . '%', 'LIKE')
+    ->execute();
+
+  if(isset($books['node'])) {
+    $nodes = entity_load('node', array_keys($books['node']));
+
+    foreach($nodes as $node) {
+
+      $author_ids = $node->field_artifact_was_authored_by[$node->language];
+      $author_id = array_shift($author_ids);
+      $author = node_load($author_id['target_id']);
+
+      if(!$author) {
+
+	drush_log(dt("Failed to resolve the author for !node_title (!node_nid)", array('!node_title' => $node->title,
+										       '!node_nid' => $node->nid)), 'warning');
+
+
+	preg_match('/\((.+?)\)/', $node->title, $title_m);
+	list($format, $number) = preg_split('/ /', $title_m[1]);
+
+	$books = $db->books_where("title LIKE 'Works%' AND format='$format' AND number='$number'");
+	$book = array_shift($books);
+
+	$authors = $book->authors;
+	$author = array_shift($authors);
+	$author_name = $author->name;
+
+	$drupalQuery = new EntityFieldQuery();
+
+	$author_results = $drupalQuery->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'human')
+	  ->propertyCondition('title', $author_name)
+	  ->execute();
+
+	//print_r($author_results);
+
+	if(isset($author_results['node'])) {
+	  $author_nodes = entity_load('node', array_keys($author_results['node']));
+	  $author_node = array_shift($author_nodes);
+	  $node->field_artifact_was_authored_by[$node->language] = array(array('target_id' => $author_node->nid));
+	} else {
+	  drush_log(dt("Failed to resolve the author for !node_title", array('!node_title' => $author_name)), 'warning');
+	  //exit(1);
+	}
+
+	$names = preg_split('/,/', $author_node->title);
+
+	$surname_name = array_shift($names);
+	$surname_name = trim($surname_name);
+
+	if(substr($surname_name, -1) == "s") {
+	  $book_normal_title = $surname_name . "' " . $node->title;
+	} else {
+	  $book_normal_title = $surname_name . "'s " . $node->title;
+	}
+
+	$book_normal_title = trim($book_normal_title);
+	$node->title = $book_normal_title;
+	$node->field_artifact_title[$node->language] = array(array('value' => $book_normal_title,
+								   'format' => '',
+								   'safe_value' => $book_normal_title));
+
+	/*
+	print "Before\n";
+	//print $node->title . "\n";
+	print_r( $node );
+	*/
+	node_save($node);
+	/*
+	print "After\n";
+	print $node->title . "\n";
+	*/
+      } else {
+
+	$names = preg_split('/,/', $author->title);
+	$surname_name = array_shift($names);
+	$surname_name = trim($surname_name);
+
+	if(substr($surname_name, -1) == "s") {
+	  $book_normal_title = $surname_name . "' " . $node->title;
+	} else {
+	  $book_normal_title = $surname_name . "'s " . $node->title;
+	}
+
+	$book_normal_title = trim($book_normal_title);
+	$node->title = $book_normal_title;
+      }
+
+      //print_r($node);
+      //node_save($node);
+      
+      drush_log(dt("Cleaned the title for !node_title (!node_nid)", array('!node_title' => $node->title,
+									  '!node_nid' => $node->nid)), 'ok');
+
+      $saved_node = node_load($node->nid);
+      print_r($saved_node->title);
+    }
+  }
+
 }
 
 /**

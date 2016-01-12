@@ -8,8 +8,22 @@
  * @todo Identify why this is no longer present/overridden within the Drupal 7.x core stylesheets
  *
  */
-#autocomplete li.selected {
+#autocomplete {
+    overflow: scroll;
+    overflow-x: hidden;
+    height: 420px;
+}
 
+#autocomplete li {
+    white-space: normal;
+}
+
+#autocomplete li.selected {
     background-color: #A2A0A0;
     color: #ffffff;
+}
+
+#autocomplete ul li div div.reference-autocomplete span.views-field.views-field-title span.field-content {
+    display: inline-block;
+    white-space: normal;
 }
