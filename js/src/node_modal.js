@@ -289,22 +289,66 @@ NodeFormModal.onNodeIdSuccessHandler = function() {
      * @todo Attempt to integrate with the tokenization widget exposed within dss_elc_autocomplete
      *
      */
-    // Anomalous handling for the addition of multiple personal relationships
-    //$("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").appendTo( $relatedInputField.siblings('.token-list') );
-    $("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").click(function(e) {
 
-	    e.preventDefault();
-	    $(this).remove();
-	}).appendTo( $relatedInputField.parents('.controls').find('.token-list') );
+    /**
+     * Extending the functionality for the "personal relationship" component of the "Add Person" Form
+     *
+     */
+    if($relatedInputField.attr('id') == 'edit-field-pers-rel-object-und' && $relatedInputField.parents('form').hasClass('node-human-form')) {
+	
+	$relatedInputField.val(entityRefStr);
+
+	var $roleFieldElem = $relatedInputField.parents('form').find('#edit-field-pers-rel-role-und:visible');
+	var role = $roleFieldElem.children('option:selected').text().toLowerCase();
+
+	var objectName = entityRefStr;
+	var $objectFieldElem = $relatedInputField;
+	var entityMatch = /(.+)\s\((\d+)\)/.exec(entityRefStr);
+
+	$.get('/elc/pers-rels/NULL/' + encodeURI(role) + '/' + entityMatch[2], function(data) {
+		var persRel = data.pop();
+
+		/**
+		 * @todo Refactor/deduplicate
+		 */
+		var $tokenAnchor = $("<a href='#' class='token'><span class='token-object'>" + objectName + "</span></a>");
+
+		// Store the Node ID for the relationship within the token
+		$tokenAnchor.data(Islandora.ELC.Relationship.Form.KEY, $('.node-form'));
+		$tokenAnchor.data(Islandora.ELC.Relationship.Field.TITLE_KEY, persRel.title);
+		$tokenAnchor.data(Islandora.ELC.Relationship.Field.NID_KEY, persRel.nid);
+
+		var $tokenClose = $("<span class='token-x'>×</span>")
+		    .data(Islandora.ELC.Relationship.Form.TOKEN_KEY, $objectFieldElem)
+		    .click(function() {
+			    var $objectFieldElem = $(this).data(Islandora.ELC.Relationship.Form.TOKEN_KEY);
+			    $objectFieldElem.prop('disabled', false);
+			});
+		var $tokenItem = $('<li>').append($tokenAnchor.append($tokenClose));
+		$objectFieldElem.parents('.field-human-pers-rels-fields').find('.pers-rel-tokens').append($tokenItem);
+				
+		$objectFieldElem.prop('disabled', false);
+		$objectFieldElem.val('');
+		$roleFieldElem.val('658');		
+	    });
+    } else {
+
+	// Anomalous handling for the addition of multiple personal relationships
+	$("<li><a href='#' class='token'><span class='token-object'>" + entityRefStr + "</span><span class='token-x'>×</span></a></li>").click(function(e) {
+
+		e.preventDefault();
+		$(this).remove();
+	    }).appendTo( $relatedInputField.parents('.controls').find('.token-list') );
     
-    $relatedInputField.val('');
+	$relatedInputField.val('');
 
-    // Trigger any handlers bound to the form field using the jQuery "change" event
-    $relatedInputField.change();
+	// Trigger any handlers bound to the form field using the jQuery "change" event
+	$relatedInputField.change();
+    }
 
-    //workaround to close the outer most dialog widget -- this is not ideal 
-    //implementation, but currently it is impossible to submit one dialog without first
-    //finishing the one above it, so This will work.
+    // Workaround to close the outermost dialog widget -- this is not the ideal 
+    // implementation, but currently it is impossible to submit one dialog without first
+    // finishing the one above it, so this will work.
     $('.ui-icon-closethick:visible').last().click();
 };
 
@@ -719,11 +763,11 @@ NodeFormModal.onAjaxSuccessHandler = function(data, textStatus, xhr) {
     $submit.data('nodeFormModal', {
 	    
 	    relatedFormElement: $relatedFormElement,
-		form: $form,
-		//container: $(this)
-		container: $modal,
-		object: dssNodeFormModal		
-		});
+	    form: $form,
+	    //container: $(this)
+	    container: $modal,
+	    object: dssNodeFormModal
+    });
 
     // Submit handler
     $submit.click(NodeFormModal.onSubmitHandler);
@@ -769,11 +813,11 @@ NodeFormModal.onClickHandler = function(event) {
     $modalContainer.data('nodeFormModal', {
 	    
 	    relatedFormElement: $(this),
-		contentTypeName: nodeFormModal.contentTypeName,
-		humanType: nodeFormModal.humanType,
-		modal: nodeFormModal.container,
-		object: nodeFormModal
-		});
+	    contentTypeName: nodeFormModal.contentTypeName,
+	    humanType: nodeFormModal.humanType,
+	    modal: nodeFormModal.container,
+	    object: nodeFormModal
+    });
 
     // Submit the AJAX request
     $.get(url, { isModalQuery: true }, NodeFormModal.onAjaxSuccessHandler);

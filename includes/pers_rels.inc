@@ -117,18 +117,12 @@ function dss_elc_pers_rels_ajax($subject_nid, $role, $object_nid) {
 
   $role_tid = 0;
 
-  /*
+  /**
+   * Set the default role to an arbitrary constant
+   * @todo Resolve
+   *
+   */
   if($role == 'NULL') {
-
-    $role_term = new stdClass();
-    $role_term->tid = NULL;
-  } else {
-
-    $role_term = dss_elc_get_taxonomy_term($role, ROLES_TAXON);
-  }
-  */
-  if($role == 'NULL') {
-
     $role = 'relator';
   }
 
@@ -144,43 +138,35 @@ function dss_elc_pers_rels_ajax($subject_nid, $role, $object_nid) {
 
   $result = $query->execute();
 
-  // @todo Remove
-  if(false) {
-
+  if(isset($result['node'])) {
+    
+    $news_items_nids = array_keys($result['node']);
+    $pers_rels = entity_load('node', $news_items_nids);
   } else {
-
-    if(isset($result['node'])) {
-
-      $news_items_nids = array_keys($result['node']);
-      $pers_rels = entity_load('node', $news_items_nids);
-    } else {
-
-      // Instantiate the personal_relationship Node
-      $pers_rel = entity_create('node', array('type' => 'personal_relationship',
-						     'uid' => 1,
-						     'status' => 1,
-						     'comment' => 1,
-						     'promote' => 0));
-
-      $pers_rel_md = entity_metadata_wrapper('node', $pers_rel);
-
-      if($subject_nid != 'NULL') {
-
-	$pers_rel_md->field_pers_rel_subject->set($subject_nid);
-      }
-
-      $pers_rel_md->field_pers_rel_role->set($role_term->tid);
-      $pers_rel_md->field_pers_rel_object->set($object_nid);
-      //$pers_rel_md->title = 'subject is a role in relation to object';
-
-      // Instantiate the Personal Relationship
-      $pers_rel_md->save(true);
-      entity_save('node', $pers_rel);
-
-      $pers_rels = array($pers_rel);
+    
+    // Instantiate the personal_relationship Node
+    $pers_rel = entity_create('node', array('type' => 'personal_relationship',
+					    'uid' => 1,
+					    'status' => 1,
+					    'comment' => 1,
+					    'promote' => 0));
+    
+    $pers_rel_md = entity_metadata_wrapper('node', $pers_rel);
+    
+    if($subject_nid != 'NULL') {
+      $pers_rel_md->field_pers_rel_subject->set($subject_nid);
     }
-  }
 
+    $pers_rel_md->field_pers_rel_role->set($role_term->tid);
+    $pers_rel_md->field_pers_rel_object->set($object_nid);
+
+    // Instantiate the Personal Relationship
+    $pers_rel_md->save(true);
+    entity_save('node', $pers_rel);
+    
+    $pers_rels = array($pers_rel);
+  }
+  
   drupal_json_output($pers_rels);
 }
 

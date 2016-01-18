@@ -6,6 +6,7 @@
  *
  */
 function dss_elc_preprocess_node_form(&$vars) {
+
   hide($vars['form']['additional_settings']);
 
   // Determine whether or not this is in response to an AJAX request
@@ -24,6 +25,7 @@ function dss_elc_preprocess_node_form(&$vars) {
  *
  */
 function dss_elc_preprocess_page(&$vars) {
+
   if (!empty($vars['page']['content']['system_main']['#form_id']) && $vars['page']['content']['system_main']['#form_id'] == 'item_node_form') {
     if( preg_match('/edit$/', $vars['page']['content']['system_main']['#action']) ) {
       $bundle = ucfirst($vars['page']['content']['system_main']['#bundle']);

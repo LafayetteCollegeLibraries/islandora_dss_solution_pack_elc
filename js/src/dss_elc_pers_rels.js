@@ -563,9 +563,7 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 				 */
 				// Perform the tokenization logic
 				// @todo Refactor
-
 				var objectName = $objectFieldElem.val();
-
 				var objectNameMatch = /"(.+?)"/.exec($objectFieldElem.val());
 				if( objectNameMatch ) {
 
@@ -578,23 +576,23 @@ DssElcPersRelsField.prototype.bindAjaxHandlers = function() {
 				 *
 				 */
 				var $tokenAnchor = $("<a href='#' class='token'><span class='token-object'>" + objectName + "</span></a>");
-
+				
 				// Store the Node ID for the relationship within the token
 				$tokenAnchor.data(Islandora.ELC.Relationship.Form.KEY, $('.node-form'));
 				$tokenAnchor.data(Islandora.ELC.Relationship.Field.TITLE_KEY, persRel.title);
 				$tokenAnchor.data(Islandora.ELC.Relationship.Field.NID_KEY, persRel.nid);
 
-				var $tokenClose = $("<span class='token-x'>×</span>").data(Islandora.ELC.Relationship.Form.TOKEN_KEY, $objectFieldElem).click(function() {
-
-					var $objectFieldElem = $(this).data(Islandora.ELC.Relationship.Form.TOKEN_KEY);
-					$objectFieldElem.prop('disabled', false);
-				    });
+				var $tokenClose = $("<span class='token-x'>×</span>")
+				    .data(Islandora.ELC.Relationship.Form.TOKEN_KEY, $objectFieldElem)
+				    .click(function() {
+					    var $objectFieldElem = $(this).data(Islandora.ELC.Relationship.Form.TOKEN_KEY);
+					    $objectFieldElem.prop('disabled', false);
+					});
 				var $tokenItem = $('<li>').append($tokenAnchor.append($tokenClose));
 				$objectFieldElem.parents('.field-human-pers-rels-fields').find('.pers-rel-tokens').append($tokenItem);
 				
 				$objectFieldElem.prop('disabled', false);
 				$objectFieldElem.val('');
-				//$roleFieldElem.val('_none');
 				$roleFieldElem.val('658');
 			    }
 			});
