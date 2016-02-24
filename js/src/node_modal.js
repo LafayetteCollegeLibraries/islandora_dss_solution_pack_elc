@@ -62,14 +62,6 @@ NodeFormModal.STYLE_ELEMENTS = '';
  *
  */
 NodeFormModal.prototype.set = function(property, value) {
-    
-    /*
-    nodeFormModal = this.$element.data('nodeFormModal');
-    nodeFormModal[property] = value;
-    
-    return this.$element.data('nodeFormModal',  nodeFormModal);
-    */
-
     this[property] = value;
     return this.$element.data('nodeFormModal',  this);
 };

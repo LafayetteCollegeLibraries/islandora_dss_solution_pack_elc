@@ -9,10 +9,11 @@ define('PERSON_TYPES_TAXON', 'person_types');
 function dss_elc_person_node_insert($node) {
 
   if(property_exists($node, 'field_human_pers_rels')) {
-    
+
     foreach($node->field_human_pers_rels[ $node->language ] as $index => $value) {
 
       $pers_rel = node_load($value['target_id']);
+      $last_rel_nid = $pers_rel->nid;
 
       //$pers_rel->field_pers_rel_subject[ $pers_rel->language ] = ;
       $pers_rel_md = entity_metadata_wrapper('node', $pers_rel);
@@ -21,8 +22,32 @@ function dss_elc_person_node_insert($node) {
       entity_save('node', $pers_rel);
 
       // If this doesn't resolve to a Node, create it
-      
+    }
+  }
 
+  /**
+   * Much more complex override (for the retrieval of related nodes)
+   *
+   */
+
+  // Retrieve the ID of the current node
+  $query = new EntityFieldQuery();
+
+  $rels = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'personal_relationship')
+    ->propertyCondition('nid', array($last_rel_nid + 1, $node->nid), 'BETWEEN')
+    ->execute();
+
+  if(isset($rels['node'])) {
+    $rel_nodes = entity_load('node', array_keys($rels['node']));
+
+    foreach($rel_nodes as $rel_node) {
+      $rel_node_md = entity_metadata_wrapper('node', $rel_node);
+      $rel_node_md->field_pers_rel_subject->set(intval($node->nid));
+      $rel_node_md->save(true);
+      entity_save('node', $rel_node);
+
+      $node->field_human_pers_rels[ $node->language ][] = array('target_id' => $rel_node->nid);
     }
   }
 }
@@ -53,10 +78,9 @@ function dss_elc_get_persons($field, $value, $contentType='person', $personType=
   }
   
   if(isset($humans['node'])) {
-    
     return entity_load('node', array_keys($humans['node']));
   }
-  }
+}
 
 /**
  * Retrieve or create a new human Node for a given name and person type

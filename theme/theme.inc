@@ -68,7 +68,6 @@ function template_preprocess_personal_relationship_node_form(&$variables) {
 											),
 										  ),
 								)
-
 			       );
   $fields = variable_get('dss_elc_autocomplete_fields', $autocomplete_fields);
   $pers_rel_fields = $fields['personal_relationship'];
@@ -153,8 +152,7 @@ function template_preprocess_human_node_form(&$variables) {
 
     drupal_add_js(array('dssElc' => array('isAjaxRequest' => false)), 'setting');
 
-    $autocomplete_fields = array('human' => array('entity' => array(
-								    array(
+    $autocomplete_fields = array('human' => array('entity' => array(array(
 									  'selector' => array("#edit-field-person-membership-und"),
 									  'options' => array()
 									  ),
@@ -163,8 +161,7 @@ function template_preprocess_human_node_form(&$variables) {
 									  'options' => array()
 									  ),
 								    ),
-						  'term' => array(
-								  array(
+						  'term' => array(array(
 									'selector' => array("#edit-field-human-occupation-und"),
 									'options' => array()
 									),
@@ -173,14 +170,11 @@ function template_preprocess_human_node_form(&$variables) {
 									'options' => array()
 									),
 								  ),
-						  )
-
-				 );
+						  ));
     $fields = variable_get('dss_elc_autocomplete_fields', $autocomplete_fields);
     $human_fields = $fields['human'];
 
-    $field_types = array(
-			 'loans' => 'DssElcAutocompleteLoan',
+    $field_types = array('loans' => 'DssElcAutocompleteLoan',
 			 'entityRefs' => 'DssElcAutocompleteEntityRef',
 			 'terms' => 'DssElcAutocomplete'
 			 );

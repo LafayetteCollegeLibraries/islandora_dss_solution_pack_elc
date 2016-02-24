@@ -59,24 +59,19 @@ function dss_elc_menu_alter(&$items) {
  */
 function dss_elc_menu() {
 
-  $items = array('node/get' => array(
-				     'page callback' => 'dss_elc_get_node_ajax',
+  $items = array('node/get' => array('page callback' => 'dss_elc_get_node_ajax',
 				     'access callback' => TRUE,
 				     ),
-		 'nodes/get' => array(
-				      'page callback' => 'dss_elc_get_nodes_ajax',
+		 'nodes/get' => array('page callback' => 'dss_elc_get_nodes_ajax',
 				      'access callback' => TRUE,
 				      ),
-		 'pers-rels/get' => array(
-					  'page callback' => 'dss_elc_get_pers_rels_ajax',
+		 'pers-rels/get' => array('page callback' => 'dss_elc_get_pers_rels_ajax',
 					  'access callback' => TRUE
 					  ),
-		 'bib-rels/get' => array(
-					 'page callback' => 'dss_elc_get_bib_rels_ajax',
+		 'bib-rels/get' => array('page callback' => 'dss_elc_get_bib_rels_ajax',
 					 'access callback' => TRUE
 					 ),
-		 'qty/rels' => array(
-				     'page callback' => 'dss_elc_qty_rels_ajax',
+		 'qty/rels' => array('page callback' => 'dss_elc_qty_rels_ajax',
 				     'access callback' => TRUE
 				     ),
 
@@ -115,8 +110,7 @@ function dss_elc_permission() {
  */
 function dss_elc_theme($existing, $type, $theme, $path) {
 
-  return array(
-	       'loan_node_form' => array(
+  return array('loan_node_form' => array(
 					 'render element' => 'form',
 					 'file' => 'theme/theme.inc',
 					 'template' => 'theme/loan-node-form',
@@ -223,12 +217,22 @@ function dss_elc_node_presave($node) {
 
   case 'personal_relationship':
 
-    $subjectNode = dss_elc_get_node('nid', $node->field_pers_rel_subject[$node->language][0]['target_id'], 'human');
-    $objectNode = dss_elc_get_node('nid', $node->field_pers_rel_object[$node->language][0]['target_id']);
-    $roleTerm = taxonomy_term_load($node->field_pers_rel_role[$node->language][0]['tid']);
+    if( array_key_exists($node->language, $node->field_pers_rel_subject) ) {
+      $subjectNode = dss_elc_get_node('nid', $node->field_pers_rel_subject[$node->language][0]['target_id'], 'human');
+    }
 
-    // Override the title
-    $node->title = $subjectNode->title . ' is a ' . $roleTerm->name . ' in relation to ' . $objectNode->title;
+    if( array_key_exists($node->language, $node->field_pers_rel_object) ) {
+      $objectNode = dss_elc_get_node('nid', $node->field_pers_rel_object[$node->language][0]['target_id']);
+    }
+
+    if( array_key_exists($node->language, $node->field_pers_rel_role) ) {
+      $roleTerm = taxonomy_term_load($node->field_pers_rel_role[$node->language][0]['tid']);
+    }
+
+    if(isset($subjectNode) and isset($objectNode) and isset($roleTerm)) {
+	// Override the title
+	$node->title = $subjectNode->title . ' is a ' . $roleTerm->name . ' in relation to ' . $objectNode->title;
+    }
 
     break;
 
@@ -237,18 +241,20 @@ function dss_elc_node_presave($node) {
     // Override the title
     // This could normally be overridden using tokens
     // @todo Refactor?
-
     $fields = array();
     foreach(array('field_person_name', 'field_human_middle_initials', 'field_human_surname') as $field) {
-
-      if(!is_null($node->{$field}) and array_key_exists($node->language, $node->{$field}) and !empty($node->{$field}[$node->language])) {
+      if(!is_null($node->{$field})
+	 and array_key_exists($node->language, $node->{$field})
+	 and !empty($node->{$field}[$node->language])) {
 
 	$fields[] = $node->{$field}[$node->language];
       }
     }
 
+    /**
+     *
+     */
     $node->title = implode(' ', array_map(function($field) {
-
 	  $result = '';
 
 	  if(!empty($field)) {
@@ -258,6 +264,52 @@ function dss_elc_node_presave($node) {
 
 	  return $result;
 	}, $fields));
+
+    /**
+     *
+     */
+    /**
+     * Much more complex override (for the retrieval of related nodes)
+     *
+     */
+
+    foreach($node->field_human_pers_rels[ $node->language ] as $index => $value) {
+
+      $pers_rel = node_load($value['target_id']);
+      $last_rel_nid = $pers_rel->nid;
+    }
+
+    // Retrieve the ID of the current node
+    $query = new EntityFieldQuery();
+
+    $saved_nodes = $query->entityCondition('entity_type', 'node')
+      ->propertyOrderBy('created', 'DESC')
+      ->range(0,1)
+      ->execute();
+    if(isset($saved_nodes['node'])) {
+      $saved_nodes = entity_load('node', array_keys($saved_nodes['node']));
+      $saved_node = array_pop($saved_nodes);
+    }
+
+    $rels = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'personal_relationship')
+      //->propertyCondition('nid', array($last_rel_nid + 1, $node->nid), 'BETWEEN')
+      ->propertyCondition('nid', array($last_rel_nid + 1, $saved_node->nid), 'BETWEEN')
+      ->execute();
+
+    if(isset($rels['node'])) {
+      $rel_nodes = entity_load('node', array_keys($rels['node']));
+
+      foreach($rel_nodes as $rel_node) {
+	$rel_node_md = entity_metadata_wrapper('node', $rel_node);
+	$rel_node_md->field_pers_rel_subject->set(intval($node->nid));
+	$rel_node_md->save(true);
+	entity_save('node', $rel_node);
+
+	$node->field_human_pers_rels[ $node->language ][] = array('target_id' => $rel_node->nid);
+      }
+    }
+
     break;
 
   case 'book':
@@ -323,14 +375,12 @@ function dss_elc_node_insert($node) {
     break;
 
   case 'human':
-
     dss_elc_person_node_insert($node);
     break;
 
   case 'item':
   case 'periodical':
   case 'book':
-
     dss_elc_item_node_insert($node);
     break;
 
@@ -385,7 +435,6 @@ function dss_elc_field_attach_view_alter(&$output, $context) {
 
   // We proceed only on nodes.
   if ($context['entity_type'] != 'node' || $context['view_mode'] != 'full') {
-
     return;
   }
 
@@ -394,10 +443,8 @@ function dss_elc_field_attach_view_alter(&$output, $context) {
   $instances = _field_invoke_get_instances('node', $node->type, array('default' => TRUE, 'deleted' => FALSE));
 
   foreach ($instances as $field_name => $instance) {
-
     // Set content for fields they are empty.
     if (empty($node->{$field_name})) {
-
       $display = field_get_display($instance, 'full', $node);
 
       // Do not add field that is hidden in current display.
@@ -444,7 +491,6 @@ function dss_elc_get_node_ajax($contentType, $field, $value=NULL) {
 
   // If value isn't set, retrieve by NID and contentType
   if(!isset($value)) {
-
     $value = $field;
     $field = $contentType;
 
@@ -544,7 +590,6 @@ function dss_elc_get_bivariate_rels($contentTypes, $fieldU, $fieldV, $fieldUType
 
       $fieldUValue = dss_elc_get_node_field($node, $fieldU, $fieldUType);
       $fieldVValue = dss_elc_get_node_field($node, $fieldV, $fieldVType);
-
 
       if($dateFieldRange) {
 

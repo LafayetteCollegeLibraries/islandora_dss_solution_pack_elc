@@ -125,20 +125,6 @@ Islandora.ELC.Relationship.Field.enableAutocomplete = function(e) {
 	acdb[uri] = new Drupal.ACDB(uri);
     }
 
-    /*
-    var $input = $(e)
-    .attr('autocomplete', 'OFF')
-    .attr('aria-autocomplete', 'list');
-			
-    $($input[0].form).submit(Drupal.autocompleteSubmit);
-    $input.parent()
-    .attr('role', 'application')
-    .append($('<span class="element-invisible" aria-live="assertive"></span>')
-	    .attr('id', $input.attr('id') + '-autocomplete-aria-live')
-	    );
-    new Drupal.jsAC($input, acdb[uri]);
-    */
-
     /**
      * Linking the individual input fields with the actual autocompletion widgets
      *
@@ -368,7 +354,6 @@ function DssElcPersRelsField(document, options) {
     // @todo This should be implemented using an ELC.Relationship.Personal.Input Class
     //
     this.$fields.each(function(i, inputElement) {
-
 	    Islandora.ELC.TokenizeFieldInit(i, inputElement);
 	});
 
@@ -387,7 +372,6 @@ function DssElcPersRelsField(document, options) {
  * Islandora.ELC.Relationship.Form
  *
  */
-//DssElcPersRelsField.addField = function(event) {
 DssElcPersRelsField.addField = function($button) {
 
     var $ = $ || jQuery;
@@ -414,7 +398,6 @@ DssElcPersRelsField.addField = function($button) {
 		 * @todo Decouple and implement within the appropriate Drupal hook implementations
 		 *
 		 */
-		//var $fields = $('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="_none">- Select a value -</option><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div></div>');
 		var $fields = $('<div class="field-human-pers-rels-fields"><div><div><label>Type</label><select class="form-select required" name="field_pers_rel_role[und]" id="edit-field-pers-rel-role-und"><option value="658">Representative</option></select></div><div><label>Person</label><input id="edit-field-pers-rel-object-und" class="form-text form-autocomplete" type="text" maxlength="1024" size="60" value="" name="field_pers_rel_object[und]" autocomplete="OFF" aria-autocomplete="list"></div></div></div>');
 		
 		// Append the newly-added form fields

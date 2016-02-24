@@ -39,7 +39,34 @@ Islandora.ELC.Human.Form = function(element, $) {
 
 		    var value = '"' + title + ' (' + $token.data(Islandora.ELC.Relationship.Field.NID_KEY) + ')"';
 		    $inputElement.val(value);
+
+		    
 		});
+
+	    // Directly modify the form data being submitted to the Drupal service endpoint
+	    // This is necessary in order to override core Drupal 7.x form validation functionality
+
+	    var data = $(this).serializeArray();
+
+	    // Select the initial form field and remove it (for the purposes of deduplicating the field in the POST request)
+	    $(this).find('[name="field_human_pers_rels[und][0][target_id]"][value=""]:first').remove();
+
+	    // Add elements for the weight value
+	    // edit-field-human-pers-rels-und-0-weight
+	    $(this).find('select[name="field_human_pers_rels[und][0][_weight]"]').remove();
+
+	    /*
+	    $(this).find('input[name^="field_human_pers_rels[und]"]').each(function(i, e) {
+		    $(this).append('<input type="hidden" value="' + i + '" name="field_human_pers_rels[und][' + i + '][_weight]">');
+		});
+	    */
+
+	    for(var i;i < 6;i++) {
+		$(this).append('<input type="hidden" value="' + i + '" name="field_human_pers_rels[und][' + i + '][_weight]">');
+	    }
+
+	    $(this).find('input[name*="field_pers_rel_role"]').remove();
+	    
 	});
 };
 

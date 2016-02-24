@@ -25,12 +25,12 @@
 	    $('form:first').attr('onsubmit', 'return false');
 	    
 	    //Enable form submission when a button is clicked
-	    jQuery('button','#edit-actions').click(function(e){
+	    $('button','#edit-actions').click(function(e){
 	    	
 		    $('form:first').attr('onsubmit', 'return true');
 		});
 	    //Enable when selected and enter pressed
-	    jQuery('button','#edit-actions').keypress(function(e){
+	    $('button','#edit-actions').keypress(function(e){
 		    
 		    if(e.which == 13){
 	    		$('form:first').attr('onsubmit', 'return true');
